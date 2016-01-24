@@ -32,7 +32,7 @@ LINK_LIBRARIES(${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) # Deprecated but so conve
 # ---- create module ----
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC"  )
-add_library(symbols STATIC SHARED ${sources} ${headers} )
+add_library(symbols STATIC ${sources} ${headers} )
 PYTHON_ADD_MODULE(_symbols ${PROJECT_SOURCE_DIR}/python.cpp)
 TARGET_LINK_LIBRARIES(_symbols symbols)
 
@@ -49,7 +49,7 @@ add_subdirectory (${PROJECT_LIBS_DIR}/lars)
 
 # ---- install ----
 
-install(TARGETS symbols DESTINATION .)
+install(TARGETS symbols DESTINATION lib)
 install(TARGETS _symbols DESTINATION pysymbols)
 install(DIRECTORY ${PROJECT_PYSOURCE_DIR}/ DESTINATION .)
 
