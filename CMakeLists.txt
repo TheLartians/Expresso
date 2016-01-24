@@ -49,7 +49,6 @@ add_subdirectory (${PROJECT_LIBS_DIR}/lars)
 
 # ---- install ----
 
-install(TARGETS symbols DESTINATION lib)
 install(TARGETS _symbols DESTINATION pysymbols)
 install(DIRECTORY ${PROJECT_PYSOURCE_DIR}/ DESTINATION .)
 
