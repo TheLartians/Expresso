@@ -251,7 +251,7 @@ def make_parallel(f):
     import threading
     from multiprocessing import cpu_count
 
-    def run_parallel_thread(_processes = 2*cpu_count(),**args):
+    def run_parallel_thread(_processes = cpu_count(),**args):
                 
         example_arg = args.iteritems().next()[1]
         
