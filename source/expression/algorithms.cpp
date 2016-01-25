@@ -146,7 +146,9 @@ namespace symbols {
     }
     
     void visit(const BinaryOperator * e)override{
-      if(e->associativity != BinaryOperator::associative){ visit((Function*)e); return; }
+      
+      // TODO: add directional associativity to Binary operator?
+      // if(e->associativity != BinaryOperator::associative){ visit((Function*)e); return; }
       
       test(e);
       if(!valid) return;
@@ -239,30 +241,7 @@ namespace symbols {
     }
     
   };
-  
-  bool commutative_match( const Expression::shared &expr,const Expression::shared &search,replacement_map &wildcards ){
     
-    if(auto b = search->as<BinaryOperator>())if(b->is_commutative()){
-      auto args = b->arguments;
-      replacement_map tmp = wildcards;
-      
-      do{
-        auto search = b->clone(argument_list(args), false);
-        tmp = wildcards;
-        MatchVisitor v(expr,tmp);
-        search->accept(&v);
-        if(v.valid){
-          wildcards = tmp;
-          return true;
-        }
-      } while(std::next_permutation(args.begin(), args.end()));
-      
-      return false;
-    }
-    
-    return match(expr, search, wildcards);
-  }
-  
   bool match( const Expression::shared &expr,const Expression::shared &search,replacement_map &wildcards ){
     MatchVisitor v(expr,wildcards);
     search->accept(&v);

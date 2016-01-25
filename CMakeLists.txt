@@ -11,10 +11,23 @@ project (Symbols)
 
 set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/source)
 set (PROJECT_LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
-set (PROJECT_PYSOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pysource)
+set (PROJECT_PYSOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pysource)
 
 file (GLOB sources ${PROJECT_SOURCE_DIR}/expression/*.cpp)
 file (GLOB headers ${PROJECT_SOURCE_DIR}/expression/*.h)
+file (GLOB_RECURSE pysources ${PROJECT_PYSOURCES_DIR}/*.py)
+
+# ---- group python sources ----
+
+foreach (resource ${pysources})
+get_filename_component(currentdir ${resource} PATH)
+list (APPEND includeDirs ${currentdir})
+get_filename_component(relative ${currentdir} PATH)
+STRING(REGEX REPLACE ${CMAKE_SOURCE_DIR} "" groupname "${currentdir}")
+STRING(REGEX REPLACE "/" "\\\\" groupname "${groupname}")
+source_group(${groupname} FILES ${resource})
+endforeach()
+
 
 # ---- enable c++11 ----
 set (CMAKE_CXX_STANDARD 11)
@@ -33,7 +46,7 @@ LINK_LIBRARIES(${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) # Deprecated but so conve
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC"  )
 add_library(symbols STATIC ${sources} ${headers} )
-PYTHON_ADD_MODULE(_symbols ${PROJECT_SOURCE_DIR}/python.cpp)
+PYTHON_ADD_MODULE(_symbols ${PROJECT_SOURCE_DIR}/python.cpp ${pysources})
 TARGET_LINK_LIBRARIES(_symbols symbols)
 
 include_directories (${PROJECT_LIBS_DIR})
@@ -50,5 +63,5 @@ add_subdirectory (${PROJECT_LIBS_DIR}/lars)
 # ---- install ----
 
 install(TARGETS _symbols DESTINATION pysymbols)
-install(DIRECTORY ${PROJECT_PYSOURCE_DIR}/ DESTINATION .)
+install(DIRECTORY ${PROJECT_PYSOURCES_DIR}/ DESTINATION .)
 

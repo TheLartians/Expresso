@@ -33,7 +33,8 @@ class WrappedExpressionTypes(object):
         self.Rule = evaluator.WrappedRule(S)
         self.RewriteEvaluator = evaluator.WrappedRewriteEvaluator(S)
         self.MultiEvaluator = evaluator.WrappedMultiEvaluator(S)
-           
+        self.ReplaceEvaluator = evaluator.WrappedReplaceEvaluator(S)
+
         self.postorder_traversal = expression.wrapped_postorder_traversal(S)
         self.preorder_traversal = expression.wrapped_preorder_traversal(S)    
         self.commutative_permutations = expression.wrapped_commutative_permutations(S) 

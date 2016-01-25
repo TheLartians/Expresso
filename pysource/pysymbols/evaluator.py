@@ -49,24 +49,33 @@ WrappedMatchCondition = lambda S:WrappedType(MatchCondition,S=S)
 
 class Evaluator(object):
     
-    def __init__(self,evaluator,S):
+    def __init__(self,evaluator,recursive ,S):
         
         if S == None:
             raise ValueError('missing argument S')
 
         self._evaluator = evaluator
+        self._evaluator.recursive = recursive
         self.S = S
 
     def __call__(self,expr):
         return self.S(self._evaluator.__call__(self.S(expr)))
-                
-            
+
+class ReplaceEvaluator(Evaluator):
+
+    def __init__(self,recursive = False,S = None):
+        super(ReplaceEvaluator,self).__init__(core.ReplaceEvaluator(),recursive,S)
+
+    def add_replacement(self,search,replace):
+        self._evaluator.add_replacement(self.S(search),self.S(replace))
+
+WrappedReplaceEvaluator = lambda S:WrappedType(ReplaceEvaluator,S=S)
+
 class RewriteEvaluator(Evaluator):
 
     def __init__(self,recursive = False,S = None):
-        super(RewriteEvaluator,self).__init__(core.RuleEvaluator(),S)
-        self._evaluator.recursive = recursive
-        
+        super(RewriteEvaluator,self).__init__(core.RuleEvaluator(),recursive,S)
+
     def __len__(self):
         return len(self._evaluator)
     
@@ -94,8 +103,8 @@ WrappedRewriteEvaluator = lambda S:WrappedType(RewriteEvaluator,S=S)
     
 class MultiEvaluator(Evaluator):
     
-    def __init__(self,S):
-        super(MultiEvaluator,self).__init__(core.MultiEvaluator(),S)
+    def __init__(self,recursive = False,S = None):
+        super(MultiEvaluator,self).__init__(core.MultiEvaluator(),recursive,S)
         self._inner_evaluators = []
     
     def add_evaluator(self,evaluator):

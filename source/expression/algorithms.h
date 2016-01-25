@@ -51,7 +51,6 @@ namespace symbols{
   
   Expression::shared replace(const Expression::shared &s,const replacement_map &replacements );
   bool match( const Expression::shared &expr,const Expression::shared &search,replacement_map &wildcards);
-  bool commutative_match( const Expression::shared &expr,const Expression::shared &search,replacement_map &wildcards);
   
   void get_matches( const Expression::shared &expr, std::shared_ptr<CompressedNode> searches, replacement_map &wildcards, std::vector<CompressedNode::ID> & matches );
   std::vector<CompressedNode::ID> get_matches( const Expression::shared &expr, std::shared_ptr<CompressedNode> searches, replacement_map &wildcards );

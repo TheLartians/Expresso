@@ -88,7 +88,11 @@ class Expression(core.Expression):
         return self.S(core.replace(self,rep))
 
     def match(self,search):
-        return ReplacementMap(core.match(self,search),self.S)
+        for expr in core.commutative_permutations(search):
+            res = core.match(self,expr)
+            if res:
+                return ReplacementMap(core.match(self,expr),self.S)
+        return None
 
 def WrappedType(T,**parameters):
     
@@ -329,8 +333,6 @@ class MulplicityList(object):
     def __pow__(self,other):
         return self.pow(other)
 
-
-    
 WrappedMulplicityList = lambda S:WrappedType(MulplicityList,S=S)
     
 def wrapped_postorder_traversal(S):

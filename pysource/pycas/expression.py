@@ -1,8 +1,12 @@
 
 import pysymbols
 
-def Symbol(name):
-    return Expression(pysymbols.create_symbol(name))
+def Symbol(name,type=None):
+    s = Expression(pysymbols.create_symbol(name))
+    if type != None:
+        from functions import Type
+        global_context.add_definition(Type(s),type)
+    return s
 
 integer_type = long
 
@@ -71,16 +75,16 @@ def Wildcard(name):
 def WildcardFunction(name):
     return pysymbols.expression.Function(pysymbols.core.WildcardFunction(name),S=expression_converter)
 
-def symbols(string):
+def symbols(string,**kwargs):
     string = string.replace(" ", "")
-    return [Symbol(s) for s in string.split(',')]
+    return [Symbol(s,**kwargs) for s in string.split(',')]
 
 def wildcard_symbols(string):
     string = string.replace(" ", "")
     return [Wildcard(s) for s in string.split(',')]
 
-printer = pysymbols.printer.Printer()
-latex = pysymbols.printer.LatexPrinter()
+printer = pysymbols.printer.Printer(expression_converter)
+latex = pysymbols.printer.LatexPrinter(expression_converter)
 
 class Expression(pysymbols.WrappedExpression(expression_converter)):
     
@@ -156,9 +160,11 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
     def __repr__(self):
          return printer(self)
 
-    def evaluate(self):
+    def evaluate(self,context = None):
+        if context == None:
+            context = global_context
         from evaluate import evaluate
-        return evaluate(self)
+        return evaluate(self,global_context)
     
     def subs(self,*args,**kwargs):
         do_evaluate = kwargs.pop('evaluate',True)
@@ -169,10 +175,16 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
 
 locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)
 
+class Context(ReplaceEvaluator):
+
+    def add_definition(self,search,replacement):
+        self.add_replacement(search,replacement)
+
+global_context = Context()
+
 One = S(1)
 Zero = S(0)
 I = Symbol('_I')
-
 
 Addition = BinaryOperator("+",pysymbols.associative,pysymbols.commutative,-11)
 Negative = UnaryOperator("-",pysymbols.prefix,-12)

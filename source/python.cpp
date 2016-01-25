@@ -95,12 +95,12 @@ namespace symbols_wrapper {
     
   };
   
-  replacement_map commutative_match(expression expr,expression search){
+  python::object match(expression expr,expression search){
     replacement_map rep;
-    if(symbols::commutative_match(expr, search, rep)){
-      return std::move(rep);
+    if(symbols::match(expr, search, rep)){
+      return python::object(rep);
     }
-    throw std::runtime_error("expressions do not match");
+    return python::object();
   }
   
 }
@@ -118,11 +118,11 @@ template <class C> void create_iterator(C & c){
   public:
     iterator_wrapper(const iterator & begin,const iterator & end):bit(begin),eit(end){}
     value_type next(){
-      if(bit == eit){
-        boost::python::objects::stop_iteration_error();
-        throw std::runtime_error("boot python didn't abort iteration");
+      while(bit != eit){
+        value_type v = *bit; ++bit; return v;
       }
-      value_type v = *bit; ++bit; return v;
+      boost::python::objects::stop_iteration_error();
+      throw std::runtime_error("boost didn't stop iteration");
     }
   };
   
@@ -183,7 +183,7 @@ BOOST_PYTHON_MODULE(_symbols){
 
   def("create_call",symbols_wrapper::create_call);
   
-  def("match",symbols_wrapper::commutative_match);
+  def("match",symbols_wrapper::match);
   def("replace",+[](const symbols::expression &s,const symbols::replacement_map &r){ return symbols::replace(s,r); });
   
 #pragma mark -
@@ -246,6 +246,7 @@ BOOST_PYTHON_MODULE(_symbols){
 #pragma mark Evaluator
   
   class_<symbols::Evaluator,boost::noncopyable>("Evaluator",no_init)
+  .def_readwrite("recursive",&symbols::RuleEvaluator::recursive)
   .def("__call__",+[](const symbols::Evaluator &r,const symbols::expression &e){ return r(e); });
 
 #pragma mark MultiEvaluator
@@ -254,6 +255,13 @@ BOOST_PYTHON_MODULE(_symbols){
   .def("add_evaluator",+[](symbols::MultiEvaluator &m,symbols::Evaluator &e){ m.add_evaluator(&e); })
   ;
   
+#pragma mark ReplaceEvaluator
+  
+  class_<symbols::ReplaceEvaluator,bases<symbols::Evaluator>>("ReplaceEvaluator")
+  .def("add_replacement",&symbols::ReplaceEvaluator::add_replacement)
+  .def("clear",&symbols::ReplaceEvaluator::clear)
+  ;
+    
 #pragma mark Rule
   
   class_<symbols::Rule>("Rule",init<symbols::expression,symbols::expression>())
@@ -267,7 +275,6 @@ BOOST_PYTHON_MODULE(_symbols){
 #pragma mark RuleEvaluator
   
   class_<symbols::RuleEvaluator,bases<symbols::Evaluator>>("RuleEvaluator")
-  .def_readwrite("recursive",&symbols::RuleEvaluator::recursive)
   .def("add_rule",&symbols::RuleEvaluator::add_rule<symbols::Rule>)
   .def("add_rule",+[](symbols::RuleEvaluator &e,const symbols::Rule &r,int p){
     e.add_rule(r,p);

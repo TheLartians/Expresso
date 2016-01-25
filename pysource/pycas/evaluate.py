@@ -7,6 +7,7 @@ import pysymbols
 
 prepare_evaluator = RewriteEvaluator()
 main_evaluator = RewriteEvaluator(recursive=True)
+type_evaluator = RewriteEvaluator(recursive=True)
 intermediate_evaluator = RewriteEvaluator(recursive=True)
 final_evaluator = RewriteEvaluator(recursive=True)
 primefactor_evaluator = RewriteEvaluator(recursive=True)
@@ -82,14 +83,15 @@ def add_basic_simplification_rules(evaluator):
     
     evaluator.add_rule(Indicator(True),1)
     evaluator.add_rule(Indicator(False),0)
-
     
 def add_logic_rules(evaluator):
     x,y,z,a,b,c,n,m = wildcard_symbols('x,y,z,a,b,c,n,m')
     f = WildcardFunction("f")
 
-    
-    evaluator.add_rule(Xor(a,b),And(Or(a,b),Not(And(a,b))));
+    evaluator.add_rule(Xor(False,False),False);
+    evaluator.add_rule(Xor(True,False),True);
+    evaluator.add_rule(Xor(False,True),True);
+    evaluator.add_rule(Xor(True,True),False);
 
     evaluator.add_rule(And(x,True),x);
     evaluator.add_rule(And(x,False),False);
@@ -129,7 +131,6 @@ def add_logic_rules(evaluator):
     evaluator.add_rule(abs(x)<y,And(x<y,-x<y));
     evaluator.add_rule(x<abs(y),Or(x<y,x<-y));
     evaluator.add_rule(Equal(abs(x),y),Or(Equal(x,y),Equal(x,-y)));
-        
 
 def primesfrom2to(n):
     # http://stackoverflow.com/questions/2068372/fastest-way-to-list-all-primes-below-n-in-python/3035188#3035188
@@ -159,7 +160,6 @@ def primefactor(x):
     if x != 1:
         res.append(x)
     return res        
-
 
 def add_numeric_evaluation_rules(evaluator,include):
     
@@ -346,13 +346,14 @@ def add_main_evaluator_rules(evaluator):
     evaluator.add_rule(x**m*y**m,(x*y)**(m))
     
     pp = PiecewisePart
-
     evaluator.add_rule(Piecewise((a,b),x),Piecewise(pp(a,b),x))
+    evaluator.add_rule(Piecewise(x,(a,b)),Piecewise(x,pp(a,b)))
+
     evaluator.add_rule(Piecewise(pp(a,True),x),pp(a,True))
     evaluator.add_rule(Piecewise(pp(a,False),x),x)
-        
-def add_basic_derivative_rules(evaluator):
+    evaluator.add_rule(Piecewise(x,pp(a,False)),x)
 
+def add_basic_derivative_rules(evaluator):
 
     x,y,z,a,b,c,n,m = wildcard_symbols('x,y,z,a,b,c,n,m')
 
@@ -440,11 +441,86 @@ def add_expand_rules(evaluator):
     evaluator.add_rule(x-y,c*(a-b),extract_intersection)
     evaluator.add_rule(-x-y,-c*(a+b),extract_intersection)
 
-    
 def add_intermediate_evaluator_rules(evaluator):
     x,y,z,a,b,c,n,m = wildcard_symbols('x,y,z,a,b,c,n,m')
     evaluator.add_rule(Piecewise(PiecewisePart(a,b),x),Piecewise((a,b),x))
-    
+    evaluator.add_rule(Piecewise(x,PiecewisePart(a,b)),Piecewise(x,(a,b)))
+
+
+def add_type_evaluator_rules(evaluator):
+    x,y,z,a,b,c,n,m = wildcard_symbols('x,y,z,a,b,c,n,m')
+
+    ordered_types = (Types.Boolean,Types.Natural,Types.Integer,Types.Rational,Types.Real,Types.Complex)
+
+    for i in range(len(ordered_types)):
+        evaluator.add_rule(DominantType(Types.Imaginary,ordered_types[i]),Types.Complex)
+        evaluator.add_rule(Type(ordered_types[i]),Types.Type)
+        for j in range(i):
+          evaluator.add_rule(DominantType(ordered_types[j],ordered_types[i]),ordered_types[i])
+
+    evaluator.add_rule(Type(Types.Imaginary*Types.Complex),Types.Complex)
+    evaluator.add_rule(DominantType(x,x),x)
+
+    evaluator.add_rule(Type(Types.Imaginary),Types.Type)
+    evaluator.add_rule(Type(Type(x)),Types.Type)
+
+    evaluator.add_rule(Type(True),Types.Boolean)
+    evaluator.add_rule(Type(False),Types.Boolean)
+    evaluator.add_rule(Type(match_int(x)),Types.Natural)
+    evaluator.add_rule(Type(1/x),DominantType(Types.Rational,Type(x)))
+
+    evaluator.add_rule(Type(x**y),OperationType(Type(x)**Type(y)))
+    evaluator.add_rule(Type(x*y),OperationType(Type(x)*Type(y)))
+
+    for t in (Types.Natural,Types.Integer,Types.Rational,Types.Real):
+        evaluator.add_rule(OperationType(Types.Imaginary*t),Types.Imaginary)
+    evaluator.add_rule(OperationType(Types.Imaginary*Types.Imaginary),Types.Real)
+
+    evaluator.add_rule(OperationType(x**Types.Natural),x)
+    evaluator.add_rule(OperationType(x**Types.Integer),DominantType(x,Types.Rational))
+    evaluator.add_rule(OperationType(Types.Natural**Types.Rational),Types.Real)
+
+    for t in (Types.Rational,Types.Real,Types.Complex):
+        evaluator.add_rule(OperationType(x**t),Types.Complex)
+
+    no_type_function = MatchCondition('no_type_function',lambda e:e.function != Type)
+
+    evaluator.add_rule(OperationType(no_type_function(x)*no_type_function(y)),DominantType(x,y))
+    evaluator.add_rule(OperationType(no_type_function(x)**no_type_function(y)),DominantType(x,y))
+
+    evaluator.add_rule(Type(x+y),DominantType(Type(x),Type(y)))
+    evaluator.add_rule(Type(-x),DominantType(Types.Integer,Type(x)))
+    evaluator.add_rule(Type(pi),Types.Real)
+    evaluator.add_rule(Type(e),Types.Real)
+    evaluator.add_rule(Type(I),Types.Imaginary)
+
+    evaluator.add_rule(Type(factorial(x)),Types.Natural)
+    evaluator.add_rule(Type(sign(x)),Types.Integer)
+    evaluator.add_rule(Type(Floor(x)),Types.Integer)
+    evaluator.add_rule(Type(Abs(x)),Types.Natural)
+    evaluator.add_rule(Type(Ceil(x)),Types.Integer)
+    evaluator.add_rule(Type(Round(x)),Types.Integer)
+    evaluator.add_rule(Type(Mod(x,y)),Types.Integer)
+
+    evaluator.add_rule(Type(Real(x)),Types.Real)
+    evaluator.add_rule(Type(Imag(x)),Types.Real)
+    evaluator.add_rule(Type(Conjugate(x)),Types.Complex)
+
+    evaluator.add_rule(Type(Indicator(x)),Types.Natural)
+    evaluator.add_rule(Type(Piecewise(a,b)),DominantType(Type(a),Type(b)))
+    evaluator.add_rule(Type(PiecewisePart(a,b)),Type(a))
+
+    evaluator.add_rule(Type(derivative(x,y)),Type(x))
+    evaluator.add_rule(Type(evaluated_at(x,y,z)),DominantType(Type(x),Type(z)))
+
+    evaluator.add_rule(Type(tmp(x)),Type(x))
+    evaluator.add_rule(Type(sqrt(x)),Type(x**(1/S(2))))
+
+    evaluator.add_rule(Type(atan2(x,y)),DominantType(Type(x),Type(x),Types.Rational))
+
+    for f in [exp,log,sin,cos,asin ,acos,tan,atan,cot,acot,sinh,cosh,asinh,acosh,tanh,atanh,coth,acoth]:
+        evaluator.add_rule(Type(f(x)),DominantType(Type(x),Types.Rational))
+
 
 def add_final_evaluator_rules(evaluator):
     
@@ -464,10 +540,8 @@ def add_final_evaluator_rules(evaluator):
     evaluator.add_rule(x**(1/S(2)),sqrt(x))
     
     evaluator.add_rule(PiecewisePart(x,y),x*Indicator(y))
-    evaluator.add_rule(Indicator(otherwise),1)
-        
-    
-    
+
+
 add_prepare_evaluator_rules(prepare_evaluator)
 
 add_numeric_evaluation_rules(main_evaluator,{'sum','product','power','logic'})
@@ -476,6 +550,8 @@ add_logic_rules(main_evaluator)
 add_main_evaluator_rules(main_evaluator)
 add_fraction_reduction_rules(main_evaluator)
 add_basic_derivative_rules(main_evaluator)
+
+add_type_evaluator_rules(type_evaluator)
 
 add_fraction_reduction_rules(primefactor_evaluator)
 add_numeric_evaluation_rules(primefactor_evaluator,{'sum','primes'})
@@ -492,8 +568,14 @@ add_final_evaluator_rules(final_evaluator)
 add_numeric_evaluation_rules(final_evaluator,{'sum','product','power','logic'})
 
 
-def evaluate(expr):
-    return final_evaluator(intermediate_evaluator(main_evaluator(primefactor_evaluator(prepare_evaluator(expr)))))
+def evaluate(expr,context = global_context):
+    main = MultiEvaluator(recursive=True)
+    main.add_evaluator(context)
+    main.add_evaluator(main_evaluator)
+    types = MultiEvaluator(recursive=True)
+    types.add_evaluator(context)
+    types.add_evaluator(type_evaluator)
+    return final_evaluator(intermediate_evaluator(types(main(primefactor_evaluator(prepare_evaluator(expr))))))
     
 def expand(expr):
     return final_evaluator(intermediate_evaluator(expand_evaluator(prepare_evaluator(expr))))

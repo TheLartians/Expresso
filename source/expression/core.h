@@ -100,7 +100,7 @@ namespace symbols {
       
       bool operator==(const Expression::shared &other)const{ if(!*this) return !other; return *other.get() == (*get()); }
       bool operator!=(const Expression::shared &other)const{ if(!*this) return bool(other); if(!other) return bool(*this); return *other.get() != (*get());  }
-      bool operator!=(const Expression * other)const{ return *other != (*get());  }
+      bool operator!=(const Expression * other)const{ if(!*this) return true; return *other != (*get());  }
       bool operator<(const Expression::shared & other)const{ return *get() < *other; }
       
       shared & operator=(const shared &other){ std::shared_ptr<const Expression>::operator=(other); return *this; }

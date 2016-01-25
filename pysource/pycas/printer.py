@@ -105,14 +105,18 @@ def visit(printer,expr):
             return printer.print_function(expr,name="Piecewise")
 
     outer = r"\begin{cases} %s \end{cases}"
-    args = [(printer(e.args[0]),printer(e.args[1])) for e in expr.args if e.args[1] != otherwise]
-    otherwise_parts = [printer(e.args[0]) for e in expr.args if e.args[1] == otherwise]
 
-    inner = r"\\ ".join([r"%s & \text{if } %s " % arg for arg in args])
+    s = len(expr.args)-1
+    inner_list = [r"%s & \text{if } %s " % (printer(e.args[0]),printer(e.args[1]))
+                         for e in expr.args[:-1]]
+    e = expr.args[-1]
 
-    if len(otherwise_parts)>0:
-        inner += r"\\ ".join([r"\\ %s & \text{otherwise}" % e for e in otherwise_parts])
+    if e.args[1] == S(True):
+        inner_list += [ r"%s & \text{otherwise } " % printer(e.args[0])]
+    else:
+        inner_list += [ r"%s & \text{if } %s " % (printer(e.args[0]),printer(e.args[1])) ]
 
+    inner = r"\\ ".join(inner_list)
     return outer % inner
 
 @add_target(printer,Piecewise)

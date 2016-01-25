@@ -14,7 +14,7 @@ namespace symbols {
   
 
     EvaluatorVisitor::EvaluatorVisitor(const Evaluator &_evaluator,replacement_map & _cache):evaluator(_evaluator),cache(_cache){
-      CAIt = evaluator.CAIterator->clone();
+
     }
         
     bool EvaluatorVisitor::get_from_cache(expression e,expression &res){
@@ -79,27 +79,33 @@ namespace symbols {
       finalize(e);
     }
     
-    void EvaluatorVisitor::visit_CA(const BinaryOperator * e){
+    void EvaluatorVisitor::visit_binary(const BinaryOperator * e){
       copy_function(e);
 
       auto c = copy->as<BinaryOperator>();
       
-      new_args.clear();
-      ignore_indices.clear();
+      std::unordered_set<unsigned> ignore_indices;
+      std::vector<unsigned> new_indices;
+      argument_list new_args;
       
       auto m = modified;
       
-      CAIt->init(c.get());
+      std::unique_ptr<BinaryIterator> bit;
       
-      //std::cout << "Visiting: " << *e << std::endl;
+      if(e->is_commutative()) bit.reset(new BinaryIterators::SingleOrdered(2));
+      else bit.reset(new BinaryIterators::Window(2));
+      bit->init(c.get());
+      
+      std::cout << "Visiting: " << *c << std::endl;
+      std::cout << "commutative: " << c->is_commutative() << std::endl;
       
       do {
         
-        auto & indices = CAIt->get_indices();
+        auto & indices = bit->get_indices();
         CAargs.resize(indices.size());
         
         bool invalid = false;
-        for(auto i: enumerate( CAIt->get_indices() ) ){
+        for(auto i: enumerate( bit->get_indices() ) ){
           if(ignore_indices.find(i.value) != ignore_indices.end()){
             invalid = true; break;
           }
@@ -114,35 +120,38 @@ namespace symbols {
           res = evaluator.evaluate(test,*this);
           add_to_cache(test,res);
         }
-        
-        //std::cout << "CA window: " << test << std::endl;
-        //auto res = evaluator.evaluate(test);
+                //auto res = evaluator.evaluate(test);
         
         modified = res != test;
+        
         if(modified){
-          ignore_indices.insert(CAIt->get_indices().begin(),CAIt->get_indices().end());
+          ignore_indices.insert(bit->get_indices().begin(),bit->get_indices().end());
           if(e->is_identical(res)){
             auto resf = res->as<Function>();
             for(auto & arg:resf->arguments){
               new_args.push_back(arg);
+              new_indices.emplace_back(bit->get_indices().front());
             }
           }
           else{
             new_args.push_back(res);
+            new_indices.emplace_back(bit->get_indices().front());
           }
-          //std::cout << "Result: " << res << std::endl;
         }
 
-      } while (CAIt->step());
+      } while (bit->step());
       
-      if(new_args.size() != 0){
+      if(ignore_indices.size() != 0){
         if(ignore_indices.size() == c->arguments.size() && new_args.size() == 1) copy = new_args.front();
         else {
-         
           for(auto arg:enumerate(c->arguments)) if(ignore_indices.find(arg.index) == ignore_indices.end()) {
-            new_args.push_back(arg.value);
+            if(c->is_commutative()) new_args.emplace_back(arg.value);
+            else{
+              unsigned idx = std::lower_bound(new_indices.begin(), new_indices.end(), arg.index) - new_indices.begin();
+              new_args.insert(new_args.begin()+idx, arg.value);
+              new_indices.insert(new_indices.begin()+idx, arg.index);
+            }
           }
-          
           copy = c->clone(std::move(new_args));
           modified = true;
         }
@@ -155,11 +164,7 @@ namespace symbols {
     
     void EvaluatorVisitor::visit(const BinaryOperator * e){
       if(is_cached(e)) return;
-      if( e->commutativity != BinaryOperator::commutative || !evaluator.CAIterator){
-        visit((Function*)e);
-        return;
-      }
-      visit_CA(e);
+      visit_binary(e);
       finalize(e);
     }
     
@@ -194,6 +199,12 @@ namespace symbols {
       auto res = run(r.first), rep = run(r.second);
       replacements[r.first] = rep;
       if(res != rep) replacements[res] = rep;
+    }
+  }
+  
+  void ReplaceEvaluator::add_replacement(expression search,expression replace){
+    for(auto expr:commutative_permutations(search)){
+      replacements[expr] = replace;
     }
   }
   
@@ -369,13 +380,25 @@ namespace symbols {
   #pragma mark evaluator evaluator
   
   expression MultiEvaluator::evaluate(expression expr,EvaluatorVisitor &v)const{
-    expression tmp;
+    
+    bool repeat;
+    //std::cout << "enter: " << expr << std::endl;
     
     do{
-      tmp = expr;
-      for(auto evaluator:evaluators) expr = evaluator->evaluate(expr,v);
+      repeat = false;
+      expression tmp = expr;
+      for(auto & evaluator:evaluators){
+        expr = evaluator->evaluate(expr,v);
+        while(tmp != expr){
+          tmp = expr;
+          //std::cout << "repeat: " << expr << std::endl;
+          expr = evaluator->evaluate(expr,v);
+          repeat = true;
+        }
+        if(repeat) break;
+      }
     }
-    while (tmp != expr);
+    while (repeat);
     
     return expr;
   }

@@ -5,15 +5,17 @@ import visitor
 __all__ = ["Printer","LatexPrinter"]
 
 class Printer(visitor.visitor_class()):
-    
+
+    def __init__(self,S):
+        self.S = S
+
     def bracket_format(self):
         return "(%s)"
     
     def register_printer(self,expr,printer):
         self.dispatcher.register_target(expr,printer)
     
-    @staticmethod
-    def needs_brackets_in(expr,parent):
+    def needs_brackets_in(self,expr,parent):
         if expr.is_atomic:
             return False
         if not expr.function.is_operator and parent.function.is_operator:
@@ -33,7 +35,7 @@ class Printer(visitor.visitor_class()):
         return "(%s)"
     
     def print_operator_argument(self,expr,parent):
-        if Printer.needs_brackets_in(expr,parent):
+        if self.needs_brackets_in(expr,parent):
             return self.bracket_format() % self(expr)
         return self(expr)
     
@@ -96,7 +98,7 @@ class Printer(visitor.visitor_class()):
         return self.print_unary_operator(expr)
 
     def __call__(self,expr):
-        return self.dispatcher(self,expr)
+        return self.dispatcher(self,self.S(expr))
     
 class LatexPrinter(Printer):
         
@@ -114,7 +116,12 @@ class LatexPrinter(Printer):
     
     def print_wildcard_symbol(self,expr):
         return '\mathbf{%s}' % expr.name[1:]
-    
+
+    def print_symbol(self,expr):
+        if len(expr.name) > 1:
+            return r'\text{%s} ' % expr.name
+        return expr.name
+
     def function_format(self):
         return r"%s \mathopen{} \left(%s \right) \mathclose{} "
     

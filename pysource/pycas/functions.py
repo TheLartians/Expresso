@@ -1,4 +1,4 @@
-from expression import Function,BinaryOperator,UnaryOperator,Symbol,Tuple
+from expression import Function,BinaryOperator,UnaryOperator,Symbol,Tuple,Wildcard
 import pysymbols
 
 # Symbols
@@ -25,9 +25,7 @@ Imag = Function('imag',argc = 1)
 Conjugate = Function('conjugate',argc = 1)
 
 Indicator = Function('indicator',argc = 1)
-Piecewise = BinaryOperator('}{',pysymbols.non_associative,pysymbols.commutative,-20)
-
-otherwise = Symbol('otherwise')
+Piecewise = BinaryOperator('}{',-20)
 
 # Calculus
 # --------
@@ -61,17 +59,36 @@ atanh = Function('atanh',argc = 1)
 coth = Function('coth',argc = 1)
 acoth = Function('acoth',argc = 1)
 
+# Type
+# ----
+
+Type = Function('Type',argc = 1)
+DominantType = BinaryOperator('<>',pysymbols.associative,pysymbols.commutative,0)
+OperationType = Function('OperationType',argc = 1)
+
+class Types:
+  Boolean = Symbol('Boolean')
+  Natural = Symbol('Natural')
+  Integer = Symbol('Integer')
+  Rational = Symbol('Rational')
+  Real = Symbol('Real')
+  Complex = Symbol('Complex')
+  Imaginary = Symbol('Imaginary')
+  Type = Symbol('Type')
+
+
 # Custom Function
 # ---------------
 
 CustomFunction = Function("CustomFunction")
 
-def custom_function(function,name = None,argc = None):
+def custom_function(name,argc = None,return_type = None,**kwargs):
     
-    if name == None:
-        name = repr(function)
-        
-    func_obj = pysymbols.create_object(function,name)
+    class CustomFunctionData(object):
+        def __init__(self,**kwargs):
+            self.__dict__.update(kwargs)
+
+    func_obj = pysymbols.create_object(CustomFunctionData(name=name,**kwargs),name)
     
     if argc is not None and not isinstance(argc,(tuple,list)):
         argc = [argc]
@@ -83,6 +100,7 @@ def custom_function(function,name = None,argc = None):
             self.name = name
             self.argc = argc
         
+        @property
         def __repr__(self):
             return name
             
@@ -91,8 +109,17 @@ def custom_function(function,name = None,argc = None):
                 raise ValueError('%s takes %s args' % (self.name,' or '.join([str(s) for s in self.argc])))
             args = [self.func_obj] + list(args)
             return CustomFunction(*args)
-    
-    return CustomFunctionDelegate(func_obj,name,argc)
+
+    res = CustomFunctionDelegate(func_obj,name,argc)
+
+    if return_type != None:
+        if not argc:
+            raise ValueError('argc needs to be defined to register result type')
+        from evaluate import type_evaluator
+        for c in argc:
+            type_evaluator.add_rule(Type(res(*[Wildcard(str(s)) for s in range(c)])),return_type)
+
+    return res
 
 
 
