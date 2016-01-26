@@ -26,12 +26,13 @@ class CodePrinter(Printer):
 
 class FunctionDefinition(object):
 
-    def __init__(self,name,args,expr,return_type = None,arg_types = None):
+    def __init__(self,name,args,expr,return_type = None,arg_types = None,use_parallel=True):
         self.name = name
         self.expr = expr
         self.args = args
         self.return_type = return_type
         self.arg_types = arg_types
+        self.use_parallel = use_parallel
 
 import ctypes
 
@@ -54,8 +55,9 @@ class CCodePrinter(CodePrinter):
 
     def __init__(self):
         super(CCodePrinter,self).__init__()
-        self.includes = ['cmath','complex']
-        self.namespaces = ['std']
+        self.includes = {'cmath','complex','thread','future','vector'}
+        self.namespaces = {'std'}
+
         self.typenames = {
           Types.Boolean:'bool',
           Types.Natural:'unsigned',
@@ -64,6 +66,14 @@ class CCodePrinter(CodePrinter):
           Types.Real:'double',
           Types.Complex:'complex<double>',
           None:'complex<double>'
+        }
+
+        self.ctype_map = {
+            'bool':ctypes.c_bool,
+            'unsigned':ctypes.c_uint,
+            'int':ctypes.c_int,
+            'double':ctypes.c_double,
+            'complex<double>':c_complex
         }
 
         self.type_converters = {}
@@ -81,13 +91,24 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
 
         self.auxiliary_code.update(set([complex_operators.format(op) for op in ['+','-','*','/']]))
 
-        self.ctype_map = {
-            'bool':ctypes.c_bool,
-            'unsigned':ctypes.c_uint,
-            'int':ctypes.c_int,
-            'double':ctypes.c_double,
-            'complex<double>':c_complex
-        }
+        parallel_for = '''
+  inline unsigned hardware_thread_count(){ return std::thread::hardware_concurrency(); }
+
+template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F f,uintptr_t thread_count = hardware_thread_count()){
+    if(end-start < thread_count) thread_count = end-start;
+    std::vector<std::future<void>> handles(thread_count);
+    C2 block_size = (end - start)/thread_count;
+    for(uintptr_t i=0;i<thread_count-1;++i){
+      handles[i] = std::async(std::launch::async,[=](){ for(C2 j=start+block_size*i;j!=start+block_size*(i+1);++j){ f(j); } });
+    }
+    handles[thread_count-1] = std::async([&](){ for(C2 j=start+block_size*(thread_count-1);j!=end;++j)f(j); });
+    for(auto & handle:handles) handle.wait();
+}
+        '''
+
+        self.auxiliary_code.add(parallel_for)
+
+
 
     def needs_brackets_in(self,expr,parent):
         if expr.is_atomic:
@@ -240,8 +261,10 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
         else:
             f_code = '%s(%s)' % (definition.name,','.join(self(arg) for arg in definition.args))
 
-
-        f_code = 'for(unsigned __i = 0;__i<__size;++__i) __res[__i] = ' + f_code
+        if definition.use_parallel:
+            f_code = 'parallel_for(0,__size,[&](unsigned __i){ __res[__i] = %s; }); ' % f_code
+        else:
+            f_code = 'for(unsigned __i = 0; __i<__size;++__i) __res[__i] = %s;' % f_code
 
         formatted_args = ','.join(['%s %s' % vardef for vardef in
                                    zip(argument_types,['__size','__res'] + list(args))])
@@ -251,6 +274,6 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
 
         definition.c_vectorized_arg_types = [self.get_ctype(arg_type) for arg_type in argument_types]
 
-        return 'extern "C"{ void %s(%s){\n\t%s;\n} }' % formatted
+        return 'extern "C"{ void %s(%s){\n\t%s\n} }' % formatted
 
 

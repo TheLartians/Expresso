@@ -318,15 +318,12 @@ def numpyfy(expr,dtype = float,parallel = False):
         return call
 
 
-def ccompile(function_definitions,print_warnings = False):
+def ccompile(*function_definitions,**kwargs):
     from .codeprinter import CCodePrinter,c_complex
     import tempfile
     import shutil
     import ctypes
     from subprocess import Popen, PIPE
-
-    if not isinstance(function_definitions,(list,tuple)):
-        function_definitions = [function_definitions]
 
     ccode_printer = CCodePrinter()
 
@@ -340,6 +337,8 @@ def ccompile(function_definitions,print_warnings = False):
     return_code = p.wait()
     if(return_code!=0):
         raise RuntimeError("Cannot compile expression: " + p.stderr.read() )
+
+    print_warnings = kwargs.get('print_warnings')
 
     if print_warnings:
         print p.stderr.read()
