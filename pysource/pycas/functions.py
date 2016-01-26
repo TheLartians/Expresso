@@ -18,6 +18,9 @@ Floor = Function('floor',argc = 1)
 Ceil = Function('ceil',argc = 1)
 Round = Function('round',argc = 1)
 
+Max = Function('max',argc = 2)
+Min = Function('min',argc = 2)
+
 Mod = Function('mod',argc = 2)
 
 Real = Function('real',argc = 1)

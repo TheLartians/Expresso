@@ -23,6 +23,7 @@ class LambdaCompiler(object):
         if func == None:
             raise ValueError('unknown function: %s' % expr.function.name)
         cargs = [self.visit(arg) for arg in expr.args]
+        print func
         return lambda args:func(*[arg(args) for arg in cargs])
 
     @visitor.function(Addition)
@@ -119,6 +120,12 @@ class LambdaCompiler(object):
     def visit(self,expr):
         arg = self.visit(expr.args[0])
         return lambda args:not arg(args)
+
+    @visitor.function(ArrayAccess)
+    def visit(self,expr):
+        array = expr.args[0].value
+        indices = [self.visit(arg) for arg in expr.args[1:]]
+        return lambda args:array[(arg(args) for arg in indices)]
 
     @visitor.function(Piecewise)
     def visit(self,expr):
@@ -241,6 +248,29 @@ class NumpyCompiler(LambdaCompiler):
     def visit(self,expr):
         arg = self.visit(expr.args[0])
         return lambda args:np.logical_not( arg(args) )
+
+    @visitor.function(Max)
+    def visit(self,expr):
+        arguments = [self.visit(arg) for arg in expr.args]
+        return lambda args:np.maximum( *[arg(args) for arg in arguments] )
+
+    @visitor.function(Min)
+    def visit(self,expr):
+        arguments = [self.visit(arg) for arg in expr.args]
+        return lambda args:np.minimum( *[arg(args) for arg in arguments] )
+
+    @visitor.function(ArrayAccess)
+    def visit(self,expr):
+        array = expr.args[0].value
+
+        indices = [self.visit(arg) for arg in expr.args[1:]]
+
+        def access_function(args):
+            idx = tuple([arg(args).astype(int) for arg in indices])
+            idx
+            return array[idx]
+
+        return access_function
 
 
 class FunctionDefinition(object):

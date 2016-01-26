@@ -147,7 +147,10 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
 
     def __and__(self, other):
         return And(self,other)
-    
+
+    def __max__(self, other):
+        return Max(self,other)
+
     def __abs__(self):
         return Abs(self)
         
@@ -197,7 +200,6 @@ MultiplicationGroup = Group(Multiplication,Fraction,One)
 RealField = Field(AdditionGroup,MultiplicationGroup)
 ComplexField = Field(AdditionGroup,MultiplicationGroup)
 
-
 Or = BinaryOperator("|",pysymbols.associative,pysymbols.commutative,-3)
 And = BinaryOperator("&",pysymbols.associative,pysymbols.commutative,-3)
 Xor = BinaryOperator(" XOR ",pysymbols.associative,pysymbols.commutative,-3)
@@ -217,6 +219,5 @@ GreaterEqual = BinaryOperator(">=",pysymbols.associative,pysymbols.non_commutati
 
 Abs = Function('abs',argc = 1)
 Tuple = Function('tuple')
-
 
 
