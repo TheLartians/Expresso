@@ -24,15 +24,10 @@ class CodePrinter(Printer):
     def visit(self,expr):
         raise ValueError('cannot compile python function %s' % expr)
 
-class FunctionDefinition(object):
+    @visitor.function(ArrayAccess)
+    def visit(self,expr):
+        raise ValueError('cannot compile python function %s' % expr)
 
-    def __init__(self,name,args,expr,return_type = None,arg_types = None,use_parallel=True):
-        self.name = name
-        self.expr = expr
-        self.args = args
-        self.return_type = return_type
-        self.arg_types = arg_types
-        self.use_parallel = use_parallel
 
 import ctypes
 
@@ -78,7 +73,8 @@ class CCodePrinter(CodePrinter):
 
         self.type_converters = {}
         self.need_conversion = {}
-        self.auxiliary_code = set()
+        self.preamble = set()
+        self.globals = set()
 
         complex_operators = '''
 inline complex<double> operator{0}(complex<double> lhs, const double & rhs){{
@@ -89,7 +85,7 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
 }}
         '''
 
-        self.auxiliary_code.update(set([complex_operators.format(op) for op in ['+','-','*','/']]))
+        self.preamble.update(set([complex_operators.format(op) for op in ['+', '-', '*', '/']]))
 
         parallel_for = '''
   inline unsigned hardware_thread_count(){ return std::thread::hardware_concurrency(); }
@@ -106,8 +102,33 @@ template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F
 }
         '''
 
-        self.auxiliary_code.add(parallel_for)
+        self.preamble.add(parallel_for)
 
+        ndarray = '''
+template<size_t _size, size_t... sizes> struct ndarray_index_calculator {
+  using rest = ndarray_index_calculator<sizes...>;
+  static size_t size(){ return _size; }
+  template <typename ... Args> static bool is_valid(size_t idx,Args ... args){ if(!rest::is_valid(args...)) return false; return idx < size(); }
+  template <typename ... Args> static size_t get_index(size_t idx,Args ... args){ return idx + rest::size() * rest::get_index(args...); }
+};
+template<size_t _size> struct ndarray_index_calculator <_size> {
+  static size_t size(){ return _size; }
+  static bool is_valid(size_t idx){ return idx < size(); }
+  static size_t get_index(size_t idx){ return idx; }
+};
+template <class T,size_t ... size> struct mapped_ndarray{
+  T * data;
+  T default_value;
+  using index_calculator = ndarray_index_calculator<size...>;
+  mapped_ndarray(T * d,const T &_default_value = 0):data(d),default_value(_default_value){ }
+  template <typename ... Args> T & operator()(Args ... indices){
+    if(!index_calculator::is_valid(indices...)){ return default_value; }
+    return data[index_calculator::get_index(indices...)];
+  }
+};
+        '''
+
+        self.preamble.add(ndarray)
 
 
     def needs_brackets_in(self,expr,parent):
@@ -123,7 +144,7 @@ template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F
     def visit(self,expr):
         f = expr.args[0].value
         if hasattr(f,'ccode'):
-            self.auxiliary_code.add(f.ccode)
+            self.preamble.add(f.ccode)
         else:
             raise ValueError('cannot compile custom function %s' % expr)
         return "%s(%s)" % (f.name,','.join([self(arg) for arg in expr.args[1:]]))
@@ -134,7 +155,7 @@ template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F
 
     @visitor.atomic(I)
     def visit(self,expr):
-        self.auxiliary_code.add("std::complex<double> __I(0,1);")
+        self.preamble.add("std::complex<double> __I(0,1);")
         return "__I"
 
     @visitor.function(Xor)
@@ -179,7 +200,7 @@ template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F
         return '\n'.join(['using namespace %s;' % namespace for namespace in self.namespaces])
 
     def print_auxiliary_code(self):
-        return '\n'.join(self.auxiliary_code)
+        return '%s\n%s' % ('\n'.join(self.preamble),'\n'.join(self.globals))
 
     def print_file(self,*function_definitions):
 
@@ -200,6 +221,16 @@ template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F
         if typename[-1] == '*':
             return ctypes.POINTER(self.get_ctype(typename[:-1]))
         return self.ctype_map[typename]
+
+    @visitor.function(ArrayAccess)
+    def visit(self,expr):
+        arr = expr.args[0].value
+        pointer = arr.ctypes.data
+        type = numpy_converters.numpy_c_typenames[arr.dtype.name]
+        size = ','.join([str(s) for s in arr.shape])
+        name = expr.args[0].name
+        self.globals.add('mapped_ndarray<%s,%s> %s((%s*)%s);' % (type,size,name,type,pointer))
+        return "%s(%s)" % (name,','.join([self(arg) for arg in expr.args[1:]]))
 
     def generate_function(self,definition):
 

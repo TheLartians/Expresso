@@ -242,6 +242,18 @@ class NumpyCompiler(LambdaCompiler):
         arg = self.visit(expr.args[0])
         return lambda args:np.logical_not( arg(args) )
 
+
+class FunctionDefinition(object):
+
+    def __init__(self,name,args,expr,return_type = None,arg_types = None,use_parallel=True):
+        self.name = name
+        self.expr = expr
+        self.args = args
+        self.return_type = return_type
+        self.arg_types = arg_types
+        self.use_parallel = use_parallel
+
+
 def lambdify(expr):
     compiler = LambdaCompiler()
     compiled = compiler.visit(expr)
@@ -340,7 +352,7 @@ def ccompile(*function_definitions,**kwargs):
     output_directory = tempfile.mkdtemp()
 
     object_file = output_directory+'/'+'pycas_compiled_expression.o'
-    p = Popen(['g++','-o',object_file,'-c','-xc++','-std=c++11','-O3','-fPIC', '-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    p = Popen(['g++','-o',object_file,'-c','-xc++','-std=c++11','-funsafe-math-optimizations','-O3','-fPIC', '-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
     p.stdin.write(ccode_printer.print_file(*function_definitions))
     p.stdin.close()
 
@@ -382,7 +394,7 @@ def ccompile(*function_definitions,**kwargs):
                 args = [np.array(arg,dtype=t) for t,arg in zip(argtypes[2:],args)]
             if isinstance(args[0],np.ndarray):
                 argtypes = self.cf_vector.argtypes
-                args = [np.ascontiguousarray(arg.astype(t._type_,copy=False)) for t,arg in zip(argtypes[2:],args)]
+                args = [np.ascontiguousarray(arg,dtype=t._type_) for t,arg in zip(argtypes[2:],args)]
 
                 if argtypes[1]._type_ == c_complex:
                     restype = c_complex.np_type()
@@ -396,6 +408,11 @@ def ccompile(*function_definitions,**kwargs):
                 self.cf_vector(*call_args)
                 return res
             return self.cf(*args)
+
+        def address(self):
+            return ctypes.cast(self.cf, ctypes.c_void_p).value
+
+
 
     class CompiledLibrary(object):
         def __init__(self,lib):

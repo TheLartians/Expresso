@@ -100,13 +100,12 @@ def custom_function(name,argc = None,return_type = None,**kwargs):
             self.name = name
             self.argc = argc
         
-        @property
         def __repr__(self):
             return name
             
         def __call__(self,*args):
             if self.argc != None and len(args) not in self.argc:
-                raise ValueError('%s takes %s args' % (self.name,' or '.join([str(s) for s in self.argc])))
+                raise ValueError('%s takes %s arguments' % (self.name,' or '.join([str(s) for s in self.argc])))
             args = [self.func_obj] + list(args)
             return CustomFunction(*args)
 
@@ -120,6 +119,84 @@ def custom_function(name,argc = None,return_type = None,**kwargs):
             type_evaluator.add_rule(Type(res(*[Wildcard(str(s)) for s in range(c)])),return_type)
 
     return res
+
+
+ArrayAccess = Function("ArrayAccess")
+
+class numpy_converters:
+
+    import numpy as np
+
+    compatible_numpy_types = {bool:bool,
+                              int:int,
+                              float:float,
+                              np.float64:np.float64,
+                              complex:np.complex128,
+                              np.complex128:np.complex128}
+
+    numpy_c_typenames = {np.bool.__name__:'bool',
+                         np.int.__name__:'int',
+                         np.float.__name__:'float',
+                         np.float64.__name__:'double',
+                         np.complex128.__name__:'complex<double>'}
+
+
+def array(name,inarray,copy = True):
+    import numpy as np
+
+    cast_type = numpy_converters.compatible_numpy_types.get(inarray.dtype)
+
+    if not cast_type:
+        for t in numpy_converters.compatible_numpy_types:
+            if isinstance(inarray.dtype,t):
+                cast_type = numpy_converters.compatible_numpy_types[t]
+
+    array = np.ascontiguousarray(inarray,dtype=cast_type)
+    pointer = array.ctypes.data
+
+    if copy == False:
+        if pointer != inarray.ctypes.data:
+            raise ValueError('cannot include array in expression without copying (not contigous or incompatible type)')
+
+    aray_obj = pysymbols.create_object(array,name)
+
+    class ArrayAccessDelegate(object):
+
+        def __init__(self,name,array):
+            self.name = name
+            self.array_obj = pysymbols.create_object(array,name)
+            self.argc = len(array.shape)
+
+        def __repr__(self):
+            return self.name
+
+        def __call__(self,*args):
+            if len(args) != self.argc:
+                raise ValueError('%s takes %s arguments' % (self.name,self.argc))
+            args = [self.array_obj] + list(args)
+            return ArrayAccess(*args)
+
+    return ArrayAccessDelegate(name,array)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -127,11 +127,14 @@ def visit(printer,expr):
 for g in ['alpha', 'theta', 'tauXbeta', 'vartheta', 'pi', 'upsilonXgamma', 'gamma', 'varpi', 'phiXdelta', 'kappa', 'rho', 'varphiXepsilon', 'lambda', 'varrho', 'chiXvarepsilon', 'mu', 'sigma', 'psiXzeta', 'nu', 'varsigma', 'omegaXeta', 'xiXGamma', 'Lambda', 'Sigma', 'PsiXDelta', 'Xi', 'Upsilon', 'OmegaXTheta', 'Pi', 'Phi', 'phi', 'varphi']:
     s = '\\' + g
     latex.register_printer(Symbol(g),lambda p,e,v=s:v)
-
     
 @add_target(latex,CustomFunction)
 def visit(printer,expr):
     name = expr.args[0].name.replace('<',r'< ').replace('>',r' >')
     return printer(Function(name)(*expr.args[1:]))
 
+@add_target(latex,ArrayAccess)
+def visit(printer,expr):
+    name = expr.args[0].name
+    return r'\text{%s} \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
 

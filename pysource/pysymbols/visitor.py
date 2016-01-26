@@ -65,8 +65,11 @@ class Dispatcher(object):
             else:
                 v = arg.value
                 if v is not None:
-                    d = self.targets.get(v)
-                    if d: return d
+                    try:
+                        d = self.targets.get(v)
+                        if d: return d
+                    except TypeError:
+                        pass
                     d = self.targets.get(type(v))
                     if d: return d
                     d = self.targets.get(obj)
@@ -90,8 +93,10 @@ class Dispatcher(object):
     def __call__(self, *args, **kw):
         arg = args[self.param_index]
         d = self.get_target(arg)
-        return d(*args, **kw)
-            
+        if hasattr(d,'__call__'):
+            return d(*args, **kw)
+        return d
+
     def register_binary_operator(self, target):
         self.targets[binary_operator] = target
         
