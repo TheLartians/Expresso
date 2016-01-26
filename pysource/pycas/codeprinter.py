@@ -33,7 +33,6 @@ class FunctionDefinition(object):
         self.return_type = return_type
         self.arg_types = arg_types
 
-
 import ctypes
 
 class c_complex(ctypes.Structure):
@@ -44,6 +43,12 @@ class c_complex(ctypes.Structure):
         return '(' + str(self.real) + ',' + str(self.imag) + ')'
     def __complex__(self):
         return complex(self.real,self.imag)
+    def is_complex(self):
+        return True
+    @staticmethod
+    def np_type():
+        import numpy
+        return numpy.complex128
 
 class CCodePrinter(CodePrinter):
 
@@ -81,7 +86,7 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
             'unsigned':ctypes.c_uint,
             'int':ctypes.c_int,
             'double':ctypes.c_double,
-            'complex<double>':c_complex,
+            'complex<double>':c_complex
         }
 
     def needs_brackets_in(self,expr,parent):
@@ -135,7 +140,7 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
     @visitor.symbol
     def visit(self,expr):
         if expr in self.need_conversion:
-            return '%s(%s)' % (self.need_conversion[expr],expr.name)
+            return self.need_conversion[expr](expr)
         return expr.name
 
     @visitor.atomic(S(True))
@@ -158,27 +163,36 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
     def print_file(self,*function_definitions):
 
         function_code = [self.generate_function(f) for f in function_definitions]
+        function_code += [self.generate_vector_function(f,use_previous_definition=True) for f in function_definitions]
 
         return "\n\n".join([self.print_includes(),
                             self.print_namespaces(),
                             self.print_auxiliary_code()] + function_code )
 
     def print_typename(self,expr):
-        return self.typenames.get(Type(expr).evaluate(),self.typenames[None])
+        return self.typenames.get(expr,self.typenames[None])
+
+    def print_vector_typename(self,expr):
+        return "%s*" % self.typenames.get(expr,self.typenames[None])
+
+    def get_ctype(self,typename):
+        if typename[-1] == '*':
+            return ctypes.POINTER(self.get_ctype(typename[:-1]))
+        return self.ctype_map[typename]
 
     def generate_function(self,definition):
 
         if definition.return_type == None:
-             return_type = self.print_typename(definition.expr)
+            return_type = self.print_typename(Type(definition.expr).evaluate())
         else:
             return_type = self.print_typename(definition.return_type)
 
         args = definition.args
 
         if definition.arg_types == None:
-            argument_types = [self.print_typename(arg) for arg in args]
+            argument_types = [self.print_typename(Type(arg).evaluate()) for arg in args]
         else:
-            argument_types = [self.print_typename(arg) for arg in definition.arg_types]
+            argument_types = [self.print_typename(Type(arg).evaluate()) for arg in definition.arg_types]
 
         self.need_conversion = {arg:self.type_converters[t]
                                 for arg,t in zip(args,argument_types)
@@ -192,10 +206,51 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
                     ','.join(['%s %s' % (type,arg.name) for arg,type in zip(args,argument_types)]),
                     f_code)
 
-        definition.c_return_type = self.ctype_map[return_type]
-        definition.c_arg_types = [self.ctype_map[arg_type] for arg_type in argument_types]
+        definition.c_return_type = self.get_ctype(return_type)
+        definition.c_arg_types = [self.get_ctype(arg_type) for arg_type in argument_types]
 
         return 'extern "C"{\n%s %s(%s){\n\treturn %s;\n}\n}' % formatted
 
+    def vectorized_name(self,name):
+        return "__%s_vector" % name
+
+    def generate_vector_function(self,definition,use_previous_definition = False):
+
+        if definition.return_type == None:
+            return_type = self.print_vector_typename(Type(definition.expr).evaluate())
+        else:
+            return_type = self.print_vector_typename(definition.return_type)
+
+        args = definition.args
+
+        if definition.arg_types == None:
+            argument_types = [self.print_vector_typename(Type(arg).evaluate()) for arg in args]
+        else:
+            argument_types = [self.print_vector_typename(Type(arg).evaluate()) for arg in definition.arg_types]
+
+        self.need_conversion.update({arg:lambda a:'%s[__i]' % a.name
+                                     for arg in args})
+
+        argument_types = ['unsigned',return_type] + argument_types
+
+        if not use_previous_definition :
+            f_code = self(definition.expr)
+            if return_type in self.type_converters:
+                f_code = "%s(%s)" % (self.type_converters[return_type],f_code)
+        else:
+            f_code = '%s(%s)' % (definition.name,','.join(self(arg) for arg in definition.args))
+
+
+        f_code = 'for(unsigned __i = 0;__i<__size;++__i) __res[__i] = ' + f_code
+
+        formatted_args = ','.join(['%s %s' % vardef for vardef in
+                                   zip(argument_types,['__size','__res'] + list(args))])
+
+
+        formatted = (self.vectorized_name(definition.name), formatted_args, f_code)
+
+        definition.c_vectorized_arg_types = [self.get_ctype(arg_type) for arg_type in argument_types]
+
+        return 'extern "C"{ void %s(%s){\n\t%s;\n} }' % formatted
 
 

@@ -319,7 +319,7 @@ def numpyfy(expr,dtype = float,parallel = False):
 
 
 def ccompile(function_definitions,print_warnings = False):
-    from .codeprinter import CCodePrinter
+    from .codeprinter import CCodePrinter,c_complex
     import tempfile
     import shutil
     import ctypes
@@ -360,11 +360,51 @@ def ccompile(function_definitions,print_warnings = False):
 
     compiled_functions = {}
 
+    class CompiledFunction(object):
+        def __init__(self,cf,cf_vector):
+            self.cf = cf
+            self.cf_vector = cf_vector
+
+        def __call__(self,*args):
+            if(len(args) == 0):
+                return self.cf()
+            if isinstance(args[0],(list,tuple)):
+                argtypes = self.cf_vector.argtypes
+                args = [np.array(arg,dtype=t) for t,arg in zip(argtypes[2:],args)]
+            if isinstance(args[0],np.ndarray):
+                argtypes = self.cf_vector.argtypes
+                args = [np.ascontiguousarray(arg.astype(t._type_,copy=False)) for t,arg in zip(argtypes[2:],args)]
+
+                if argtypes[1]._type_ == c_complex:
+                    restype = c_complex.np_type()
+                else:
+                    restype = argtypes[1]._type_
+
+                res = np.zeros(args[0].shape,dtype=restype)
+
+                call_args = [res.size,res.ctypes.data_as(argtypes[1])]
+                call_args += [arg.ctypes.data_as(t) for t,arg in zip(argtypes[2:],args)]
+                self.cf_vector(*call_args)
+                return res
+            return self.cf(*args)
+
+    class CompiledLibrary(object):
+        def __init__(self,lib):
+            self.lib = lib
+
+    res = CompiledLibrary(lib)
+
     for definition in function_definitions:
         f = getattr(lib,definition.name)
         f.argtypes = definition.c_arg_types
         f.restype  = definition.c_return_type
 
-    return lib
+        f_vector = getattr(lib, ccode_printer.vectorized_name(definition.name))
+        f_vector.argtypes = definition.c_vectorized_arg_types
+        f_vector.restype  = None
+
+        setattr(res,definition.name,CompiledFunction(f,f_vector))
+
+    return res
 
 
