@@ -1,11 +1,13 @@
 
 import pysymbols
 
-def Symbol(name,type=None):
+def Symbol(name,type=None,positive = False):
     s = Expression(pysymbols.create_symbol(name))
     if type != None:
         from functions import Type
         global_context.add_definition(Type(s),type)
+    if positive == True:
+        global_context.add_definition(s>0,True)
     return s
 
 integer_type = long
@@ -181,7 +183,7 @@ locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)
 class Context(ReplaceEvaluator):
 
     def add_definition(self,search,replacement):
-        self.add_replacement(search,replacement)
+        self.add_replacement(search.evaluate(),replacement)
 
 global_context = Context()
 
