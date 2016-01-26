@@ -131,11 +131,21 @@ class LambdaCompiler(object):
             for i in xrange(len(cond_args)):
                 if cond_args[i](args):
                     return eval_args[i](args)
+            return 0
+
         return evaluate
 
     @visitor.symbol
     def visit(self,expr):
         return lambda args:args[expr.name]
+
+    @visitor.atomic(S(True))
+    def visit(self,expr):
+        return lambda args:True
+
+    @visitor.atomic(S(False))
+    def visit(self,expr):
+        return lambda args:False
 
     @visitor.atomic(I)
     def visit(self,expr):
@@ -194,7 +204,7 @@ class NumpyCompiler(LambdaCompiler):
 
                 valid = cond(args)
 
-                if not isinstance( c,np.ndarray):
+                if not isinstance(valid,np.ndarray) or valid.shape == [1]:
                     if valid == False:
                         continue
                     if valid == True:
@@ -202,11 +212,11 @@ class NumpyCompiler(LambdaCompiler):
                 else:
                     valid &= unset
 
-                unset -= valid
-
                 new_args = { name:arg[valid] if isinstance(arg,np.ndarray) and name[0]!='_' else arg
                             for name,arg in args.iteritems() }
+
                 res[valid] = val(new_args)
+                unset &= np.logical_not(valid)
 
             return res
 
