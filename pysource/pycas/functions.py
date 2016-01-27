@@ -1,4 +1,4 @@
-from expression import Function,BinaryOperator,UnaryOperator,Symbol,Tuple,Wildcard
+from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Tuple,Wildcard
 import pysymbols
 
 # Symbols

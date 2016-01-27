@@ -1,6 +1,6 @@
 
 import pysymbols as ex
-from printer import latex
+from .printer import latex
 
 def S(expr):
     if isinstance(expr,ex.core.Expression):

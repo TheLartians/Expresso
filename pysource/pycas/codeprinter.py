@@ -28,6 +28,10 @@ class CodePrinter(Printer):
     def visit(self,expr):
         raise ValueError('cannot compile python function %s' % expr)
 
+    @visitor.function(Tuple)
+    def visit(self,expr):
+        raise ValueError('cannot compile python function %s' % expr)
+
 
 import ctypes
 
@@ -173,6 +177,10 @@ template <class T,size_t ... size> struct mapped_ndarray{
     @visitor.function(Fraction)
     def visit(self,expr):
         return "1./(%s)" % self(expr.args[0])
+
+    @visitor.function(Mod)
+    def visit(self,expr):
+        return "fmod(%s,%s)" % (self(expr.args[0]),self(expr.args[1]))
 
     @visitor.function(Piecewise)
     def visit(self,expr):

@@ -1,7 +1,7 @@
 
 import pysymbols.visitor as visitor
-from expression import *
-from functions import *
+from .expression import *
+from .functions import *
 
 class LambdaCompiler(object):
 

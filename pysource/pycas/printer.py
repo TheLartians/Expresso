@@ -123,11 +123,6 @@ def visit(printer,expr):
 def visit(printer,expr):
     return printer.print_function(expr,name="Piecewise")
 
-
-for g in ['alpha', 'theta', 'tauXbeta', 'vartheta', 'pi', 'upsilonXgamma', 'gamma', 'varpi', 'phiXdelta', 'kappa', 'rho', 'varphiXepsilon', 'lambda', 'varrho', 'chiXvarepsilon', 'mu', 'sigma', 'psiXzeta', 'nu', 'varsigma', 'omegaXeta', 'xiXGamma', 'Lambda', 'Sigma', 'PsiXDelta', 'Xi', 'Upsilon', 'OmegaXTheta', 'Pi', 'Phi', 'phi', 'varphi']:
-    s = '\\' + g
-    latex.register_printer(Symbol(g),lambda p,e,v=s:v)
-    
 @add_target(latex,CustomFunction)
 def visit(printer,expr):
     name = expr.args[0].name.replace('<',r'< ').replace('>',r' >')
