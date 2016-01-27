@@ -139,6 +139,10 @@ class numpy_converters:
 
     numpy_c_typenames = {np.bool.__name__:'bool',
                          np.int.__name__:'int',
+                         np.int8.__name__:'int8_t',
+                         np.int16.__name__:'int16_t',
+                         np.int32.__name__:'int32_t',
+                         np.int64.__name__:'int64_t',
                          np.float.__name__:'float',
                          np.float64.__name__:'double',
                          np.complex128.__name__:'complex<double>'}

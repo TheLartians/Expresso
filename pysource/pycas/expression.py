@@ -48,12 +48,17 @@ def expression_converter(expr):
             mantissa = mantissa[:-1]
         if len(mantissa) == 0:
             return Zero
-        mantissa = integer_type(mantissa)
+
+        try:
+            mantissa = integer_type(mantissa)
+        except ValueError:
+            return NaN
+
         test_str = "%se%s" % (mantissa,exponent)
         assert eval(test_str) == expr, "float conversion error: %s != %s" % (eval(test_str),expr)
         if exponent == 0:
             return S(mantissa)
-        return S(mantissa) * 10**S(exponent)
+        return (S(mantissa) * 10**S(exponent)).evaluate()
     if isinstance(expr,complex):
         if expr.real == 0:
             if expr.imag == 0:
@@ -178,6 +183,10 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
             return res.evaluate()
         return res
 
+    def N(self,*args,**kwargs):
+        from .compiler import N
+        return N(self,*args,**kwargs)
+
 locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)
 
 class Context(ReplaceEvaluator):
@@ -189,6 +198,7 @@ global_context = Context()
 
 One = S(1)
 Zero = S(0)
+NaN = Symbol('NaN')
 I = Symbol('_I')
 
 Addition = BinaryOperator("+",pysymbols.associative,pysymbols.commutative,-11)

@@ -5,17 +5,24 @@ from functions import *
 
 class LambdaCompiler(object):
 
-    def __init__(self):
+    def __init__(self,value_converter = lambda x:x,function_module = None,value_module = None):
         self.dispatcher = self.visit.dispatcher
+        self.value_converter = value_converter
+        if function_module == None:
+            import math
+            function_module = math
+        if value_module == None:
+            value_module = function_module
+        self.function_module = function_module
+        self.value_module = value_module
 
     @visitor.on('expr')
     def visit(self,expr):
         raise ValueError('cannot compile expression: %s' % expr)
 
     def get_function(self,name):
-        import math
-        if name in math.__dict__:
-            return math.__dict__[name]
+        if name in self.function_module.__dict__:
+            return self.function_module.__dict__[name]
 
     @visitor.function
     def visit(self,expr):
@@ -23,7 +30,6 @@ class LambdaCompiler(object):
         if func == None:
             raise ValueError('unknown function: %s' % expr.function.name)
         cargs = [self.visit(arg) for arg in expr.args]
-        print func
         return lambda args:func(*[arg(args) for arg in cargs])
 
     @visitor.function(Addition)
@@ -45,7 +51,8 @@ class LambdaCompiler(object):
     @visitor.function(Fraction)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
-        return lambda args:1/arg(args)
+        one = self.value_converter(1.)
+        return lambda args:one/arg(args)
 
     @visitor.function(Exponentiation)
     def visit(self,expr):
@@ -116,6 +123,11 @@ class LambdaCompiler(object):
         arg = self.visit(expr.args[0])
         return lambda args:arg(args).conjugate()
 
+    @visitor.function(Abs)
+    def visit(self,expr):
+        arg = self.visit(expr.args[0])
+        return lambda args:abs(arg(args))
+
     @visitor.function(Not)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
@@ -125,14 +137,21 @@ class LambdaCompiler(object):
     def visit(self,expr):
         array = expr.args[0].value
         indices = [self.visit(arg) for arg in expr.args[1:]]
-        return lambda args:array[(arg(args) for arg in indices)]
+
+        def access(args):
+            idx = [int(arg(args)) for arg in indices[::-1]]
+            for i,s in zip(idx,array.shape):
+                if (i<0 or i>=s):
+                    return self.value_converter(0)
+
+            return array[tuple(idx)]
+
+        return access
 
     @visitor.function(Piecewise)
     def visit(self,expr):
-        cond_args = [self.visit(arg.args[1]) for arg in expr.args if arg.args[1] != otherwise]
-        eval_args = [self.visit(arg.args[0]) for arg in expr.args if arg.args[1] != otherwise]
-        cond_args += [lambda a:True for arg in expr.args if arg.args[1] == otherwise]
-        eval_args += [self.visit(arg.args[0]) for arg in expr.args if arg.args[1] == otherwise]
+        cond_args = [self.visit(arg.args[1]) for arg in expr.args]
+        eval_args = [self.visit(arg.args[0]) for arg in expr.args]
 
         def evaluate(args):
             for i in xrange(len(cond_args)):
@@ -144,7 +163,20 @@ class LambdaCompiler(object):
 
     @visitor.symbol
     def visit(self,expr):
-        return lambda args:args[expr.name]
+        name = expr.name
+
+        def get_symbol(args):
+            try:
+                return self.value_converter(args[name])
+            except KeyError:
+                pass
+            try:
+                return self.value_converter(self.value_module.__dict__[name])
+            except KeyError:
+                pass
+            raise ValueError('undefined symbol %s' % name)
+
+        return get_symbol
 
     @visitor.atomic(S(True))
     def visit(self,expr):
@@ -156,11 +188,12 @@ class LambdaCompiler(object):
 
     @visitor.atomic(I)
     def visit(self,expr):
-        return lambda args:1j
+        im = self.value_converter(1j)
+        return lambda args:im
 
     @visitor.obj(integer_type)
     def visit(self,expr):
-        v = float(expr.value)
+        v = self.value_converter(expr.value)
         return lambda args:v
 
     @visitor.function(CustomFunction)
@@ -171,6 +204,26 @@ class LambdaCompiler(object):
                 raise ValueError("custom function %s has no attribute 'python_function'" % f.name)
         callback = f.python_function
         return lambda args:callback(*[arg(args) for arg in cargs])
+
+def lambdify(expr,**kwargs):
+    compiler = LambdaCompiler(**kwargs)
+    compiled = compiler.visit(S(expr))
+    return lambda **args:compiled(args)
+
+def mpmathify(expr):
+    from mpmath import mp
+    vc = lambda x:mp.mpc(x) if isinstance(x,(complex,mp.mpc)) else mp.mpf(x)
+    compiler = LambdaCompiler(value_converter=vc,function_module=mp)
+    f = compiler.visit(S(expr))
+    return lambda **args:f(args)
+
+def N(expr,mp_dps = None,**kwargs):
+    from mpmath import mp
+    if mp_dps != None:
+        mp.dps = mp_dps;
+    f = mpmathify(expr)
+    res = f(**kwargs)
+    return res
 
 import numpy as np
 
@@ -266,9 +319,31 @@ class NumpyCompiler(LambdaCompiler):
         indices = [self.visit(arg) for arg in expr.args[1:]]
 
         def access_function(args):
-            idx = tuple([arg(args).astype(int) for arg in indices])
-            idx
-            return array[idx]
+
+            idx = [arg(args) for arg in indices[::-1]]
+
+            shape = None
+            for i in idx:
+                if isinstance(i,np.ndarray):
+                    shape = i.shape
+                    break
+
+            if shape != None:
+                idx = [arg.astype(int) if isinstance(arg,np.ndarray) else int(arg)*np.ones(shape,dtype=int)
+                       for arg in idx]
+
+            valid =  reduce(np.logical_and,[ (i >= 0) & (i<s) for i,s in zip(idx,array.shape) ])
+
+            if np.all(valid):
+                return array[tuple(idx)]
+            if np.all(valid == False):
+                return self.value_converter(0)
+
+            res = np.zeros(valid.shape,dtype = array.dtype)
+            idx = [i[valid] for i in idx]
+            res[valid] = array[tuple(idx)]
+
+            return res
 
         return access_function
 
@@ -277,17 +352,12 @@ class FunctionDefinition(object):
 
     def __init__(self,name,args,expr,return_type = None,arg_types = None,use_parallel=True):
         self.name = name
-        self.expr = expr
+        self.expr = S(expr)
         self.args = args
         self.return_type = return_type
         self.arg_types = arg_types
         self.use_parallel = use_parallel
 
-
-def lambdify(expr):
-    compiler = LambdaCompiler()
-    compiled = compiler.visit(expr)
-    return lambda **args:compiled(args)
 
 def make_parallel(f):
 
@@ -333,7 +403,7 @@ def make_parallel(f):
 def numpyfy(expr,dtype = float,parallel = False):
 
     compiler = NumpyCompiler(dtype)
-    res = compiler.visit(expr)
+    res = compiler.visit(S(expr))
 
     def call(**args):
 
