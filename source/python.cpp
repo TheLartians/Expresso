@@ -255,6 +255,10 @@ BOOST_PYTHON_MODULE(_symbols){
   .def("add_evaluator",+[](symbols::MultiEvaluator &m,symbols::Evaluator &e){ m.add_evaluator(&e); })
   ;
   
+  class_<symbols::StepEvaluator,bases<symbols::MultiEvaluator>>("StepEvaluator")
+  ;
+
+  
 #pragma mark ReplaceEvaluator
   
   class_<symbols::ReplaceEvaluator,bases<symbols::Evaluator>>("ReplaceEvaluator")

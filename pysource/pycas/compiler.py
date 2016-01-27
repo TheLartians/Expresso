@@ -282,16 +282,6 @@ class NumpyCompiler(LambdaCompiler):
 
         return evaluate
 
-    @visitor.atomic(pi)
-    def visit(self,expr):
-        import numpy as np
-        return lambda s,e:lambda args:np.pi
-
-    @visitor.atomic(e)
-    def visit(self,expr):
-        import numpy as np
-        return lambda s,e:lambda args:np.e
-
     @visitor.obj(integer_type)
     def visit(self,expr):
         v = self.dtype(expr.value)

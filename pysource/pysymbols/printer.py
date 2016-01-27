@@ -109,7 +109,7 @@ class LatexPrinter(Printer):
         super(LatexPrinter,self).__init__(*args,**kwargs)
 
         self.latex_replacements = {}
-        self.latex_replacements.update({w:r'\%s ' % w for w in ['alpha', 'theta', 'tauXbeta', 'vartheta', 'pi', 'upsilonXgamma', 'gamma', 'varpi', 'phiXdelta', 'kappa', 'rho', 'varphiXepsilon', 'lambda', 'varrho', 'chiXvarepsilon', 'mu', 'sigma', 'psiXzeta', 'nu', 'varsigma', 'omegaXeta', 'xiXGamma', 'Lambda', 'Sigma', 'PsiXDelta', 'Xi', 'Upsilon', 'OmegaXTheta', 'Pi', 'Phi', 'phi', 'varphi']})
+        self.latex_replacements.update({w:r'\%s ' % w for w in ['alpha', 'theta', 'tauXbeta', 'vartheta', 'pi', 'upsilonXgamma', 'gamma', 'varpi', 'phiXdelta', 'kappa', 'rho', 'varphiXepsilon', 'lambda', 'varrho', 'chiXvarepsilon', 'mu', 'sigma', 'psiXzeta', 'nu', 'varsigma', 'omegaXeta', 'xiXGamma', 'Lambda', 'Sigma', 'PsiXDelta', 'Xi', 'Upsilon', 'OmegaXTheta', 'Pi', 'Phi', 'phi', 'varphi','psi','Psi','nabla']})
 
     @visitor.on('expr',parent = Printer)
     def visit(self,expr):

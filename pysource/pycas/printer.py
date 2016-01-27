@@ -130,6 +130,6 @@ def visit(printer,expr):
 
 @add_target(latex,ArrayAccess)
 def visit(printer,expr):
-    name = expr.args[0].name
-    return r'\text{%s} \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
+    name = printer.format_name(expr.args[0].name)
+    return r'%s \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
 

@@ -203,9 +203,7 @@ namespace symbols {
   }
   
   void ReplaceEvaluator::add_replacement(expression search,expression replace){
-    for(auto expr:commutative_permutations(search)){
-      replacements[expr] = replace;
-    }
+    replacements[search] = replace;
   }
   
 #pragma mark RuleEvaluator
@@ -389,18 +387,21 @@ namespace symbols {
       expression tmp = expr;
       for(auto & evaluator:evaluators){
         expr = evaluator->evaluate(expr,v);
-        while(tmp != expr){
-          tmp = expr;
-          //std::cout << "repeat: " << expr << std::endl;
-          expr = evaluator->evaluate(expr,v);
+        if(tmp != expr){
           repeat = true;
+          break;
         }
-        if(repeat) break;
       }
     }
     while (repeat);
     
     return expr;
   }
+
+  expression StepEvaluator::evaluate(expression expr,EvaluatorVisitor &v)const{
+    for(auto & evaluator:evaluators) expr = evaluator->evaluate(expr,v);
+    return expr;
+  }
+
   
 }

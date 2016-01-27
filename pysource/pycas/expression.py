@@ -1,13 +1,20 @@
 
 import pysymbols
 
-def Symbol(name,type=None,positive = False):
+def Symbol(name,type=None,positive = False,latex = None):
     s = Expression(pysymbols.create_symbol(name))
     if type != None:
         from functions import Type
         global_context.add_definition(Type(s),type)
     if positive == True:
-        global_context.add_definition(s>0,True)
+        global_context.add_definition(0<s,True)
+    if latex is not None:
+        latex_rep = latex
+        from printer import latex,add_target
+        @add_target(latex,s)
+        def print_latex(printer,expr):
+            return latex_rep
+
     return s
 
 integer_type = long
@@ -58,7 +65,9 @@ def expression_converter(expr):
         assert eval(test_str) == expr, "float conversion error: %s != %s" % (eval(test_str),expr)
         if exponent == 0:
             return S(mantissa)
-        return (S(mantissa) * 10**S(exponent)).evaluate()
+        if mantissa == 1:
+            return 10**S(exponent)
+        return (S(mantissa) * 10**S(exponent))
     if isinstance(expr,complex):
         if expr.real == 0:
             if expr.imag == 0:
@@ -192,7 +201,7 @@ locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)
 class Context(ReplaceEvaluator):
 
     def add_definition(self,search,replacement):
-        self.add_replacement(search.evaluate(),replacement)
+        self.add_replacement(search,replacement)
 
 global_context = Context()
 

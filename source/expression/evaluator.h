@@ -203,10 +203,19 @@ namespace symbols {
   };
   
   class MultiEvaluator:public Evaluator{
+  protected:
     std::vector<Evaluator*> evaluators;
   public:
     void add_evaluator(Evaluator*e){ evaluators.emplace_back(e); }
     expression evaluate(expression expr,EvaluatorVisitor &)const override;
   };
 
+  
+  class StepEvaluator:public MultiEvaluator{
+  public:
+    expression evaluate(expression expr,EvaluatorVisitor &)const override;
+  };
+
+  
+  
 }

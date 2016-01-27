@@ -58,6 +58,7 @@ def add_basic_simplification_rules(evaluator):
     evaluator.add_rule((-x)*y,-(x*y))
     evaluator.add_rule(1/-x,-(1/x))
     evaluator.add_rule((-x)**-1,-((x)**-1))
+    evaluator.add_rule(-S(0),0)
 
     evaluator.add_rule(1/(y/z),z/y)
     evaluator.add_rule(1/(1/z),z)

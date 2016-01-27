@@ -159,8 +159,15 @@ template <class T,size_t ... size> struct mapped_ndarray{
 
     @visitor.atomic(I)
     def visit(self,expr):
-        self.preamble.add("std::complex<double> __I(0,1);")
-        return "__I"
+        return "std::complex<double>(0,1)"
+
+    @visitor.atomic(pi)
+    def visit(self,expr):
+        return "M_PI"
+
+    @visitor.atomic(e)
+    def visit(self,expr):
+        return "M_E"
 
     @visitor.function(Xor)
     def visit(self,expr):
