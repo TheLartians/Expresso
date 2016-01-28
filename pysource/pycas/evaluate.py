@@ -1,4 +1,6 @@
 
+raise RuntimeError('importing depreciated source')
+
 __all__ =['prepare_evaluator','main_evaluator','intermediate_evaluator','final_evaluator','primefactor_evaluator','expand_evaluator','expand','evaluate']
 
 from .expression import *
@@ -13,7 +15,6 @@ final_evaluator = RewriteEvaluator(recursive=True)
 primefactor_evaluator = RewriteEvaluator(recursive=True)
 expand_evaluator = RewriteEvaluator(recursive=True)
 
-PiecewisePart = Function('piecewise_part',argc = 2)
 
 def add_prepare_evaluator_rules(evaluator):
     x,y,z,a,b,c,n,m = wildcard_symbols('x,y,z,a,b,c,n,m')
@@ -580,7 +581,6 @@ def evaluate(expr,context = global_context):
     
 def expand(expr):
     return final_evaluator(intermediate_evaluator(expand_evaluator(prepare_evaluator(expr))))
-
 
 
 

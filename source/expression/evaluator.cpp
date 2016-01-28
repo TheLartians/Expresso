@@ -46,7 +46,7 @@ namespace symbols {
       add_to_cache(e->get_shared(), copy);
       if(*copy != *e){
         modified = true;
-        if(evaluator.recursive){
+        if(evaluator.settings.recursive){
           //std::cout << "Revisit: " << copy << " != " << *e << std::endl;
           expression keep_reference = copy;
           copy->accept(this);
@@ -95,9 +95,6 @@ namespace symbols {
       if(e->is_commutative()) bit.reset(new BinaryIterators::SingleOrdered(2));
       else bit.reset(new BinaryIterators::Window(2));
       bit->init(c.get());
-      
-      std::cout << "Visiting: " << *c << std::endl;
-      std::cout << "commutative: " << c->is_commutative() << std::endl;
       
       do {
         
@@ -164,7 +161,8 @@ namespace symbols {
     
     void EvaluatorVisitor::visit(const BinaryOperator * e){
       if(is_cached(e)) return;
-      visit_binary(e);
+      if(e->arguments.size()>2 && evaluator.settings.split_binary) visit_binary(e);
+      else visit((const Function *)e);
       finalize(e);
     }
     
@@ -208,6 +206,28 @@ namespace symbols {
   
 #pragma mark RuleEvaluator
   
+  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::expression_evaluator ev){
+    
+    return Rule(search,replacement,[=](replacement_map &m,EvaluatorVisitor &v)->bool{
+      if(v.evaluate(replace(condition,m)) == valid_result){
+        if(ev){
+          for(auto &rep:m){
+            rep.second = v.evaluate(rep.second);
+          }
+          return ev(m,v);
+        }
+        return true;
+      }
+      return false;
+    });
+    
+  }
+  
+  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::minimal_expression_evaluator ev){
+    return conditional_rule(search, replacement, condition, valid_result, [=](replacement_map &m,EvaluatorVisitor &v){ return ev(m); });
+  }
+
+  
   void RuleEvaluator::verbose_apply_callback(const Rule &rule,const replacement_map &wildcards){
     std::cout << "Apply: " << replace(rule.search,wildcards) << " => " << replace(rule.replacement,wildcards) << std::endl;
   };
@@ -226,16 +246,24 @@ namespace symbols {
 
     Rule copy = r;
     replacement_map wc;
-    bool first = true;
+    std::vector<expression> inserted;
     
     for(auto p:commutative_permutations(r.search)){
-      wc.clear();
-      if(!first && match(r.search, p, wc)){
-        continue;
+      bool valid = true;
+      
+      for(auto &s:inserted){
+        wc.clear();
+        if(match(s, p, wc)){
+          valid = false;
+          break;
+        }
       }
-      first = false;
+      
+      if(!valid) continue;
+      
       copy.search = p;
       insert_rule(copy,priority);
+      inserted.emplace_back(p);
     }
     
   }
@@ -397,11 +425,25 @@ namespace symbols {
     
     return expr;
   }
+  
+  void MultiEvaluator::add_evaluator(Evaluator*e){
+    if(auto me = dynamic_cast<MultiEvaluator*>(e)){
+      for(auto eval:me->evaluators) add_evaluator(eval);
+      return;
+    }
+    for(auto eval:evaluators){
+      if(eval == e) return;
+    }
+    evaluators.emplace_back(e);
+  }
+
 
   expression StepEvaluator::evaluate(expression expr,EvaluatorVisitor &v)const{
     for(auto & evaluator:evaluators) expr = evaluator->evaluate(expr,v);
     return expr;
   }
+  
+
 
   
 }

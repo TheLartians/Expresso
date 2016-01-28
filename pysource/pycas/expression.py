@@ -142,7 +142,13 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
 
     def __rpow__(self,other):
         return Exponentiation(other,self)
-    
+
+    def __mod__(self,other):
+        return Mod(self,other)
+
+    def __rmod__(self,other):
+        return Mod(other,self)
+
     def __lt__(self, other):
         return Less(self,other)
 
@@ -182,14 +188,12 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
     def evaluate(self,context = None):
         if context == None:
             context = global_context
-        from evaluate import evaluate
+        from evaluators import evaluate
         return evaluate(self,global_context)
     
     def subs(self,*args,**kwargs):
-        do_evaluate = kwargs.pop('evaluate',True)
-        res = self.substitute(*args)
-        if do_evaluate:
-            return res.evaluate()
+        #do_evaluate = kwargs.pop('evaluate',True)
+        res = self.replace(*args)
         return res
 
     def N(self,*args,**kwargs):
@@ -226,6 +230,7 @@ And = BinaryOperator("&",pysymbols.associative,pysymbols.commutative,-3)
 Xor = BinaryOperator(" XOR ",pysymbols.associative,pysymbols.commutative,-3)
 
 Not = UnaryOperator("~",pysymbols.prefix,-7)
+Mod = Function('mod',argc = 2)
 
 Equal = BinaryOperator("=",pysymbols.associative,pysymbols.commutative,-6)
 NotEqual = BinaryOperator("!=",pysymbols.associative,pysymbols.commutative,-6);

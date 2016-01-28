@@ -21,14 +21,13 @@ Round = Function('round',argc = 1)
 Max = Function('max',argc = 2)
 Min = Function('min',argc = 2)
 
-Mod = Function('mod',argc = 2)
-
 Real = Function('real',argc = 1)
 Imag = Function('imag',argc = 1)
 Conjugate = Function('conjugate',argc = 1)
 
 Indicator = Function('indicator',argc = 1)
 Piecewise = BinaryOperator('}{',-20)
+PiecewisePart = Function('piecewise_part',argc = 2)
 
 # Calculus
 # --------

@@ -2,14 +2,20 @@ from expression import core,Function,WrappedType,ReplacementMap
 
 class Rule(object):
     
-    def __init__(self,search,replacement = None,evaluator=None,S=None):
+    def __init__(self,search,replacement = None,evaluator=None,condition=None,S=None):
         if S == None:
             raise ValueError('missing argument S')
         
-        if evaluator is not None: 
-            self._rule = core.Rule(S(search),S(replacement),lambda m:evaluator(ReplacementMap(m,S=S)))
+        if evaluator is not None:
+            if condition is not None:
+                self._rule = core.Rule(S(search),S(replacement),S(condition),S(True),lambda m:evaluator(ReplacementMap(m,S=S)))
+            else:
+                self._rule = core.Rule(S(search),S(replacement),lambda m:evaluator(ReplacementMap(m,S=S)))
         elif replacement is not None:
-            self._rule = core.Rule(S(search),S(replacement))
+            if condition is not None:
+                self._rule = core.Rule(S(search),S(replacement),S(condition),S(True))
+            else:
+                self._rule = core.Rule(S(search),S(replacement))
         else:
             self._rule = search    
         self.S = S
@@ -49,13 +55,15 @@ WrappedMatchCondition = lambda S:WrappedType(MatchCondition,S=S)
 
 class Evaluator(object):
     
-    def __init__(self,evaluator,recursive ,S):
+    def __init__(self,evaluator,recursive = False,split_binary = True,S = None):
         
         if S == None:
             raise ValueError('missing argument S')
 
         self._evaluator = evaluator
-        self._evaluator.recursive = recursive
+        self._evaluator.settings.recursive = recursive
+        self._evaluator.settings.split_binary = split_binary
+
         self.S = S
 
     def __call__(self,expr):
@@ -63,8 +71,11 @@ class Evaluator(object):
 
 class ReplaceEvaluator(Evaluator):
 
-    def __init__(self,recursive = False,S = None):
-        super(ReplaceEvaluator,self).__init__(core.ReplaceEvaluator(),recursive,S)
+    def __init__(self,replacement_map = None,**kwargs):
+        if replacement_map is not None:
+            super(ReplaceEvaluator,self).__init__(core.ReplaceEvaluator(replacement_map),**kwargs)
+        else:
+            super(ReplaceEvaluator,self).__init__(core.ReplaceEvaluator(),**kwargs)
 
     def add_replacement(self,search,replace):
         self._evaluator.add_replacement(self.S(search),self.S(replace))
@@ -73,8 +84,8 @@ WrappedReplaceEvaluator = lambda S:WrappedType(ReplaceEvaluator,S=S)
 
 class RewriteEvaluator(Evaluator):
 
-    def __init__(self,recursive = False,S = None):
-        super(RewriteEvaluator,self).__init__(core.RuleEvaluator(),recursive,S)
+    def __init__(self,**kwargs):
+        super(RewriteEvaluator,self).__init__(core.RuleEvaluator(),**kwargs)
 
     def __len__(self):
         return len(self._evaluator)
@@ -88,29 +99,33 @@ class RewriteEvaluator(Evaluator):
                 yield self[i]
         return generator()
     
-    def add_rule(self,search,replace = None,evaluator=None,priority = 0):
-        self._evaluator.add_rule(Rule(search,replace,evaluator,S=self.S)._rule,priority)
+    def add_rule(self,search,replace = None,evaluator=None,priority = 0,**kwargs):
+        self._evaluator.add_rule(Rule(search,replace,evaluator,S=self.S,**kwargs)._rule,priority)
     
-    def set_apply_callback(self,f):
+    def set_rule_callback(self,f):
         if f is not None:
             self._evaluator.set_apply_callback(lambda r,m:f(Rule(r,S=self.S),ReplacementMap(m,S=self.S)))
         else:
             self._evaluator.set_apply_callback(None)
 
 
-    
 WrappedRewriteEvaluator = lambda S:WrappedType(RewriteEvaluator,S=S)
     
 class MultiEvaluator(Evaluator):
     
-    def __init__(self,recursive = False,S = None):
-        super(MultiEvaluator,self).__init__(core.MultiEvaluator(),recursive,S)
+    def __init__(self,S = None,**kwargs):
+        super(MultiEvaluator,self).__init__(core.MultiEvaluator(),S=S,**kwargs)
         self._inner_evaluators = []
     
     def add_evaluator(self,evaluator):
         self._inner_evaluators.append(evaluator)
         self._evaluator.add_evaluator(evaluator._evaluator)
-    
+
+    def set_rule_callback(self,callback):
+        for e in self._inner_evaluators:
+            if isinstance(e,(RewriteEvaluator,MultiEvaluator)):
+                e.set_rule_callback(callback)
+
 WrappedMultiEvaluator = lambda S:WrappedType(MultiEvaluator,S=S)
 
     

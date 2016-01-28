@@ -79,6 +79,18 @@ namespace symbols_wrapper {
     }));
   }
   
+  boost::shared_ptr<Rule> create_conditional_rule_f(const expression &a,const expression &b,const expression &c,const expression &t,const python::object f){
+    return boost::shared_ptr<Rule>(new Rule(conditional_rule(a,b,c,t,[f](replacement_map &m,EvaluatorVisitor &v)->bool{
+      auto res = f(boost::ref(m));
+      if(res == python::object()) return true;
+      return python::extract<bool>(res);
+    })));
+  }
+  
+  boost::shared_ptr<Rule> create_conditional_rule(const expression &a,const expression &b,const expression &c,const expression &t){
+    return boost::shared_ptr<Rule>(new Rule(conditional_rule(a,b,c,t)));
+  }
+  
   boost::shared_ptr<MatchCondition> create_match_condition(const std::string &name,const python::object f){
     return boost::shared_ptr<MatchCondition>(new MatchCondition(name,[f](const expression &expr){
       bool res = python::extract<bool>(f(boost::ref(expr)));
@@ -184,7 +196,9 @@ BOOST_PYTHON_MODULE(_symbols){
   def("create_call",symbols_wrapper::create_call);
   
   def("match",symbols_wrapper::match);
-  def("replace",+[](const symbols::expression &s,const symbols::replacement_map &r){ return symbols::replace(s,r); });
+  def("replace",+[](const symbols::expression &s,const symbols::replacement_map &r){
+    return symbols::replace(s,r);
+  });
   
 #pragma mark -
 #pragma mark Function
@@ -245,8 +259,13 @@ BOOST_PYTHON_MODULE(_symbols){
 #pragma mark -
 #pragma mark Evaluator
   
+  class_<symbols::Evaluator::settings_t,boost::noncopyable>("Evaluator.settings",no_init)
+  .def_readwrite("recursive",&symbols::Evaluator::settings_t::recursive)
+  .def_readwrite("split_binary",&symbols::Evaluator::settings_t::split_binary)
+  ;
+  
   class_<symbols::Evaluator,boost::noncopyable>("Evaluator",no_init)
-  .def_readwrite("recursive",&symbols::RuleEvaluator::recursive)
+  .def_readwrite("settings",&symbols::Evaluator::settings)
   .def("__call__",+[](const symbols::Evaluator &r,const symbols::expression &e){ return r(e); });
 
 #pragma mark MultiEvaluator
@@ -255,13 +274,14 @@ BOOST_PYTHON_MODULE(_symbols){
   .def("add_evaluator",+[](symbols::MultiEvaluator &m,symbols::Evaluator &e){ m.add_evaluator(&e); })
   ;
   
-  class_<symbols::StepEvaluator,bases<symbols::MultiEvaluator>>("StepEvaluator")
+  class_<symbols::StepEvaluator,bases<symbols::Evaluator>>("StepEvaluator")
+  .def("add_evaluator",+[](symbols::StepEvaluator &m,symbols::Evaluator &e){ m.add_evaluator(&e); })
   ;
-
   
 #pragma mark ReplaceEvaluator
   
   class_<symbols::ReplaceEvaluator,bases<symbols::Evaluator>>("ReplaceEvaluator")
+  .def(init<const symbols::replacement_map &>())
   .def("add_replacement",&symbols::ReplaceEvaluator::add_replacement)
   .def("clear",&symbols::ReplaceEvaluator::clear)
   ;
@@ -270,6 +290,8 @@ BOOST_PYTHON_MODULE(_symbols){
   
   class_<symbols::Rule>("Rule",init<symbols::expression,symbols::expression>())
   .def("__init__",make_constructor(symbols_wrapper::create_rule))
+  .def("__init__",make_constructor(symbols_wrapper::create_conditional_rule))
+  .def("__init__",make_constructor(symbols_wrapper::create_conditional_rule_f))
   .def(init<const symbols::Rule &>())
   .def("has_evaluator",+[](const symbols::Rule &r){ return bool(r.evaluator); })
   .def_readonly("search",&symbols::Rule::search)

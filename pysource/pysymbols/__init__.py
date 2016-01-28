@@ -8,7 +8,7 @@ from expression import associative,non_associative,commutative,non_commutative,p
 
 def create_object(value,string = None):
     if string is None:
-        string = str(value)
+        string = '%s:(%s)' % (type(value).__name__, str(value))
     return core.create_object(value,string)
 
 def create_symbol(name):

@@ -193,6 +193,10 @@ namespace symbols {
     
     //*
     void visit(const BinaryOperator * e){
+      if(e->arguments.size() < 2){
+        visit((const Function *)e);
+        return;
+      }
       print_with_brackets_in(print_operator_symbol(e->get_symbol(),e->arguments.front(),true), e);
       for (auto i : range<unsigned>(1,e->arguments.size())) {
         print_with_brackets_in(print_operator_symbol(e->get_symbol(),e->arguments[i]), e);

@@ -66,11 +66,11 @@ class Dispatcher(object):
                 v = arg.value
                 if v is not None:
                     try:
-                        d = self.targets.get(v)
+                        d = self.targets.get((obj,v))
                         if d: return d
                     except TypeError:
                         pass
-                    d = self.targets.get(type(v))
+                    d = self.targets.get((obj,type(v)))
                     if d: return d
                     d = self.targets.get(obj)
                     if d: return d
@@ -193,7 +193,7 @@ def obj(arg):
         if typ is None:
             dispatcher.register_object(fn)
         else:
-            dispatcher.register_target(typ, fn)
+            dispatcher.register_target((obj,typ), fn)
         def ff(*args, **kw):
             return dispatcher(*args, **kw)
         ff.dispatcher = dispatcher

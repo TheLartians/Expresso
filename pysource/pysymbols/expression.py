@@ -69,7 +69,7 @@ class Expression(core.Expression):
             return v
         return None
 
-    def substitute(self,*args):
+    def replace(self,*args):
         if len(args) == 1:
             if isinstance(args[0],ReplacementMap):
                 rep = args[0]._replacement_map
@@ -85,7 +85,9 @@ class Expression(core.Expression):
             rep[self.S(args[0])] = self.S(args[1])
         else:
             raise ValueError('invalid substitution arguments')
-        return self.S(core.replace(self,rep))
+
+        from evaluator import ReplaceEvaluator
+        return ReplaceEvaluator(rep,S=self.S)(self)
 
     def match(self,search):
         for expr in core.commutative_permutations(search):

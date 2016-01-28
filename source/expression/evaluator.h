@@ -112,7 +112,11 @@ namespace symbols {
   
   class Evaluator{
     public:
-    bool recursive = false;
+    
+    struct settings_t{
+      bool recursive = false;
+      bool split_binary = true;
+    } settings;
     
     using ignore_set = std::unordered_set<expression>;
     virtual expression evaluate(expression,EvaluatorVisitor &) const = 0;
@@ -136,6 +140,8 @@ namespace symbols {
   class ReplaceEvaluator:public Evaluator{
     replacement_map replacements;
   public:
+    ReplaceEvaluator(){}
+    ReplaceEvaluator(const replacement_map &rep):replacements(rep){}
     void clear(){ replacements.clear(); }
     void add_replacement(expression search,expression replace);
     expression evaluate(expression,EvaluatorVisitor &)const override;
@@ -150,11 +156,19 @@ namespace symbols {
     
     Rule(expression _search,expression _replacement,expression_evaluator ev = expression_evaluator()):search(_search),replacement(_replacement),evaluator(ev){}
     Rule(expression _search,expression _replacement,minimal_expression_evaluator ev):search(_search),replacement(_replacement),evaluator([ev](replacement_map &m,EvaluatorVisitor &){ return ev(m); }){}
-    
   };
-    
+  
+  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::expression_evaluator ev = Rule::expression_evaluator());
+  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::minimal_expression_evaluator e);
+
   std::ostream & operator<<(std::ostream &stream,const Rule &rule);
 
+  
+  /*
+   TODO: add lazy evaluation
+   */
+  
+  
   class RuleEvaluator:public Evaluator{
     using expression_evaluator = std::function<void(replacement_map &)>;
 
@@ -206,13 +220,16 @@ namespace symbols {
   protected:
     std::vector<Evaluator*> evaluators;
   public:
-    void add_evaluator(Evaluator*e){ evaluators.emplace_back(e); }
+    void add_evaluator(Evaluator*e);
     expression evaluate(expression expr,EvaluatorVisitor &)const override;
   };
 
   
-  class StepEvaluator:public MultiEvaluator{
+  class StepEvaluator:public Evaluator{
+  protected:
+    std::vector<Evaluator*> evaluators;
   public:
+    void add_evaluator(Evaluator*e){ evaluators.emplace_back(e); }
     expression evaluate(expression expr,EvaluatorVisitor &)const override;
   };
 

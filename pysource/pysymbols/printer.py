@@ -79,10 +79,14 @@ class Printer(visitor.visitor_class()):
     @visitor.function
     def visit(self,expr):
         return self.print_function(expr)
-        
+
     @visitor.atomic
     def visit(self,expr):
         return self.print_symbol(expr)
+
+    @visitor.obj
+    def visit(self,expr):
+        return str(expr.value)
 
     @visitor.wildcard_symbol
     def visit(self,expr):
@@ -94,7 +98,10 @@ class Printer(visitor.visitor_class()):
 
     @visitor.binary_operator
     def visit(self,expr):
-        return self.print_binary_operator(expr)
+        if len(expr.args) >= 2:
+            return self.print_binary_operator(expr)
+        else:
+            return self.print_function(expr)
 
     @visitor.unary_operator
     def visit(self,expr):
@@ -149,4 +156,6 @@ class LatexPrinter(Printer):
         name = '\mathbf{%s} ' % name
         return self.print_function(expr,name=name)
 
-
+    @visitor.obj
+    def visit(self,expr):
+        return r'\text{%s}' % str(expr.value)
