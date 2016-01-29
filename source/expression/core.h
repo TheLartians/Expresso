@@ -115,7 +115,7 @@ namespace symbols {
     
     // type
     template <class R> const std::shared_ptr<const R> as() const { return std::dynamic_pointer_cast<const R>(shared_from_this()); }
-    template <class R> const R * static_as() const { return static_cast<const R *>(this); }
+    template <class R> const std::shared_ptr<const R> static_as() const { return std::static_pointer_cast<const R>(shared_from_this()); }
     template <class R> bool is() const { return dynamic_cast<const R*>(this); }
     
     shared get_shared()const{ return shared(shared_from_this()); }

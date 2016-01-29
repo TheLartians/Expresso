@@ -78,7 +78,7 @@ def expression_converter(expr):
         return S(float(expr.real)) + I * S(float(expr.imag))
     if isinstance(expr,tuple):
         return Tuple(*expr)
-    raise ValueError('Unsupported expression type: %s' % type(expr))
+    raise ValueError('Unsupported expression type: %s (%s)' % (type(expr),expr))
 
 def S(value):
     if isinstance(value,str):
@@ -185,11 +185,11 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
     def __repr__(self):
          return printer(self)
 
-    def evaluate(self,context = None):
+    def evaluate(self,context = None,*args,**kwargs):
         if context == None:
             context = global_context
         from evaluators import evaluate
-        return evaluate(self,global_context)
+        return evaluate(self,global_context,*args,**kwargs)
     
     def subs(self,*args,**kwargs):
         #do_evaluate = kwargs.pop('evaluate',True)

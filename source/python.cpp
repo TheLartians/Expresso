@@ -80,15 +80,15 @@ namespace symbols_wrapper {
   }
   
   boost::shared_ptr<Rule> create_conditional_rule_f(const expression &a,const expression &b,const expression &c,const expression &t,const python::object f){
-    return boost::shared_ptr<Rule>(new Rule(conditional_rule(a,b,c,t,[f](replacement_map &m,EvaluatorVisitor &v)->bool{
+    return boost::shared_ptr<Rule>(new Rule(a,b,c,t,[f](replacement_map &m,EvaluatorVisitor &v)->bool{
       auto res = f(boost::ref(m));
       if(res == python::object()) return true;
       return python::extract<bool>(res);
-    })));
+    }));
   }
   
   boost::shared_ptr<Rule> create_conditional_rule(const expression &a,const expression &b,const expression &c,const expression &t){
-    return boost::shared_ptr<Rule>(new Rule(conditional_rule(a,b,c,t)));
+    return boost::shared_ptr<Rule>(new Rule(a,b,c,t));
   }
   
   boost::shared_ptr<MatchCondition> create_match_condition(const std::string &name,const python::object f){

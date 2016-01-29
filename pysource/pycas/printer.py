@@ -101,7 +101,7 @@ latex.register_printer(Tuple,lambda p,e: p.print_function(e,r""))
 @add_target(latex,Piecewise)
 def visit(printer,expr):   
     for arg in expr.args:
-        if arg.function != Tuple :
+        if arg.function != Tuple and arg.function != PiecewisePart:
             return printer.print_function(expr,name="Piecewise")
 
     outer = r"\begin{cases} %s \end{cases}"

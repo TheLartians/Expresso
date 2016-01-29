@@ -387,8 +387,9 @@ namespace symbols {
     
     std::sort(this->begin(), this->end(), [](const mulplicity_list::value_type &a,const mulplicity_list::value_type &b){ return a.first < b.first; });
   
-    for(int i=0;i<size()-1;){
+    for(int i=0;size()>0 && i<size()-1;){
       auto &a = (*this)[i], &b = (*this)[i+1];
+      
       if(a.first == b.first){
         a.second = real_field.additive_group.operation(a.second,b.second);
         erase(begin()+i+1);
@@ -526,11 +527,24 @@ namespace symbols {
   }
   
   argument_list mulplicity_list::as_argument_list()const{
+    
+    std::unordered_map<expression, argument_list> inverted_mlist;
     argument_list res;
+    
     for(const auto &arg:*this){
-      if(arg.second == real_field.multiplicative_group.neutral) res.emplace_back(arg.first);
-      else res.emplace_back(mulplicity(arg.first,arg.second));
+      if(arg.second == real_field.multiplicative_group.neutral){
+        res.emplace_back(arg.first);
+      }
+      else{
+        inverted_mlist[arg.second].emplace_back(arg.first);
+      }
     }
+    
+    for(auto &im:inverted_mlist){
+      res.emplace_back(mulplicity(base.operation(std::move(im.second)),im.first));
+    }
+    
+    
     return std::move(res);
   }
   

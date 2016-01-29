@@ -26,8 +26,8 @@ Imag = Function('imag',argc = 1)
 Conjugate = Function('conjugate',argc = 1)
 
 Indicator = Function('indicator',argc = 1)
-Piecewise = BinaryOperator('}{',-20)
-PiecewisePart = Function('piecewise_part',argc = 2)
+Piecewise = BinaryOperator('}{',-14)
+PiecewisePart = Function('piecewise part',argc = 2)
 
 # Calculus
 # --------

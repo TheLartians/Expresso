@@ -6,7 +6,8 @@
 #include <iostream>
 #include <algorithm>
 
-#define VERBOSE
+
+//#define VERBOSE
 
 namespace symbols {
   
@@ -22,23 +23,29 @@ namespace symbols {
       auto cached = cache.find(key);
       if(cached != cache.end()) {
         res = cached->second;
-        //if(e != res) std::cout << "cached: " << e << " -> " << res << std::endl;
         return true;
       }
       return false;
     }
     
     bool EvaluatorVisitor::is_cached(const Expression * e){
-      //std::cout << "entering: " << *e << std::endl;
+#ifdef VERBOSE
+      std::cout << "entering: " << *e << std::endl;
+#endif
       if(get_from_cache(e->get_shared(),copy)) {
         modified |= *e != *copy;
+#ifdef VERBOSE
+         std::cout << "cached: " << *e << " -> " << *copy << std::endl;
+#endif
         return true;
       }
       return false;
     }
     
     void EvaluatorVisitor::add_to_cache(expression e,expression res){
-      //std::cout << "caching: " << e << " -> " << res << std::endl;
+#ifdef VERBOSE
+      std::cout << "caching: " << e << " -> " << res << std::endl;
+#endif
       cache[e] = res;
     }
     
@@ -47,7 +54,9 @@ namespace symbols {
       if(*copy != *e){
         modified = true;
         if(evaluator.settings.recursive){
-          //std::cout << "Revisit: " << copy << " != " << *e << std::endl;
+#ifdef VERBOSE
+          std::cout << "Revisit: " << copy << " != " << *e << std::endl;
+#endif
           expression keep_reference = copy;
           copy->accept(this);
           add_to_cache(e->get_shared(), copy);
@@ -55,7 +64,20 @@ namespace symbols {
       }
     }
     
-    void EvaluatorVisitor::copy_function(const Function * e){
+    bool EvaluatorVisitor::copy_function(const Function * e){
+      
+      if(is_cached(e)){
+        return true;
+      }
+      
+      if(expression_stack.find(*e) != expression_stack.end()){
+#ifdef VERBOSE
+        std::cout << "stopped recursion: " << *e << std::endl;
+#endif
+        return true;
+      }
+      
+      expression_stack.emplace(*e);
       
       argument_list args(e->arguments.size());
       auto m = modified;
@@ -67,22 +89,53 @@ namespace symbols {
         a.value->accept(this);
         args[a.index] = copy;
       }
-      if(modified) copy = e->clone(std::move(args));
+      if(modified){
+        copy = e->clone(std::move(args));
+        
+#ifdef VERBOSE
+        std::cout << "recursive copied expression: " << *e << " -> " << *copy << std::endl;
+#endif
+        
+        if(is_cached(copy.get())){
+          expression_stack.erase(expression_stack.find(*e));
+          return true;
+        }
+      }
+      
       else copy = e->get_shared();
       modified |= m;
+      
+      expression_stack.erase(expression_stack.find(*e));
+      return false;
+      
     }
     
     void EvaluatorVisitor::visit(const Function * e){
-      if(is_cached(e)) return;
-      copy_function(e);
+#ifdef VERBOSE
+      std::cout << "visit function: " << *e << std::endl;
+#endif
+      if(copy_function(e)) return;
+      auto tmp = copy;
       copy = evaluator.evaluate(copy,*this);
+      if(*tmp!=*e) add_to_cache(tmp,copy);
       finalize(e);
     }
     
     void EvaluatorVisitor::visit_binary(const BinaryOperator * e){
-      copy_function(e);
-
-      auto c = copy->as<BinaryOperator>();
+      if(copy_function(e)) return;
+      
+      auto c = copy->static_as<BinaryOperator>();
+      
+      if(c->arguments.size()<=2){
+#ifdef VERBOSE
+        std::cout << "visit binary as function: " << *e << std::endl;
+#endif
+        auto tmp = copy;
+        copy = evaluator.evaluate(copy,*this);
+        if(*tmp!=*e) add_to_cache(tmp,copy);
+        finalize(e);
+        return;
+      }
       
       std::unordered_set<unsigned> ignore_indices;
       std::vector<unsigned> new_indices;
@@ -111,13 +164,12 @@ namespace symbols {
         if(invalid) continue;
         
         auto test = e->clone(std::move(CAargs));
-        expression res;
         
-        if(!get_from_cache(test,res)){
-          res = evaluator.evaluate(test,*this);
-          add_to_cache(test,res);
-        }
-                //auto res = evaluator.evaluate(test);
+#ifdef VERBOSE
+        std::cout << "Binary window: " << *test << std::endl;
+#endif
+        
+        expression res = evaluate(test);
         
         modified = res != test;
         
@@ -157,16 +209,22 @@ namespace symbols {
         copy = c;
         modified = m;
       }
-    }
-    
-    void EvaluatorVisitor::visit(const BinaryOperator * e){
-      if(is_cached(e)) return;
-      if(e->arguments.size()>2 && evaluator.settings.split_binary) visit_binary(e);
-      else visit((const Function *)e);
+      
       finalize(e);
     }
     
+    void EvaluatorVisitor::visit(const BinaryOperator * e){
+#ifdef VERBOSE
+      std::cout << "visit binary: " << *e << std::endl;
+#endif
+      if(evaluator.settings.split_binary) visit_binary(e);
+      else visit((const Function *)e);
+    }
+    
     void EvaluatorVisitor::visit(const AtomicExpression * e){
+#ifdef VERBOSE
+      std::cout << "visit atomic: " << *e << std::endl;
+#endif
       if(is_cached(e)) return;
       copy = evaluator.evaluate(e->get_shared(),*this);
       modified |= copy != e;
@@ -206,34 +264,13 @@ namespace symbols {
   
 #pragma mark RuleEvaluator
   
-  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::expression_evaluator ev){
-    
-    return Rule(search,replacement,[=](replacement_map &m,EvaluatorVisitor &v)->bool{
-      if(v.evaluate(replace(condition,m)) == valid_result){
-        if(ev){
-          for(auto &rep:m){
-            rep.second = v.evaluate(rep.second);
-          }
-          return ev(m,v);
-        }
-        return true;
-      }
-      return false;
-    });
-    
-  }
-  
-  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::minimal_expression_evaluator ev){
-    return conditional_rule(search, replacement, condition, valid_result, [=](replacement_map &m,EvaluatorVisitor &v){ return ev(m); });
-  }
-
-  
   void RuleEvaluator::verbose_apply_callback(const Rule &rule,const replacement_map &wildcards){
     std::cout << "Apply: " << replace(rule.search,wildcards) << " => " << replace(rule.replacement,wildcards) << std::endl;
   };
     
   std::ostream & operator<<(std::ostream &stream,const Rule &rule){
     stream << rule.search << " -> " << rule.replacement;
+    if(rule.condition) stream << " if " << rule.condition << " -> " << rule.valid;
     if(rule.evaluator) stream << " ...";
     return stream;
   }
@@ -341,8 +378,6 @@ namespace symbols {
     std::vector<expression> wc_functions;
     replacement_map wildcards;
 
-    //std::cout << "Matching: " << e << std::endl;
-
     for(auto i:m){
       
       wc_functions.clear();
@@ -389,12 +424,26 @@ namespace symbols {
         }
       }
       
+      
+      if(current.rule.condition){
+        if(v.evaluate(replace(current.rule.condition,wildcards)) == current.rule.valid){
+          if(current.rule.evaluator) for(auto &rep:wildcards) rep.second = v.evaluate(rep.second);
+        }
+        else continue;
+      }
+      
       if(valid && current.rule.evaluator) valid = current.rule.evaluator(wildcards,v);
       if(!valid) continue;
+      
       
       auto res = replace(current.rule.replacement, wildcards);
       
       if(res != e){
+#ifdef VERBOSE
+        std::cout << "Apply: " << current.rule << ":" << std::endl;
+        std::cout << replace(current.rule.search,wildcards) << " => " << replace(current.rule.replacement,wildcards) << std::endl;
+#endif
+        
         if(apply_callback) apply_callback(current.rule,wildcards);
         return res;
       }
@@ -407,21 +456,14 @@ namespace symbols {
   
   expression MultiEvaluator::evaluate(expression expr,EvaluatorVisitor &v)const{
     
-    bool repeat;
-    //std::cout << "enter: " << expr << std::endl;
+    expression tmp = expr;
     
-    do{
-      repeat = false;
-      expression tmp = expr;
-      for(auto & evaluator:evaluators){
-        expr = evaluator->evaluate(expr,v);
-        if(tmp != expr){
-          repeat = true;
-          break;
-        }
+    for(auto & evaluator:evaluators){
+      expr = evaluator->evaluate(expr,v);
+      if(tmp != expr){
+        return expr;
       }
     }
-    while (repeat);
     
     return expr;
   }

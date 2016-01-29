@@ -96,7 +96,7 @@ namespace symbols {
     bool is_cached(const Expression * e);
     void add_to_cache(expression e,expression res);
     void finalize(const Expression * e);
-    void copy_function(const Function * e);
+    bool copy_function(const Function * e);
     void visit(const Function * e)override;
     void visit_binary(const BinaryOperator * e);
     void visit(const BinaryOperator * e)override;
@@ -104,6 +104,7 @@ namespace symbols {
     
     public:
     replacement_map & cache;
+    std::unordered_set<expression> expression_stack;
 
     EvaluatorVisitor(const Evaluator &_evaluator,replacement_map & _cache);
     const expression & evaluate(expression e){ e->accept(this); return copy; }
@@ -151,15 +152,15 @@ namespace symbols {
   struct Rule{
     using expression_evaluator = std::function<bool(replacement_map &,EvaluatorVisitor &)>;
     using minimal_expression_evaluator = std::function<bool(replacement_map &)>;
-    expression search,replacement;
+    expression search,replacement,condition,valid;
     expression_evaluator evaluator;
     
     Rule(expression _search,expression _replacement,expression_evaluator ev = expression_evaluator()):search(_search),replacement(_replacement),evaluator(ev){}
     Rule(expression _search,expression _replacement,minimal_expression_evaluator ev):search(_search),replacement(_replacement),evaluator([ev](replacement_map &m,EvaluatorVisitor &){ return ev(m); }){}
+    Rule(expression _search,expression _replacement,expression _condition,expression _valid,expression_evaluator ev = expression_evaluator()):search(_search),replacement(_replacement),condition(_condition),valid(_valid),evaluator(ev){}
+    Rule(expression _search,expression _replacement,expression _condition,expression _valid,minimal_expression_evaluator ev):search(_search),replacement(_replacement),condition(_condition),valid(_valid),evaluator([ev](replacement_map &m,EvaluatorVisitor &){ return ev(m); }){}
   };
   
-  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::expression_evaluator ev = Rule::expression_evaluator());
-  Rule conditional_rule(expression search,expression replacement,expression condition,expression valid_result,Rule::minimal_expression_evaluator e);
 
   std::ostream & operator<<(std::ostream &stream,const Rule &rule);
 

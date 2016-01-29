@@ -22,7 +22,10 @@ evaluator.add_rule(s.x*s.x**-1, 1)
 evaluator.add_rule((s.x**s.a)**s.b, s.x**(s.a*s.b))
 evaluator.add_rule(s.x**s.n*s.x, s.x**(s.n+1))
 evaluator.add_rule(s.x**s.n*s.x**s.m, s.x**(s.n+s.m))
-evaluator.add_rule(s.a**s.x*s.b**s.x, (s.a*s.b)**(s.x))
+
+
+from logic_evaluator import is_explicit_natural
+evaluator.add_rule(s.a**s.x*s.b**s.x, (s.a*s.b)**(s.x), condition=pc.Not(pc.Or(is_explicit_natural(s.a),is_explicit_natural(s.b))))
 
 evaluator.add_rule(-(s.x+s.y), -s.x-s.y)
 evaluator.add_rule(s.x*-1, -s.x)
@@ -51,12 +54,28 @@ evaluator.add_rule(-s.x-s.y, -s.c*(s.a+s.b), extract_intersection)
 from .logic_evaluator import is_function_type
 
 def evaluate_fraction(m):
-    ex,ey = m[s.x],m[s.y]
+    ex,ey = m[s.x],m[s.y]**m[s.z]
     ma = pc.MulplicityList(ex,pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
     mb = pc.MulplicityList(ey,pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
+
+    mbs = {k for k,v in mb}
+
+    valid = False
+
+    if not valid:
+        for k,v in ma:
+            if k in mbs:
+                valid = True
+                break
+            if valid:
+                break
+
+    if valid == False:
+        return False
+
     m[s.c] = (ma+mb).as_expression()
 
-evaluator.add_rule(s.x*s.y, s.c, evaluate_fraction, condition=pc.Or(is_function_type(s.x, pc.Exponentiation), is_function_type(s.y, pc.Exponentiation)))
+evaluator.add_rule(s.x*s.y**s.z, s.c, evaluate_fraction)
 
 
 evaluator.add_rule(pc.log(pc.e), 1)
@@ -128,9 +147,23 @@ from .logic_evaluator import logic_evaluator
 from .numeric_evaluator import numeric_evaluator
 from .type_evaluator import type_evaluator
 
+
 main_evaluator = pc.MultiEvaluator(recursive = True, split_binary=True)
 main_evaluator.add_evaluator(canonical_form)
 main_evaluator.add_evaluator(evaluator)
 main_evaluator.add_evaluator(type_evaluator)
 main_evaluator.add_evaluator(logic_evaluator)
 main_evaluator.add_evaluator(numeric_evaluator)
+
+
+
+
+
+
+
+
+
+
+
+
+

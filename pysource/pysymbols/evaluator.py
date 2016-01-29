@@ -128,8 +128,25 @@ class MultiEvaluator(Evaluator):
 
 WrappedMultiEvaluator = lambda S:WrappedType(MultiEvaluator,S=S)
 
-    
-    
+
+class StepEvaluator(Evaluator):
+
+    def __init__(self,S = None,**kwargs):
+        super(StepEvaluator,self).__init__(core.StepEvaluator(),S=S,**kwargs)
+        self._inner_evaluators = []
+
+    def add_evaluator(self,evaluator):
+        self._inner_evaluators.append(evaluator)
+        self._evaluator.add_evaluator(evaluator._evaluator)
+
+    def set_rule_callback(self,callback):
+        for e in self._inner_evaluators:
+            if isinstance(e,(RewriteEvaluator,MultiEvaluator)):
+                e.set_rule_callback(callback)
+
+WrappedStepEvaluator = lambda S:WrappedType(StepEvaluator,S=S)
+
+
     
     
     
