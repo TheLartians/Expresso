@@ -107,9 +107,8 @@ namespace symbols {
     std::unordered_set<expression> expression_stack;
 
     EvaluatorVisitor(const Evaluator &_evaluator,replacement_map & _cache);
-    const expression & evaluate(expression e){ e->accept(this); return copy; }
+    expression evaluate(expression e);
   };
-
   
   class Evaluator{
     public:
@@ -117,6 +116,8 @@ namespace symbols {
     struct settings_t{
       bool recursive = false;
       bool split_binary = true;
+      bool preorder = false;
+      bool postorder = true;
     } settings;
     
     using ignore_set = std::unordered_set<expression>;

@@ -1,6 +1,7 @@
 
 import pysymbols.visitor as visitor
 from pysymbols.printer import Printer
+from mpmath import mp
 
 from .functions import *
 from .expression import *
@@ -63,8 +64,8 @@ class CCodePrinter(CodePrinter):
           Types.Integer:'int',
           Types.Rational:'double',
           Types.Real:'double',
-          Types.Complex:'complex<double>',
-          None:'complex<double>'
+          Types.Complex:'c_complex',
+          None:'c_complex'
         }
 
         self.ctype_map = {
@@ -72,7 +73,7 @@ class CCodePrinter(CodePrinter):
             'unsigned':ctypes.c_uint,
             'int':ctypes.c_int,
             'double':ctypes.c_double,
-            'complex<double>':c_complex
+            'c_complex':c_complex
         }
 
         self.type_converters = {}
@@ -80,12 +81,21 @@ class CCodePrinter(CodePrinter):
         self.preamble = set()
         self.globals = set()
 
+        c_complex_type = '''
+struct c_complex{ double real; double imag; };
+inline std::complex<double> to_cpp_complex(c_complex z){ return std::complex<double>(z.real,z.imag); }
+inline c_complex to_c_complex(std::complex<double> z){ return c_complex{z.real(),z.imag()}; }
+        '''
+
+        self.preamble.add(c_complex_type);
+        self.type_converters['c_complex'] = (lambda x:'to_cpp_complex(%s)' % x,lambda x:'to_c_complex(%s)' % x)
+
         complex_operators = '''
 inline complex<double> operator{0}(complex<double> lhs, const double & rhs){{
-    return lhs {0} rhs;
+    return lhs {0} complex<double>(rhs);
 }}
 inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
-    return lhs {0} rhs;
+    return complex<double>(lhs) {0} rhs;
 }}
         '''
 
@@ -196,8 +206,12 @@ template <class T,size_t ... size> struct mapped_ndarray{
 
     @visitor.symbol
     def visit(self,expr):
-        if expr in self.need_conversion:
-            return self.need_conversion[expr](expr)
+        converter = self.need_conversion.get(expr)
+        if converter:
+            if isinstance(converter,tuple):
+                return converter[0](expr)
+            else:
+                return converter(expr)
         return expr.name
 
     @visitor.atomic(S(True))
@@ -247,6 +261,19 @@ template <class T,size_t ... size> struct mapped_ndarray{
         self.globals.add('mapped_ndarray<%s,%s> %s((%s*)%s);' % (type,size,name,type,pointer))
         return "%s(%s)" % (name,','.join([self(arg) for arg in expr.args[1:]]))
 
+    @visitor.obj(mp.mpf)
+    def visit(self,expr):
+        return repr(float(expr.value))
+
+    @visitor.obj(mp.mpc)
+    def visit(self,expr):
+        v = expr.value
+        return "complex<double>(%s,%s)" % (repr(float(v.real)),repr(float(v.imag)))
+
+    def optimize_function(self,expr):
+        from .evaluators.optimizers import optimize_for_compilation
+        return optimize_for_compilation(expr)
+
     def generate_function(self,definition):
 
         if definition.return_type == None:
@@ -265,9 +292,9 @@ template <class T,size_t ... size> struct mapped_ndarray{
                                 for arg,t in zip(args,argument_types)
                                 if t in self.type_converters}
 
-        f_code = self(definition.expr)
-        if return_type in self.type_converters:
-            f_code = "%s(%s)" % (self.type_converters[return_type],f_code)
+        f_code = self(self.optimize_function(definition.expr))
+        if return_type in self.type_converters and isinstance(self.type_converters[return_type],tuple):
+            f_code = self.type_converters[return_type][1](f_code)
 
         formatted = (return_type, definition.name,
                     ','.join(['%s %s' % (type,arg.name) for arg,type in zip(args,argument_types)]),
@@ -295,13 +322,12 @@ template <class T,size_t ... size> struct mapped_ndarray{
         else:
             argument_types = [self.print_vector_typename(Type(arg).evaluate()) for arg in definition.arg_types]
 
-        self.need_conversion.update({arg:lambda a:'%s[__i]' % a.name
-                                     for arg in args})
+        self.need_conversion.update({arg:lambda a:'%s[__i]' % a for arg in args})
 
         argument_types = ['unsigned',return_type] + argument_types
 
         if not use_previous_definition :
-            f_code = self(definition.expr)
+            f_code = self(self.optimize_function(definition.expr))
             if return_type in self.type_converters:
                 f_code = "%s(%s)" % (self.type_converters[return_type],f_code)
         else:

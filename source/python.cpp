@@ -259,6 +259,9 @@ BOOST_PYTHON_MODULE(_symbols){
 #pragma mark -
 #pragma mark Evaluator
   
+  class_<symbols::EvaluatorVisitor,boost::noncopyable>("EvaluatorVisitor",no_init)
+  .def("evaluate",&symbols::EvaluatorVisitor::evaluate);
+  
   class_<symbols::Evaluator::settings_t,boost::noncopyable>("Evaluator.settings",no_init)
   .def_readwrite("recursive",&symbols::Evaluator::settings_t::recursive)
   .def_readwrite("split_binary",&symbols::Evaluator::settings_t::split_binary)
@@ -266,7 +269,9 @@ BOOST_PYTHON_MODULE(_symbols){
   
   class_<symbols::Evaluator,boost::noncopyable>("Evaluator",no_init)
   .def_readwrite("settings",&symbols::Evaluator::settings)
-  .def("__call__",+[](const symbols::Evaluator &r,const symbols::expression &e){ return r(e); });
+  .def("__call__",+[](const symbols::Evaluator &r,const symbols::expression &e){ return r(e); })
+  .def("__call__",+[](const symbols::Evaluator &r,const symbols::expression &e,symbols::replacement_map &m){ return r(e,m); })
+  ;
 
 #pragma mark MultiEvaluator
   

@@ -4,9 +4,9 @@ import pysymbols
 # Symbols
 # -------
 
-e = Symbol('e')
+e = Symbol('eulers constant')
 pi = Symbol('pi')
-oo = Symbol('oo')
+oo = Symbol('infinity')
 
 # Various Functions
 # -----------------
@@ -76,6 +76,7 @@ class Types:
   Real = Symbol('Real')
   Complex = Symbol('Complex')
   Imaginary = Symbol('Imaginary')
+  Unit = Symbol('Unit')
   Type = Symbol('Type')
 
 

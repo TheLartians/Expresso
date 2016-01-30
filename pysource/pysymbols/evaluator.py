@@ -66,8 +66,11 @@ class Evaluator(object):
 
         self.S = S
 
-    def __call__(self,expr):
-        return self.S(self._evaluator.__call__(self.S(expr)))
+    def __call__(self,expr,cache = None):
+        if cache:
+            return self.S(self._evaluator.__call__(self.S(expr),cache._replacement_map))
+        else:
+            return self.S(self._evaluator.__call__(self.S(expr)))
 
 class ReplaceEvaluator(Evaluator):
 

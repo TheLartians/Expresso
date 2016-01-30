@@ -35,6 +35,9 @@ evaluator.add_rule(1 / -s.x, -(1 / s.x))
 evaluator.add_rule((-s.x)**-1, -((s.x)**-1))
 evaluator.add_rule(-pc.S(0), 0)
 
+evaluator.add_rule(abs(s.x), s.x,condition=s.x>=0)
+evaluator.add_rule(abs(s.x), -s.x,condition=s.x<0)
+
 def extract_intersection(m):
 
     ma = pc.MulplicityList(m[s.x],pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
@@ -122,21 +125,6 @@ evaluator.add_rule( pc.derivative(s.f(s.g(s.x)),s.x) ,
                     pc.evaluated_at( pc.derivative(s.f(pc.tmp(s.x)),pc.tmp(s.x)), pc.tmp(s.x), s.g(s.x) ) * pc.derivative(s.g(s.x),s.x));
 
 evaluator.add_rule(pc.evaluated_at( s.f(s.x), s.x, s.c ), s.f(s.c), condition = pc.Not(is_function_type(s.f(s.x),pc.derivative)) )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -86,8 +86,11 @@ class Expression(core.Expression):
         else:
             raise ValueError('invalid substitution arguments')
 
-        from evaluator import ReplaceEvaluator
-        return ReplaceEvaluator(rep,S=self.S)(self)
+        #from evaluator import ReplaceEvaluator
+        #return ReplaceEvaluator(rep,S=self.S)(self)
+
+        return self.S(core.replace(self,rep))
+
 
     def match(self,search):
         for expr in core.commutative_permutations(search):
@@ -205,15 +208,17 @@ def WrappedFunction(F,S,argc = None):
 
 class ReplacementMap(object):
 
-    def __init__(self,rep,S):
+    def __init__(self,rep = None,S = None):
         
         if isinstance(rep,core.replacement_map):
             self._replacement_map = rep
-        else:
+        elif rep != None:
             self._replacement_map = core.replacement_map()
             for key, value in dict(rep).iteritems():
                 self._replacement_map[S(key)] = S(value)
-                
+        else:
+            self._replacement_map = core.replacement_map()
+
         self.S = S
         
     def __repr__(self):

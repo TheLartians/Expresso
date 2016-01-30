@@ -7,15 +7,14 @@ import numeric_evaluator
 import type_evaluator
 import main_evaluator
 
-def evaluate(expr,context = pc.global_context,format = True):
+def evaluate(expr,context = pc.global_context,cache = None,format = True):
     main = pc.MultiEvaluator(recursive=True,split_binary=True)
     main.add_evaluator(context)
     main.add_evaluator(main_evaluator.main_evaluator)
-    expr = main(expr)
+    expr = main(expr,cache)
     if format:
         expr = canonical_form.format_evaluator(expr)
     return expr
-
 
 def set_debug(v):
 

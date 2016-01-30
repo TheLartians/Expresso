@@ -1,7 +1,7 @@
 
 from expression import *
 from functions import *
-from pysymbols.visitor import add_target
+from pysymbols.visitor import add_target,add_target_obj
 
 
 @add_target(latex,Addition)
@@ -132,4 +132,26 @@ def visit(printer,expr):
 def visit(printer,expr):
     name = printer.format_name(expr.args[0].name)
     return r'%s \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
+
+@add_target_obj(latex,integer_type)
+def visit(printer,expr):
+    v = expr.value
+
+    if v == 0:
+        return '0'
+
+    o = v
+
+    exp = 0
+
+    while (v % 10) == 0:
+        v = v/10
+        exp = exp + 1
+    if exp > 1:
+        if v != 1:
+            return r"%s \cdot 10^{%s}" % (v,exp)
+        if v == 1:
+            return r"10^{%s}" % exp
+
+    return str(o)
 

@@ -76,6 +76,23 @@ evaluator.add_rule(pc.Type(pc.atan2(s.x,s.y)),pc.DominantType(pc.Type(s.x),pc.Ty
 for f in [pc.exp,pc.log,pc.sin,pc.cos,pc.asin ,pc.acos,pc.tan,pc.atan,pc.cot,pc.acot,pc.sinh,pc.cosh,pc.asinh,pc.acosh,pc.tanh,pc.atanh,pc.coth,pc.acoth]:
     evaluator.add_rule(pc.Type(f(s.x)),pc.DominantType(pc.Type(s.x),pc.Types.Rational))
 
+def issubtype(x,t):
+    return pc.Equal(pc.DominantType(pc.Type(x),t),t)
+
+from .logic_evaluator import is_mpmath
+from mpmath import mp
+
+def mpmath_type_evaluator(m):
+    v = m[s.x].value
+    if isinstance(v,mp.mpf):
+        m[s.y] = pc.Types.Real
+    elif isinstance(v,mp.mpc):
+        m[s.y] = pc.Types.Complex
+    else:
+        raise AttributeError('unknown mpmath type')
+
+evaluator.add_rule(pc.Type(s.x),s.y,condition=is_mpmath(s.x))
+
 
 from .canonical_form import canonical_form
 from .logic_evaluator import logic_evaluator

@@ -39,6 +39,14 @@ namespace symbols {
 #endif
         return true;
       }
+      //TODO: we should figure out how check for infinite recursion without screwing up the evaluation process
+      //if(expression_stack.find(*e) != expression_stack.end()){
+#ifdef VERBOSE
+        //std::cout << "stopped recursion: " << *e << std::endl;
+#endif
+        //copy = *e;
+        //return true;
+      //}
       return false;
     }
     
@@ -63,17 +71,20 @@ namespace symbols {
         }
       }
     }
-    
+  
+  expression EvaluatorVisitor::evaluate(expression e){
+#ifdef VERBOSE
+    std::cout << "Evaluate: " << e << std::endl;
+#endif
+    copy = expression();
+    e->accept(this);
+    if(copy) return copy;
+    return e;
+  }
+  
     bool EvaluatorVisitor::copy_function(const Function * e){
       
       if(is_cached(e)){
-        return true;
-      }
-      
-      if(expression_stack.find(*e) != expression_stack.end()){
-#ifdef VERBOSE
-        std::cout << "stopped recursion: " << *e << std::endl;
-#endif
         return true;
       }
       
@@ -107,7 +118,6 @@ namespace symbols {
       
       expression_stack.erase(expression_stack.find(*e));
       return false;
-      
     }
     
     void EvaluatorVisitor::visit(const Function * e){
@@ -120,7 +130,7 @@ namespace symbols {
       if(*tmp!=*e) add_to_cache(tmp,copy);
       finalize(e);
     }
-    
+  
     void EvaluatorVisitor::visit_binary(const BinaryOperator * e){
       if(copy_function(e)) return;
       
@@ -226,7 +236,9 @@ namespace symbols {
       std::cout << "visit atomic: " << *e << std::endl;
 #endif
       if(is_cached(e)) return;
+      expression_stack.emplace(*e);
       copy = evaluator.evaluate(e->get_shared(),*this);
+      expression_stack.erase(expression_stack.find(*e));
       modified |= copy != e;
       finalize(e);
     }
@@ -366,15 +378,23 @@ namespace symbols {
   }
   
   expression RuleEvaluator::evaluate(expression e,EvaluatorVisitor &v,std::vector<rule_id> m)const{
+    
+#ifdef VERBOSE
+    std::cout << "entering rule evaluator: " << e << std::endl;
+#endif
+
+    
     replacement_map raw_wildcards;
     
     get_matches(e, search_tree, raw_wildcards, m);
     
+    /*
     std::sort(m.begin(), m.end(), [this](rule_id a, rule_id b){
       auto pa = rules[a].priority,pb = rules[b].priority; if(pa == pb) return a<b;
       return pa < pb;
     });
-    
+    */
+     
     std::vector<expression> wc_functions;
     replacement_map wildcards;
 
@@ -424,17 +444,27 @@ namespace symbols {
         }
       }
       
+      if(!valid) continue;
+      
+#ifdef VERBOSE
+      std::cout << "matched " << current.rule.search << ", wildcards: ";
+      for(auto r:wildcards){
+        std::cout << "(" << r.first << "," << r.second << "),";
+      }
+#endif
       
       if(current.rule.condition){
+#ifdef VERBOSE
+        std::cout << "checking condition on rule " << current.rule << std::endl;
+        std::cout << replace(current.rule.condition,wildcards) << std::endl;
+#endif
         if(v.evaluate(replace(current.rule.condition,wildcards)) == current.rule.valid){
           if(current.rule.evaluator) for(auto &rep:wildcards) rep.second = v.evaluate(rep.second);
         }
         else continue;
       }
       
-      if(valid && current.rule.evaluator) valid = current.rule.evaluator(wildcards,v);
-      if(!valid) continue;
-      
+      if(current.rule.evaluator) if(!current.rule.evaluator(wildcards,v)) continue;
       
       auto res = replace(current.rule.replacement, wildcards);
       

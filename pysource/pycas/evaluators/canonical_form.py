@@ -2,7 +2,7 @@
 import pycas as pc
 import rule_symbols as s
 
-evaluator = pc.RewriteEvaluator(recursive=True,split_binary=False)
+evaluator = pc.RewriteEvaluator(recursive=True,split_binary=True)
 canonical_form = evaluator
 
 def normalize_exponentiation(m):
@@ -32,6 +32,14 @@ canonical_form.add_rule(s.x**s.y, s.z, normalize_exponentiation)
 canonical_form.add_rule(pc.exp(s.x),pc.e**s.x)
 canonical_form.add_rule(pc.sqrt(s.x),s.x**(pc.S(1)/2))
 
+
+canonical_form.add_rule(s.x>s.y,s.y<s.x)
+canonical_form.add_rule(s.x>=s.y,s.y<=s.x)
+canonical_form.add_rule(s.x<=s.y,pc.Or(s.x<s.y,pc.Equal(s.x,s.y)))
+
+#canonical_form.add_rule(abs(s.x)<s.y,pc.And(s.x<s.y,-s.x<s.y),condition=pc.And(s.y>0,pc.Equal(pc.DominantType(pc.Type(s.x),pc.Types.Real),pc.Types.Real)))
+
+
 pp = pc.PiecewisePart
 canonical_form.add_rule(pc.Piecewise((s.a,s.b),s.x),pc.Piecewise(pp(s.a,s.b),s.x))
 
@@ -45,3 +53,5 @@ format_evaluator.add_rule(s.x**(pc.S(1)/2),pc.sqrt(s.x))
 format_evaluator.add_rule(s.x**s.a/s.y**s.a,(s.x/s.y)**s.a)
 format_evaluator.add_rule(s.x**s.a*s.y**s.a,(s.x*s.y)**s.a)
 format_evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x/s.y)**s.a)
+
+format_evaluator.add_rule(pc.Or(s.x<s.y,pc.Equal(s.x,s.y)),s.x<=s.y)

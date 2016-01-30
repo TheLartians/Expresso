@@ -185,20 +185,33 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
     def __repr__(self):
          return printer(self)
 
-    def evaluate(self,context = None,*args,**kwargs):
+    def evaluate(self,context = None,**kwargs):
         if context == None:
             context = global_context
         from evaluators import evaluate
-        return evaluate(self,global_context,*args,**kwargs)
+        return evaluate(self,context = context,**kwargs)
     
     def subs(self,*args,**kwargs):
         #do_evaluate = kwargs.pop('evaluate',True)
         res = self.replace(*args)
         return res
 
-    def N(self,*args,**kwargs):
+    def N(self,prec = 16,**kwargs):
         from .compiler import N
-        return N(self,*args,**kwargs)
+        return N(self,mp_dps=prec,**kwargs)
+
+    def __float__(self):
+        return float(self.N())
+
+    def __complex__(self):
+        return complex(self.N())
+
+    def __int__(self):
+        return int(str(self))
+
+    def __long__(self):
+        return long(str(self))
+
 
 locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)
 
@@ -212,7 +225,7 @@ global_context = Context()
 One = S(1)
 Zero = S(0)
 NaN = Symbol('NaN')
-I = Symbol('_I')
+I = Symbol('imaginary unit')
 
 Addition = BinaryOperator("+",pysymbols.associative,pysymbols.commutative,-11)
 Negative = UnaryOperator("-",pysymbols.prefix,-12)

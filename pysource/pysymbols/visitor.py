@@ -65,11 +65,6 @@ class Dispatcher(object):
             else:
                 v = arg.value
                 if v is not None:
-                    try:
-                        d = self.targets.get((obj,v))
-                        if d: return d
-                    except TypeError:
-                        pass
                     d = self.targets.get((obj,type(v)))
                     if d: return d
                     d = self.targets.get(obj)
@@ -307,12 +302,20 @@ def visitor_class(visit_name = 'visit'):
     return Visitor
 
 
-def add_target(visitor,target,visit_name = 'visit'):
+def add_target(visitor,target):
     
     def decorator(fn):
         visitor.dispatcher.register_target(target,fn)
     
     return decorator
+
+def add_target_obj(visitor,target):
+
+    def decorator(fn):
+        visitor.dispatcher.register_target((obj,target),fn)
+
+    return decorator
+
 
 
 

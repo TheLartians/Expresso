@@ -2,6 +2,7 @@
 import pysymbols.visitor as visitor
 from .expression import *
 from .functions import *
+from mpmath import mp
 
 class LambdaCompiler(object):
 
@@ -205,6 +206,11 @@ class LambdaCompiler(object):
         callback = f.python_function
         return lambda args:callback(*[arg(args) for arg in cargs])
 
+    @visitor.obj
+    def visit(self,expr):
+        value = self.value_converter(expr.value)
+        return lambda args:value
+
 def lambdify(expr,**kwargs):
     compiler = LambdaCompiler(**kwargs)
     compiled = compiler.visit(S(expr))
@@ -348,6 +354,9 @@ class FunctionDefinition(object):
         self.arg_types = arg_types
         self.use_parallel = use_parallel
 
+    def __str__(self):
+        return '%s(%s) = %s' % (self.name,','.join([str(arg) for arg in self.args]),self.expr)
+
 
 def make_parallel(f):
 
@@ -429,7 +438,6 @@ def numpyfy(expr,dtype = float,parallel = False):
     else:
         return call
 
-
 def ccompile(*function_definitions,**kwargs):
     from .codeprinter import CCodePrinter,c_complex
     import tempfile
@@ -438,12 +446,13 @@ def ccompile(*function_definitions,**kwargs):
     from subprocess import Popen, PIPE
 
     ccode_printer = CCodePrinter()
+    code  = ccode_printer.print_file(*function_definitions)
 
     output_directory = tempfile.mkdtemp()
 
     object_file = output_directory+'/'+'pycas_compiled_expression.o'
     p = Popen(['g++','-o',object_file,'-c','-xc++','-std=c++11','-funsafe-math-optimizations','-O3','-fPIC', '-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    p.stdin.write(ccode_printer.print_file(*function_definitions))
+    p.stdin.write(code)
     p.stdin.close()
 
     return_code = p.wait()
@@ -479,11 +488,22 @@ def ccompile(*function_definitions,**kwargs):
         def __call__(self,*args):
             if(len(args) == 0):
                 return self.cf()
-            if isinstance(args[0],(list,tuple)):
+            if any([isinstance(arg,(list,tuple)) for arg in args]):
                 argtypes = self.cf_vector.argtypes
                 args = [np.array(arg,dtype=t) for t,arg in zip(argtypes[2:],args)]
-            if isinstance(args[0],np.ndarray):
+            if any([isinstance(arg,np.ndarray) for arg in args]):
                 argtypes = self.cf_vector.argtypes
+
+                shape = None
+                for arg in args:
+                    if isinstance(arg,np.ndarray):
+                        if shape == None:
+                            shape = arg.shape
+                        else:
+                            if arg.shape != shape:
+                                raise AttributeError('c function got arguments with different shapes')
+
+                args = [arg if isinstance(arg,np.ndarray) else arg * np.ones(shape) for arg in args]
                 args = [np.ascontiguousarray(arg,dtype=t._type_) for t,arg in zip(argtypes[2:],args)]
 
                 if argtypes[1]._type_ == c_complex:
@@ -502,13 +522,12 @@ def ccompile(*function_definitions,**kwargs):
         def address(self):
             return ctypes.cast(self.cf, ctypes.c_void_p).value
 
-
-
     class CompiledLibrary(object):
-        def __init__(self,lib):
+        def __init__(self,lib,code):
             self.lib = lib
+            self.code = code
 
-    res = CompiledLibrary(lib)
+    res = CompiledLibrary(lib,code)
 
     for definition in function_definitions:
         f = getattr(lib,definition.name)
