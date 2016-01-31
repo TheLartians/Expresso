@@ -1,4 +1,6 @@
-from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Tuple,Wildcard
+from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Wildcard,Number,Expression,S
+from .expression import One,Zero,NaN,I,Addition,Negative,Multiplication,Fraction,Exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,Mod,Equal,NotEqual,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
+
 import pysymbols
 
 # Symbols
@@ -68,16 +70,53 @@ Type = Function('Type',argc = 1)
 DominantType = BinaryOperator('<>',pysymbols.associative,pysymbols.commutative,0)
 OperationType = Function('OperationType',argc = 1)
 
+
+class TypeInfo(object):
+    def __init__(self,**kwargs):
+        self.__dict__.update(kwargs)
+
+    def __repr__(self):
+        return repr('pyCAS.TypeInfo<%s>' % self.__dict__)
+
+def create_type(name,**kwargs):
+    return S(pysymbols.create_object(TypeInfo(name=name,**kwargs),'pyCAS type ' + name))
+
 class Types:
-  Boolean = Symbol('Boolean')
-  Natural = Symbol('Natural')
-  Integer = Symbol('Integer')
-  Rational = Symbol('Rational')
-  Real = Symbol('Real')
-  Complex = Symbol('Complex')
-  Imaginary = Symbol('Imaginary')
-  Unit = Symbol('Unit')
-  Type = Symbol('Type')
+  Boolean = create_type('Boolean',python_type=bool,c_type='bool')
+  Natural = create_type('Natural',python_type=long,c_type='unsigned')
+  Integer = create_type('Integer',python_type=long,c_type='long')
+  Rational = create_type('Rational',python_type=float,c_type='double')
+  Real = create_type('Real',python_type=float,c_type='double')
+  Complex = create_type('Complex',python_type=complex,c_type='c_complex')
+  Imaginary = create_type('Imaginary',python_type=complex,c_type='c_complex')
+  Unit = create_type('Unit')
+  Type = create_type('Type')
+
+
+class type_converters:
+
+    import numpy as np
+
+    compatible_numpy_types = {
+        bool:bool,
+        int:int,
+        float:float,
+        np.float64:np.float64,
+        complex:np.complex128,
+        np.complex128:np.complex128
+    }
+
+    numpy_c_typenames = {
+        np.bool.__name__:'bool',
+        np.int.__name__:'int',
+        np.int8.__name__:'int8_t',
+        np.int16.__name__:'int16_t',
+        np.int32.__name__:'int32_t',
+        np.int64.__name__:'int64_t',
+        np.float.__name__:'float',
+        np.float64.__name__:'double',
+        np.complex128.__name__:'complex<double>'
+    }
 
 
 # Custom Function
@@ -117,7 +156,7 @@ def custom_function(name,argc = None,return_type = None,**kwargs):
     if return_type != None:
         if not argc:
             raise ValueError('argc needs to be defined to register result type')
-        from evaluate import type_evaluator
+        from evaluators.type_evaluator import type_evaluator
         for c in argc:
             type_evaluator.add_rule(Type(res(*[Wildcard(str(s)) for s in range(c)])),return_type)
 
@@ -126,37 +165,15 @@ def custom_function(name,argc = None,return_type = None,**kwargs):
 
 ArrayAccess = Function("ArrayAccess")
 
-class numpy_converters:
-
-    import numpy as np
-
-    compatible_numpy_types = {bool:bool,
-                              int:int,
-                              float:float,
-                              np.float64:np.float64,
-                              complex:np.complex128,
-                              np.complex128:np.complex128}
-
-    numpy_c_typenames = {np.bool.__name__:'bool',
-                         np.int.__name__:'int',
-                         np.int8.__name__:'int8_t',
-                         np.int16.__name__:'int16_t',
-                         np.int32.__name__:'int32_t',
-                         np.int64.__name__:'int64_t',
-                         np.float.__name__:'float',
-                         np.float64.__name__:'double',
-                         np.complex128.__name__:'complex<double>'}
-
-
 def array(name,inarray,copy = True):
     import numpy as np
 
-    cast_type = numpy_converters.compatible_numpy_types.get(inarray.dtype)
+    cast_type = type_converters.compatible_numpy_types.get(inarray.dtype)
 
     if not cast_type:
-        for t in numpy_converters.compatible_numpy_types:
+        for t in type_converters.compatible_numpy_types:
             if isinstance(inarray.dtype,t):
-                cast_type = numpy_converters.compatible_numpy_types[t]
+                cast_type = type_converters.compatible_numpy_types[t]
 
     array = np.ascontiguousarray(inarray,dtype=cast_type)
     pointer = array.ctypes.data

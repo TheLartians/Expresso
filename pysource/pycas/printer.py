@@ -133,15 +133,10 @@ def visit(printer,expr):
     name = printer.format_name(expr.args[0].name)
     return r'%s \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
 
-@add_target_obj(latex,integer_type)
+@add_target_obj(latex, Number)
 def visit(printer,expr):
     v = expr.value
-
-    if v == 0:
-        return '0'
-
     o = v
-
     exp = 0
 
     while (v % 10) == 0:

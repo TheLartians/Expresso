@@ -11,14 +11,14 @@ def normalize_exponentiation(m):
         return False
 
     candidates = [arg for arg in f.args if arg.function == pc.Exponentiation]
-    candidates += [arg for arg in f.args if isinstance(arg.value,pc.integer_type)]
+    candidates += [arg for arg in f.args if isinstance(arg.value, pc.Number)]
 
     if len(candidates) == 0:
         return False
 
     e = m[s.y]
     exponents = [arg.args[0]**(arg.args[1]*e) for arg in f.args if arg.function == pc.Exponentiation]
-    exponents += [arg**e for arg in f.args if isinstance(arg.value,pc.integer_type)]
+    exponents += [arg ** e for arg in f.args if isinstance(arg.value, pc.Number)]
 
     if len(candidates) != len(f.args):
         exponents += [pc.Multiplication(*[arg for arg in f.args if arg not in candidates])**e]
@@ -46,7 +46,7 @@ canonical_form.add_rule(pc.Piecewise((s.a,s.b),s.x),pc.Piecewise(pp(s.a,s.b),s.x
 
 format_evaluator = pc.RewriteEvaluator(recursive=True,split_binary=True)
 format_evaluator.add_rule(s.x**-1,1/s.x)
-format_evaluator.add_rule(s.x**-s.y,1/s.x**s.y,lambda m:isinstance(m[s.y].value,pc.integer_type))
+format_evaluator.add_rule(s.x ** -s.y, 1 / s.x ** s.y, lambda m:isinstance(m[s.y].value, pc.Number))
 format_evaluator.add_rule(pc.e**s.x,pc.exp(s.x))
 format_evaluator.add_rule(s.x**(pc.S(1)/2),pc.sqrt(s.x))
 

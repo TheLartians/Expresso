@@ -17,7 +17,7 @@ contains_atomic = pc.Function('contains atomic')
 
 def is_explicit_natural_evaluator(m):
     for expr in m:
-        if not isinstance(expr[1].value,pc.integer_type):
+        if not isinstance(expr[1].value, pc.Number):
             m[s.y] = False
             return
     m[s.y] = True

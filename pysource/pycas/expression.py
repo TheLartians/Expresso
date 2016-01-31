@@ -1,6 +1,8 @@
 
 import pysymbols
 
+Number = long
+
 def Symbol(name,type=None,positive = False,latex = None):
     s = Expression(pysymbols.create_symbol(name))
     if type != None:
@@ -14,10 +16,7 @@ def Symbol(name,type=None,positive = False,latex = None):
         @add_target(latex,s)
         def print_latex(printer,expr):
             return latex_rep
-
     return s
-
-integer_type = long
 
 def expression_converter(expr):
     if isinstance(expr,pysymbols.core.Expression):
@@ -29,45 +28,23 @@ def expression_converter(expr):
             return Symbol('True')
         if expr == False:
             return Symbol('False')
-    if isinstance(expr,int):
-        expr = integer_type(expr)
-    if isinstance(expr,integer_type):
+    if isinstance(expr,(int)):
+        expr = Number(expr)
+    if isinstance(expr, Number):
         if expr >= 0:
             return Expression(pysymbols.create_object(expr))
         else:
             expr = abs(expr)
             return Negative(pysymbols.create_object(expr))
     if isinstance(expr,float):
-        s = repr(expr)
-        split = s.split('e')
-        if len(split) == 2:
-            mantissa,exponent = (split[0],integer_type(split[1]))
+        import fractions
+        f = fractions.Fraction(repr(expr))
+        if f.denominator == 1:
+            return expression_converter(f.numerator)
+        if f.numerator == 1:
+            return Fraction(f.denominator)
         else:
-            exponent = 0
-            mantissa = split[0]
-        decimal = mantissa.find('.')
-        mantissa = mantissa.replace('.','')
-        if decimal != -1:
-            exponent -= len(mantissa) - decimal
-        mantissa = mantissa.lstrip('0')
-        while len(mantissa) > 1 and mantissa[-1] == '0':
-            exponent += 1
-            mantissa = mantissa[:-1]
-        if len(mantissa) == 0:
-            return Zero
-
-        try:
-            mantissa = integer_type(mantissa)
-        except ValueError:
-            return NaN
-
-        test_str = "%se%s" % (mantissa,exponent)
-        assert eval(test_str) == expr, "float conversion error: %s != %s" % (eval(test_str),expr)
-        if exponent == 0:
-            return S(mantissa)
-        if mantissa == 1:
-            return 10**S(exponent)
-        return (S(mantissa) * 10**S(exponent))
+            return f.numerator * Fraction(f.denominator)
     if isinstance(expr,complex):
         if expr.real == 0:
             if expr.imag == 0:
@@ -197,7 +174,7 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
         return res
 
     def N(self,prec = 16,**kwargs):
-        from .compiler import N
+        from compilers import N
         return N(self,mp_dps=prec,**kwargs)
 
     def __float__(self):
