@@ -4,7 +4,7 @@ import evaluator
 import printer
 import visitor
 
-from expression import associative,non_associative,commutative,non_commutative,postfix,prefix
+from expression import associative,non_associative,left_associative,right_associative,commutative,non_commutative,postfix,prefix
 
 def create_object(value,string = None):
     if string is None:

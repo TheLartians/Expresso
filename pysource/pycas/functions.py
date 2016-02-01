@@ -28,7 +28,7 @@ Imag = Function('imag',argc = 1)
 Conjugate = Function('conjugate',argc = 1)
 
 Indicator = Function('indicator',argc = 1)
-Piecewise = BinaryOperator('}{',-14)
+Piecewise = BinaryOperator('}{',pysymbols.associative,pysymbols.non_commutative,-14)
 PiecewisePart = Function('piecewise part',argc = 2)
 
 # Calculus
@@ -78,8 +78,14 @@ class TypeInfo(object):
     def __repr__(self):
         return repr('pyCAS.TypeInfo<%s>' % self.__dict__)
 
+
+inverse_python_types = {}
+
 def create_type(name,**kwargs):
-    return S(pysymbols.create_object(TypeInfo(name=name,**kwargs),'pyCAS type ' + name))
+    res = S(pysymbols.create_object(TypeInfo(name=name,**kwargs),'pyCAS type ' + name))
+    if 'python_type' in kwargs:
+        inverse_python_types[kwargs['python_type']] = res
+    return res
 
 class Types:
   Boolean = create_type('Boolean',python_type=bool,c_type='bool')
@@ -91,32 +97,6 @@ class Types:
   Imaginary = create_type('Imaginary',python_type=complex,c_type='c_complex')
   Unit = create_type('Unit')
   Type = create_type('Type')
-
-
-class type_converters:
-
-    import numpy as np
-
-    compatible_numpy_types = {
-        bool:bool,
-        int:int,
-        float:float,
-        np.float64:np.float64,
-        complex:np.complex128,
-        np.complex128:np.complex128
-    }
-
-    numpy_c_typenames = {
-        np.bool.__name__:'bool',
-        np.int.__name__:'int',
-        np.int8.__name__:'int8_t',
-        np.int16.__name__:'int16_t',
-        np.int32.__name__:'int32_t',
-        np.int64.__name__:'int64_t',
-        np.float.__name__:'float',
-        np.float64.__name__:'double',
-        np.complex128.__name__:'complex<double>'
-    }
 
 
 # Custom Function
@@ -165,6 +145,33 @@ def custom_function(name,argc = None,return_type = None,**kwargs):
 
 ArrayAccess = Function("ArrayAccess")
 
+
+class type_converters:
+
+    import numpy as np
+
+    compatible_numpy_types = {
+        bool:bool,
+        int:int,
+        float:float,
+        np.float64:np.float64,
+        complex:np.complex128,
+        np.complex128:np.complex128
+    }
+
+    numpy_c_typenames = {
+        np.bool.__name__:'bool',
+        np.int.__name__:'int',
+        np.int8.__name__:'int8_t',
+        np.int16.__name__:'int16_t',
+        np.int32.__name__:'int32_t',
+        np.int64.__name__:'int64_t',
+        np.float.__name__:'float',
+        np.float64.__name__:'double',
+        np.complex128.__name__:'complex<double>'
+    }
+
+
 def array(name,inarray,copy = True):
     import numpy as np
 
@@ -182,8 +189,6 @@ def array(name,inarray,copy = True):
         if pointer != inarray.ctypes.data:
             raise ValueError('cannot include array in expression without copying (not contigous or incompatible type)')
 
-    aray_obj = pysymbols.create_object(array,name)
-
     class ArrayAccessDelegate(object):
 
         def __init__(self,name,array):
@@ -199,6 +204,12 @@ def array(name,inarray,copy = True):
                 raise ValueError('%s takes %s arguments' % (self.name,self.argc))
             args = [self.array_obj] + list(args)
             return ArrayAccess(*args)
+
+    for t,v in inverse_python_types.iteritems():
+        if isinstance(inarray.dtype,t):
+            from evaluators.type_evaluator import type_evaluator
+            type_evaluator.add_rule(ArrayAccessDelegate([Wildcard(str(i)) for i in range(array.shape)]),v)
+            break
 
     return ArrayAccessDelegate(name,array)
 

@@ -8,6 +8,8 @@ evaluator = pc.RewriteEvaluator(recursive=True, split_binary=True)
 
 from .logic_evaluator import is_explicit_natural,is_function_type
 
+evaluator.add_rule(pc.DominantType(s.x),s.x)
+
 for i in range(len(ordered_types)):
     evaluator.add_rule(pc.DominantType(pc.Types.Imaginary,ordered_types[i]),pc.Types.Complex)
     evaluator.add_rule(pc.Type(ordered_types[i]),pc.Types.Type)

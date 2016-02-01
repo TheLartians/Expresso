@@ -25,9 +25,9 @@ def expression_converter(expr):
         return expr
     if isinstance(expr,bool):
         if expr == True:
-            return Symbol('True')
+            return Expression(pysymbols.create_object(expr))
         if expr == False:
-            return Symbol('False')
+            return Expression(pysymbols.create_object(expr))
     if isinstance(expr,(int)):
         expr = Number(expr)
     if isinstance(expr, Number):
@@ -162,6 +162,12 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
     def __repr__(self):
          return printer(self)
 
+    def __iter__(self):
+        from .functions import Tuple
+        if self.function == Tuple:
+            return self.args.__iter__()
+        raise AttributeError('%s object has no attribute __iter__' % type(self))
+
     def evaluate(self,context = None,**kwargs):
         if context == None:
             context = global_context
@@ -178,16 +184,24 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
         return N(self,mp_dps=prec,**kwargs)
 
     def __float__(self):
-        return float(self.N())
+        return float(self.evaluate().N())
 
     def __complex__(self):
-        return complex(self.N())
+        return complex(self.evaluate().N())
 
     def __int__(self):
-        return int(str(self))
+        from compilers import lambdify
+        val = lambdify(self.evaluate())()
+        if not isinstance(val,(int,long)):
+            raise RuntimeError('expression %s is not convertable to int' % self)
+        return int(val)
 
     def __long__(self):
-        return long(str(self))
+        from compilers import lambdify
+        val = lambdify(self.evaluate())()
+        if not isinstance(val,(int,long)):
+            raise RuntimeError('expression %s is not convertable to int' % self)
+        return long(val)
 
 
 locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)
@@ -201,8 +215,8 @@ global_context = Context()
 
 One = S(1)
 Zero = S(0)
-NaN = Symbol('NaN')
-I = Symbol('imaginary unit')
+NaN = S( pysymbols.create_object(float('nan'),'undefined value') )
+I = S( pysymbols.create_object(1j,'imaginary unit') )
 
 Addition = BinaryOperator("+",pysymbols.associative,pysymbols.commutative,-11)
 Negative = UnaryOperator("-",pysymbols.prefix,-12)

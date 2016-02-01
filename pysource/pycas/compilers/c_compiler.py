@@ -8,13 +8,13 @@ from mpmath import mp
 
 class FunctionDefinition(object):
 
-    def __init__(self,name,args,expr,return_type = None,arg_types = None,use_parallel=True):
+    def __init__(self, name, args, expr, return_type = None, arg_types = None, parallel=True):
         self.name = name
         self.expr = e.S(expr)
         self.args = args
         self.return_type = return_type
         self.arg_types = arg_types
-        self.use_parallel = use_parallel
+        self.parallel = parallel
 
     def __str__(self):
         return '%s(%s) = %s' % (self.name,','.join([str(arg) for arg in self.args]),self.expr)
@@ -260,6 +260,16 @@ template <class T,size_t ... size> struct mapped_ndarray{
         from pycas.evaluators.optimizers import optimize_for_compilation
         return optimize_for_compilation(expr)
 
+    def get_body_code(self,definition):
+        if definition.return_type == None:
+            return_type = self.print_typename(f.Type(definition.expr).evaluate())
+        else:
+            return_type = self.print_typename(definition.return_type)
+        f_code = self(self.optimize_function(definition.expr))
+        if return_type in self.type_converters and isinstance(self.type_converters[return_type],tuple):
+            f_code = self.type_converters[return_type][1](f_code)
+        return f_code
+
     def generate_function(self,definition):
 
         if definition.return_type == None:
@@ -278,9 +288,7 @@ template <class T,size_t ... size> struct mapped_ndarray{
                                 for arg,t in zip(args,argument_types)
                                 if t in self.type_converters}
 
-        f_code = self(self.optimize_function(definition.expr))
-        if return_type in self.type_converters and isinstance(self.type_converters[return_type],tuple):
-            f_code = self.type_converters[return_type][1](f_code)
+        f_code = self.get_body_code(definition)
 
         formatted = (return_type, definition.name,
                     ','.join(['%s %s' % (type,arg.name) for arg,type in zip(args,argument_types)]),
@@ -313,13 +321,11 @@ template <class T,size_t ... size> struct mapped_ndarray{
         argument_types = ['unsigned',return_type] + argument_types
 
         if not use_previous_definition :
-            f_code = self(self.optimize_function(definition.expr))
-            if return_type in self.type_converters:
-                f_code = "%s(%s)" % (self.type_converters[return_type],f_code)
+            f_code = self.get_body_code(definition)
         else:
             f_code = '%s(%s)' % (definition.name,','.join(self(arg) for arg in definition.args))
 
-        if definition.use_parallel:
+        if definition.parallel:
             f_code = 'parallel_for(0,__size,[&](unsigned __i){ __res[__i] = %s; }); ' % f_code
         else:
             f_code = 'for(unsigned __i = 0; __i<__size;++__i) __res[__i] = %s;' % f_code
@@ -332,7 +338,7 @@ template <class T,size_t ... size> struct mapped_ndarray{
 
         definition.c_vectorized_arg_types = [self.get_ctype(arg_type) for arg_type in argument_types]
 
-        return 'extern "C"{ void %s(%s){\n\t%s\n} }' % formatted
+        return 'extern "C"{\nvoid %s(%s){\n\t%s\n}\n}' % formatted
 
 
 def ccompile(*function_definitions,**kwargs):

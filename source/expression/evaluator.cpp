@@ -136,7 +136,7 @@ namespace symbols {
       
       auto c = copy->static_as<BinaryOperator>();
       
-      if(c->arguments.size()<=2){
+      if(e->associativity == BinaryOperator::non_associative || c->arguments.size()<=2){
 #ifdef VERBOSE
         std::cout << "visit binary as function: " << *e << std::endl;
 #endif
@@ -156,7 +156,10 @@ namespace symbols {
       std::unique_ptr<BinaryIterator> bit;
       
       if(e->is_commutative()) bit.reset(new BinaryIterators::SingleOrdered(2));
-      else bit.reset(new BinaryIterators::Window(2));
+      else{
+          // TODO: add real associativity support
+          bit.reset(new BinaryIterators::Window(2));
+      }
       bit->init(c.get());
       
       do {
@@ -201,8 +204,6 @@ namespace symbols {
       } while (bit->step());
       
       if(ignore_indices.size() != 0){
-        if(ignore_indices.size() == c->arguments.size() && new_args.size() == 1) copy = new_args.front();
-        else {
           for(auto arg:enumerate(c->arguments)) if(ignore_indices.find(arg.index) == ignore_indices.end()) {
             if(c->is_commutative()) new_args.emplace_back(arg.value);
             else{
@@ -213,7 +214,6 @@ namespace symbols {
           }
           copy = c->clone(std::move(new_args));
           modified = true;
-        }
       }
       else{
         copy = c;

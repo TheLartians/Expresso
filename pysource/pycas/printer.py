@@ -3,7 +3,6 @@ from expression import *
 from functions import *
 from pysymbols.visitor import add_target,add_target_obj
 
-
 @add_target(latex,Addition)
 def visit(printer,expr):
     neg_args = [arg for arg in expr.args if arg.function == Negative]
@@ -19,7 +18,7 @@ def visit(printer,expr):
 def visit(printer,expr):
     denominators = [arg for arg in expr.args if arg.function == Fraction]
     if len(denominators)>0:
-        numerators = [arg for arg in expr.args if arg.is_atomic]
+        numerators = [arg for arg in expr.args if arg.is_atomic and not arg == I]
         if len(numerators) == 0:
             numerators = [One]
 
@@ -71,6 +70,7 @@ def visit(printer,expr):
 
 
 latex.register_printer(pi,lambda p,e:r'\pi ')
+latex.register_printer(e,lambda p,e:r'e ')
 latex.register_printer(oo,lambda p,e:r'\infty ')
 
 latex.register_printer(I,lambda p,e:r'i ')
@@ -136,6 +136,10 @@ def visit(printer,expr):
 @add_target_obj(latex, Number)
 def visit(printer,expr):
     v = expr.value
+
+    if v == 0:
+        return '0'
+
     o = v
     exp = 0
 

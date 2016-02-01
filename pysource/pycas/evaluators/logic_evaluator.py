@@ -22,7 +22,7 @@ def is_explicit_natural_evaluator(m):
             return
     m[s.y] = True
 
-logic_evaluator.add_rule(is_explicit_natural(s.x),s.y,is_explicit_natural_evaluator,condition=is_atomic(s.x))
+logic_evaluator.add_rule(is_explicit_natural(s.x),s.y,is_explicit_natural_evaluator)
 
 def is_function_type(expr,function):
     return is_function(expr,pc.pysymbols.create_object(function))

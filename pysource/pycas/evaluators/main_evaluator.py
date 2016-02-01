@@ -91,11 +91,9 @@ evaluator.add_rule(pc.Indicator(False), 0)
 
 
 pp = pc.PiecewisePart
-evaluator.add_rule(pc.Piecewise(s.x,(s.a,s.b)),pc.Piecewise(s.x,pp(s.a,s.b)))
-
-evaluator.add_rule(pc.Piecewise(pp(s.a,True),s.x),pp(s.a,True))
-evaluator.add_rule(pc.Piecewise(pp(s.a,False),s.x),s.x)
-evaluator.add_rule(pc.Piecewise(s.x,pp(s.a,False)),s.x)
+evaluator.add_rule(pc.Piecewise(pp(s.a,True),s.x),pc.Piecewise(pp(s.a,True)))
+evaluator.add_rule(pc.Piecewise(pp(s.a,False),s.x),pc.Piecewise(s.x))
+evaluator.add_rule(pc.Piecewise(s.x,pp(s.a,False)),pc.Piecewise(s.x))
 
 
 

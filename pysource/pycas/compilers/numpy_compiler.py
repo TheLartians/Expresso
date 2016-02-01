@@ -3,6 +3,7 @@ from .lambda_compiler import LambdaCompiler,visitor
 import numpy as np
 import pycas.expression as e
 import pycas.functions as f
+from mpmath import mp
 
 class NumpyCompiler(LambdaCompiler):
 
@@ -120,6 +121,14 @@ class NumpyCompiler(LambdaCompiler):
 
         return access_function
 
+    @visitor.obj(mp.mpc)
+    def visit(self,expr):
+        return lambda args:complex(expr.value)
+
+    @visitor.obj(mp.mpf)
+    def visit(self,expr):
+        return lambda args:float(expr.value)
+
 
 def make_parallel(f):
 
@@ -156,8 +165,9 @@ def make_parallel(f):
             threads.append(t)
             t.start()
 
-        for r in threads:
+        for t in threads:
             t.join()
+
 
         return result
 
@@ -166,12 +176,16 @@ def make_parallel(f):
 
 def numpyfy(expr,dtype = float,parallel = False):
 
+    from pycas.evaluators.optimizers import optimize_for_compilation
+
     compiler = NumpyCompiler(dtype)
-    res = compiler.visit(e.S(expr))
+    res = compiler.visit(optimize_for_compilation(e.S(expr)))
 
     res_type = f.Type(expr).evaluate(cache=compiler.cache).value
     if isinstance(res_type,f.TypeInfo):
         restype = res_type.__dict__.get('python_type')
+        if restype == None:
+            res_type = dtype
     else:
         restype = dtype
 

@@ -77,7 +77,7 @@ namespace symbols {
       std::sort(args.begin(), args.end());
     }
     
-    if(arguments.size() == 1) throw std::runtime_error("created binary operator with only one argument");
+    //if(arguments.size() == 1) throw std::runtime_error("created binary operator with only one argument");
     
   }
   

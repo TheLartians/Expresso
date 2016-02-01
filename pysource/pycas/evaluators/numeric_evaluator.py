@@ -40,8 +40,6 @@ def exp_length(a,b):
     import math as m
     return m.log10(a)*b
 
-# if exp_length(x,y)<20 else None
-
 evaluator.add_rule(s.x ** s.y, s.z, binary_rule(lambda x, y: x ** y if exp_length(x,y)<100 else None), condition=are_explicit_numbers(s.x, s.y))
 evaluator.add_rule(s.x ** -s.y, s.z ** -1, binary_rule(lambda x, y: x ** y if exp_length(x,y)<100 else None), condition=are_explicit_numbers(s.x, s.y))
 
@@ -75,8 +73,17 @@ evaluator.add_rule(s.x*s.z**-1<s.y,s.x<s.y*s.z ,condition=are_explicit_numbers(s
 evaluator.add_rule(s.x<-(s.y*s.z**-1),s.z*s.x<-s.y ,condition=are_explicit_numbers(s.y,s.z))
 evaluator.add_rule(-(s.x*s.z**-1)<s.y,-s.x<s.y*s.z ,condition=are_explicit_numbers(s.x,s.z))
 
+evaluator.add_rule(s.x<s.z**-1,s.z*s.x<1 ,condition=is_explicit_natural(s.z))
+evaluator.add_rule(s.z**-1<s.y,1<s.y*s.z ,condition=is_explicit_natural(s.z))
+evaluator.add_rule(s.x<-(s.z**-1),s.z*s.x<-1 ,condition=is_explicit_natural(s.z))
+evaluator.add_rule(-(s.z**-1)<s.y,-1<s.y*s.z ,condition=is_explicit_natural(s.z))
+
+
 evaluator.add_rule(pc.Equal(s.x,s.y*s.z**-1),pc.Equal(s.z*s.x,s.y),condition=are_explicit_numbers(s.y,s.z))
 evaluator.add_rule(pc.Equal(s.x,-(s.y*s.z**-1)),pc.Equal(s.z*s.x,-s.y),condition=are_explicit_numbers(s.y,s.z))
+
+evaluator.add_rule(pc.Equal(s.x,-(s.y*s.z**-1)),pc.Equal(s.z*s.x,-s.y),condition=are_explicit_numbers(s.y,s.z))
+
 
 from .logic_evaluator import is_pure_numeric,is_numeric
 

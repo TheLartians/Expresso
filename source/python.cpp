@@ -238,6 +238,8 @@ BOOST_PYTHON_MODULE(_symbols){
   .value("associative", symbols::BinaryOperator::associativity_type::associative)
   .value("non_associative", symbols::BinaryOperator::associativity_type::non_associative);
   boost::python::scope().attr("associative") = symbols::BinaryOperator::associativity_type::associative;
+  boost::python::scope().attr("left_associative") = symbols::BinaryOperator::associativity_type::left_associative;
+  boost::python::scope().attr("right_associative") = symbols::BinaryOperator::associativity_type::right_associative;
   boost::python::scope().attr("non_associative") = symbols::BinaryOperator::associativity_type::non_associative;
   
   enum_<symbols::BinaryOperator::commutativity_type>("commutativity_type")
@@ -301,6 +303,7 @@ BOOST_PYTHON_MODULE(_symbols){
   .def("has_evaluator",+[](const symbols::Rule &r){ return bool(r.evaluator); })
   .def_readonly("search",&symbols::Rule::search)
   .def_readonly("replacement",&symbols::Rule::replacement)
+  .def("get_condition",+[](const symbols::Rule &r){ if(r.condition) return object(r.condition); return object(); })
   .def("__repr__",lars::to_string<symbols::Rule>);
   
 #pragma mark RuleEvaluator

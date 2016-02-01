@@ -1,5 +1,24 @@
 from expression import core,Function,WrappedType,ReplacementMap
 
+class Evaluator(object):
+
+    def __init__(self,evaluator,recursive = False,split_binary = True,S = None):
+
+        if S == None:
+            raise ValueError('missing argument S')
+
+        self._evaluator = evaluator
+        self._evaluator.settings.recursive = recursive
+        self._evaluator.settings.split_binary = split_binary
+
+        self.S = S
+
+    def __call__(self,expr,cache = None):
+        if cache:
+            return self.S(self._evaluator.__call__(self.S(expr),cache._replacement_map))
+        else:
+            return self.S(self._evaluator.__call__(self.S(expr)))
+
 class Rule(object):
     
     def __init__(self,search,replacement = None,evaluator=None,condition=None,S=None):
@@ -31,7 +50,13 @@ class Rule(object):
     @property
     def replacement(self):
         return self.S(self._rule.replacement)
-    
+
+    @property
+    def condition(self):
+        c = self._rule.get_condition()
+        if c:
+            return self.S(c)
+
     def __repr__(self):
         l = str(self.search) + ' -> ' + str(self.replacement)
         if self.has_evaluator:
@@ -52,25 +77,6 @@ class MatchCondition(Function):
         super(MatchCondition,self).__init__(core.MatchCondition(name,lambda e:F(S(e))),S=S)
 
 WrappedMatchCondition = lambda S:WrappedType(MatchCondition,S=S)
-
-class Evaluator(object):
-    
-    def __init__(self,evaluator,recursive = False,split_binary = True,S = None):
-        
-        if S == None:
-            raise ValueError('missing argument S')
-
-        self._evaluator = evaluator
-        self._evaluator.settings.recursive = recursive
-        self._evaluator.settings.split_binary = split_binary
-
-        self.S = S
-
-    def __call__(self,expr,cache = None):
-        if cache:
-            return self.S(self._evaluator.__call__(self.S(expr),cache._replacement_map))
-        else:
-            return self.S(self._evaluator.__call__(self.S(expr)))
 
 class ReplaceEvaluator(Evaluator):
 

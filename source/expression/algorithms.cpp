@@ -94,18 +94,11 @@ namespace symbols {
   
 #pragma mark match
   
-  Function RHS_Associative("__rhs_associative__");
-  
-  expression rhs_associative(expression x){
-    return RHS_Associative(x);
-  }
-  
   struct MatchVisitor:public Visitor{
     replacement_map &wildcards;
     Expression::shared to_match;
 
     bool valid = true;
-    bool lhs_associative = true;
     
     MatchVisitor(Expression::shared _to_match,replacement_map &_wildcards):wildcards(_wildcards),to_match(_to_match){
     
@@ -116,15 +109,6 @@ namespace symbols {
     }
     
     void visit(const Function * e)override{
-      if(RHS_Associative.is_identical(e)){
-        auto lhs_prev = lhs_associative;
-        lhs_associative = false;
-        e->arguments[0]->accept(this);
-        if(!valid) return;
-        lhs_associative = lhs_prev;
-        return;
-      }
-      
       test(e);
       if(!valid) return;
       
@@ -161,27 +145,31 @@ namespace symbols {
       }
       else {
         if(e->arguments.size() == 2){
-          
+        
           Expression::shared lhs,rhs;
           
-          if(lhs_associative){
+          if(e->associativity == BinaryOperator::left_associative || e->associativity == BinaryOperator::associative){
             lhs = tm->arguments.front();
             to_match = lhs; e->arguments[0]->accept(this); if(!valid) return;
             rhs = tm->clone(Function::argument_list(tm->arguments.begin()+1,tm->arguments.end()));
             to_match = rhs; e->arguments[1]->accept(this); if(!valid) return;
           }
-          else{
+          else if(e->associativity == BinaryOperator::right_associative){
             lhs = tm->clone(Function::argument_list(tm->arguments.begin(),tm->arguments.end()-1));
             to_match = lhs; e->arguments[0]->accept(this); if(!valid) return;
             rhs = tm->arguments.back();
             to_match = rhs; e->arguments[1]->accept(this); if(!valid) return;
           }
-          
+          else {
+            valid = false;
+            return;
+          };
+
         }
         else {
           valid = false;
           return;
-        }
+        };
       }
     }
     
