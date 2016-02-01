@@ -171,14 +171,17 @@ class LambdaCompiler(object):
             try:
                 return self.value_converter(args[name])
             except KeyError:
-                pass
-            try:
-                return self.value_converter(self.value_module.__dict__[name])
-            except KeyError:
-                pass
-            raise ValueError('undefined symbol %s' % name)
+                raise ValueError('undefined symbol %s' % name)
 
         return get_symbol
+
+    @visitor.obj(f.SymbolicConstant)
+    def visit(self,expr):
+        try:
+            v = self.value_converter(self.value_module.__dict__[expr.value.name])
+        except KeyError:
+            raise ValueError('cannot compile %s' % expr)
+        return lambda args: v
 
     @visitor.atomic(e.S(True))
     def visit(self,expr):

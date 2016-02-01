@@ -3,7 +3,7 @@ import pysymbols
 
 Number = long
 
-def Symbol(name,type=None,positive = False,latex = None):
+def Symbol(name,type=None,positive = False,latex = None,repr = None):
     s = Expression(pysymbols.create_symbol(name))
     if type != None:
         from functions import Type
@@ -16,6 +16,11 @@ def Symbol(name,type=None,positive = False,latex = None):
         @add_target(latex,s)
         def print_latex(printer,expr):
             return latex_rep
+    if repr is not None:
+        from printer import printer,add_target
+        @add_target(printer,s)
+        def evaluate(printer,expr):
+            return repr
     return s
 
 def expression_converter(expr):
@@ -184,24 +189,30 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
         return N(self,mp_dps=prec,**kwargs)
 
     def __float__(self):
-        return float(self.evaluate().N())
+        v = self.evaluate().N()
+        try:
+            return float(v)
+        except:
+            raise RuntimeError('expression %s is not convertable to float' % self)
 
     def __complex__(self):
         return complex(self.evaluate().N())
 
     def __int__(self):
         from compilers import lambdify
-        val = lambdify(self.evaluate())()
-        if not isinstance(val,(int,long)):
+        v = lambdify(self.evaluate())()
+        try:
+            return int(v)
+        except:
             raise RuntimeError('expression %s is not convertable to int' % self)
-        return int(val)
 
     def __long__(self):
         from compilers import lambdify
-        val = lambdify(self.evaluate())()
-        if not isinstance(val,(int,long)):
-            raise RuntimeError('expression %s is not convertable to int' % self)
-        return long(val)
+        v = lambdify(self.evaluate())()
+        try:
+            return long(v)
+        except:
+            raise RuntimeError('expression %s is not convertable to long' % self)
 
 
 locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)

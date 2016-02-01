@@ -2,13 +2,21 @@ from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Wildcard,Nu
 from .expression import One,Zero,NaN,I,Addition,Negative,Multiplication,Fraction,Exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,Mod,Equal,NotEqual,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
 
 import pysymbols
+import math
 
 # Symbols
 # -------
 
-e = Symbol('eulers constant')
-pi = Symbol('pi')
-oo = Symbol('infinity')
+class SymbolicConstant(object):
+    def __init__(self,name):
+        self.name = name
+
+def create_symbolic_constant(name):
+    return S(pysymbols.create_object(SymbolicConstant(name),'symbolic constant %s' % name))
+
+e = create_symbolic_constant('e')
+pi = create_symbolic_constant('pi')
+oo = create_symbolic_constant('infinity')
 
 # Various Functions
 # -----------------

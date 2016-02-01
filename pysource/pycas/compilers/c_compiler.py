@@ -11,7 +11,7 @@ class FunctionDefinition(object):
     def __init__(self, name, args, expr, return_type = None, arg_types = None, parallel=True):
         self.name = name
         self.expr = e.S(expr)
-        self.args = args
+        self.args = tuple(args)
         self.return_type = return_type
         self.arg_types = arg_types
         self.parallel = parallel

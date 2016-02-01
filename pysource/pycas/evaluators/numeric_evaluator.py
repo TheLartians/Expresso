@@ -90,6 +90,10 @@ from .logic_evaluator import is_pure_numeric,is_numeric
 evaluator.add_rule(s.a+s.b*s.c**-1,(s.a*s.c+s.b)*s.c**-1,condition=pc.And(is_pure_numeric(s.a),are_explicit_numbers(s.b,s.c)))
 evaluator.add_rule(s.a-s.b*s.c**-1,(s.a*s.c-s.b)*s.c**-1,condition=pc.And(is_pure_numeric(s.a),are_explicit_numbers(s.b,s.c)))
 
+evaluator.add_rule(s.a+s.c**-1,(s.a*s.c+1)*s.c**-1,condition=pc.And(is_pure_numeric(s.a),is_explicit_natural(s.c)))
+evaluator.add_rule(s.a-s.c**-1,(s.a*s.c-1)*s.c**-1,condition=pc.And(is_pure_numeric(s.a),is_explicit_natural(s.c)))
+
+
 evaluator.add_rule((s.a+s.b)**2,(s.a**2+2*s.a*s.b+s.b**2),condition=pc.And(is_numeric(s.a),is_numeric(s.b)))
 evaluator.add_rule(s.a*(s.b+s.c),s.a*s.b+s.a*s.c,condition=pc.And(is_pure_numeric(s.a),is_numeric(s.b),is_numeric(s.c)))
 

@@ -3,6 +3,7 @@ from expression import *
 from functions import *
 from pysymbols.visitor import add_target,add_target_obj
 
+@add_target(printer,Addition)
 @add_target(latex,Addition)
 def visit(printer,expr):
     neg_args = [arg for arg in expr.args if arg.function == Negative]
@@ -48,6 +49,17 @@ def visit(printer,expr):
     res  = '\cdot '.join(printer.printed_operator_arguments(expr,numeric)) 
     res += '\, '.join(printer.printed_operator_arguments(expr,non_numeric))
 
+    return res
+
+
+@add_target(printer,Multiplication)
+def visit(printer,expr):
+    res = printer.print_operator_argument(expr.args[0],expr)
+    for arg in expr.args[1:]:
+        if arg.function == Fraction:
+            res += '/' + printer.print_operator_argument(arg.args[0],expr)
+        else:
+            res += '*' + printer.print_operator_argument(arg,expr)
     return res
 
 @add_target(latex,Fraction)

@@ -313,6 +313,7 @@ def add_target_obj(visitor,target):
 
     def decorator(fn):
         visitor.dispatcher.register_target((obj,target),fn)
+        return fn
 
     return decorator
 
