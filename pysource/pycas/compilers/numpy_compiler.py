@@ -7,8 +7,7 @@ from mpmath import mp
 
 class NumpyCompiler(LambdaCompiler):
 
-    def __init__(self,dtype):
-        self.dtype = dtype
+    def __init__(self):
         super(NumpyCompiler,self).__init__()
 
     @visitor.on('expr',parent = LambdaCompiler)
@@ -28,9 +27,9 @@ class NumpyCompiler(LambdaCompiler):
     @visitor.function(f.Piecewise)
     def visit(self,expr):
 
-        res_type = f.Type(expr).evaluate(cache=self.cache).value
-        if isinstance(res_type,f.TypeInfo):
-            ptype = res_type.__dict__.get('python_type')
+        restype = f.Type(expr).evaluate(cache=self.cache).value
+        if isinstance(restype ,f.TypeInfo):
+            ptype = restype .__dict__.get('python_type')
         else:
             ptype = None
 
@@ -39,10 +38,12 @@ class NumpyCompiler(LambdaCompiler):
 
         def evaluate(args):
 
-            dtype = ptype if ptype is not None else args['_dtype']
-            shape = args['_shape']
-            res = np.zeros(shape,dtype = dtype)
-            unset = np.ones(shape,dtype = bool)
+            #dtype = ptype if ptype is not None else args['_dtype']
+            #shape = args['_shape']
+            #res = np.zeros(shape,dtype = dtype)
+            #unset = np.ones(shape,dtype = bool)
+
+            is_arr = False
 
             for cond,val in zip(cond_args,eval_args):
 
@@ -52,14 +53,35 @@ class NumpyCompiler(LambdaCompiler):
                     if valid == False:
                         continue
                     if valid == True:
+                        if not is_arr:
+                            return val(args)
                         valid = unset
                 else:
+                    if not is_arr:
+                        if np.all(valid):
+                            return val(args)
+                        if np.all(valid==False):
+                            continue
+                        shape = valid.shape
+                        is_arr = True
+                        unset = np.ones(shape,dtype = bool)
+                        if ptype:
+                            res = np.zeros(shape,dtype = ptype)
+                        else:
+                            res = np.zeros(shape)
+
                     valid &= unset
 
-                new_args = { name:arg[valid] if isinstance(arg,np.ndarray) and name[0]!='_' else arg
+                new_args = { name:arg[valid] if isinstance(arg,np.ndarray) and arg.shape==shape else arg
                             for name,arg in args.iteritems() }
 
-                res[valid] = val(new_args)
+                values = np.array(val(new_args))
+
+                if not np.can_cast(values.dtype,res.dtype):
+                    res = res.astype(values.dtype)
+
+                res[valid] = values
+
                 unset &= np.logical_not(valid)
 
             return res
@@ -68,7 +90,7 @@ class NumpyCompiler(LambdaCompiler):
 
     @visitor.obj(e.Number)
     def visit(self,expr):
-        v = self.dtype(expr.value)
+        v = expr.value
         return lambda args:v
 
     @visitor.function(f.Not)
@@ -130,6 +152,29 @@ class NumpyCompiler(LambdaCompiler):
         return lambda args:float(expr.value)
 
 
+def get_example_arg(args):
+    for arg in args.values():
+        if isinstance(arg,np.ndarray):
+            return arg
+    for arg in args.values():
+        if hasattr(arg,"__len__"):
+            return arg
+    return args.values()[1]
+
+
+def prepare_arguments(args):
+    example_arg = get_example_arg(args)
+
+    if not hasattr(example_arg,"__len__"):
+        shape = None
+        args = { name:np.array([arg]) for name,arg in args.iteritems() }
+    else:
+        shape = np.array(example_arg).shape
+        args = { name:(np.array(arg) if hasattr(arg,"__len__") else arg) for name,arg in args.iteritems() }
+
+    return args,shape
+
+
 def make_parallel(f):
 
     import threading
@@ -137,24 +182,21 @@ def make_parallel(f):
 
     def run_parallel_thread(_processes = cpu_count(),**args):
 
-        example_arg = args.iteritems().next()[1]
-
-        size = len(example_arg) if hasattr(example_arg,'__len__') else 1
+        args,shape = prepare_arguments(args)
+        size = shape[0] if shape else 1
         _processes = min(size,_processes)
 
         if _processes == 1:
             return f(**args)
 
-        example_arg = np.array(example_arg)
-
         step = int(size/_processes)
         slices = [[i*step,(i+1)*step] for i in range(_processes)]
         slices[-1][1] = size
 
-        result = np.zeros(example_arg.shape,dtype = f.restype)
+        result = np.zeros(shape,dtype = f.restype)
 
         def worker(s,args):
-            args = {name:value[s[0]:s[1]] for name,value in args.iteritems()}
+            args = {name:(value[s[0]:s[1]]) if isinstance(value,np.ndarray) and value.shape==shape else value for name,value in args.iteritems()}
             args['_slice'] = s
             result[s[0]:s[1]] = f(**args)
 
@@ -174,45 +216,32 @@ def make_parallel(f):
     return run_parallel_thread
 
 
-def numpyfy(expr,dtype = float,parallel = False):
+def numpyfy(expr,parallel = False,restype = None):
 
     from pycas.evaluators.optimizers import optimize_for_compilation
 
-    compiler = NumpyCompiler(dtype)
+    compiler = NumpyCompiler()
     res = compiler.visit(optimize_for_compilation(e.S(expr)))
 
-    res_type = f.Type(expr).evaluate(cache=compiler.cache).value
-    if isinstance(res_type,f.TypeInfo):
-        restype = res_type.__dict__.get('python_type')
-        if restype == None:
-            res_type = dtype
-    else:
-        restype = dtype
+    if restype is None:
+        restype = f.Type(expr).evaluate(cache=compiler.cache).value
+        if isinstance(restype,f.TypeInfo):
+            restype = restype.__dict__.get('python_type')
+            if restype == None:
+                restype = complex
+        else:
+            restype = complex
 
     def call(**args):
+        args,shape = prepare_arguments(args)
+        cres = np.array(res(args)).astype(restype)
 
-        example_arg = args.itervalues().next()
-        to_number = not hasattr(example_arg,"__len__")
-
-        if to_number:
-            args = { name:np.array([arg]) for name,arg in args.iteritems() }
-            example_arg = args.itervalues().next()
+        if not shape:
+            if cres.shape:
+                cres = cres[0]
         else:
-            args = {name:np.array(arg) for name,arg in args.iteritems() }
-            example_arg = args.itervalues().next()
-
-        if '_shape' not in args:
-            args['_shape'] = example_arg.shape
-        if '_dtype' not in args:
-            args['_dtype'] = restype
-
-        cres = res(args)
-
-        if not isinstance(cres,np.ndarray):
-            cres = np.ones(example_arg.shape,dtype=dtype) * cres
-
-        if to_number:
-            cres = cres[0]
+            if shape and cres.shape != shape:
+                cres = np.ones(shape)*cres
 
         return cres
 
@@ -222,3 +251,50 @@ def numpyfy(expr,dtype = float,parallel = False):
         return make_parallel(call)
     else:
         return call
+
+
+def ncompile(*function_definitions):
+
+    functions = {}
+
+    for definition in function_definitions:
+
+        if definition.return_type is not None:
+            restype = definition.return_type.value.__dict__.get('python_type')
+        else:
+            restype = None
+
+        f = numpyfy(definition.expr,parallel=definition.parallel,restype=restype)
+
+        if definition.arg_types:
+            # TODO: implement argument type conversions
+            arg_types = [arg.value.__dict__.get('python_type') for arg in definition.arg_types]
+
+        arg_names = [arg.name for arg in definition.args]
+
+        class Delegate(object):
+            def __init__(self,f,arg_names):
+                self.f = f
+                self.arg_names = arg_names
+            def __call__(self, *args):
+                args = { n:a for n,a in zip(self.arg_names,args) }
+                return self.f(**args)
+
+        functions[definition.name] = Delegate(f,arg_names)
+
+    class lib(object):
+        def __init__(self,functions):
+            self.__dict__.update(functions)
+
+    return lib(functions)
+
+
+
+
+
+
+
+
+
+
+

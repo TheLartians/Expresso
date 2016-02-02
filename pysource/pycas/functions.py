@@ -144,9 +144,11 @@ def custom_function(name,argc = None,return_type = None,**kwargs):
     if return_type != None:
         if not argc:
             raise ValueError('argc needs to be defined to register result type')
-        from evaluators.type_evaluator import type_evaluator
+
+        # TODO: register in local context, not global evaluators
+        from evaluators.type_evaluator import evaluator
         for c in argc:
-            type_evaluator.add_rule(Type(res(*[Wildcard(str(s)) for s in range(c)])),return_type)
+            evaluator.add_rule(Type(res(*[Wildcard(str(s)) for s in range(c)])),return_type)
 
     return res
 
@@ -215,8 +217,9 @@ def array(name,inarray,copy = True):
 
     for t,v in inverse_python_types.iteritems():
         if isinstance(inarray.dtype,t):
-            from evaluators.type_evaluator import type_evaluator
-            type_evaluator.add_rule(ArrayAccessDelegate([Wildcard(str(i)) for i in range(array.shape)]),v)
+            # TODO: register in local context, not global evaluators
+            from evaluators.type_evaluator import evaluator
+            evaluator.add_rule(ArrayAccessDelegate([Wildcard(str(i)) for i in range(array.shape)]),v)
             break
 
     return ArrayAccessDelegate(name,array)

@@ -6,19 +6,6 @@ import pycas.functions as f
 import pysymbols.visitor as visitor
 from mpmath import mp
 
-class FunctionDefinition(object):
-
-    def __init__(self, name, args, expr, return_type = None, arg_types = None, parallel=True):
-        self.name = name
-        self.expr = e.S(expr)
-        self.args = tuple(args)
-        self.return_type = return_type
-        self.arg_types = arg_types
-        self.parallel = parallel
-
-    def __str__(self):
-        return '%s(%s) = %s' % (self.name,','.join([str(arg) for arg in self.args]),self.expr)
-
 
 class c_complex(ctypes.Structure):
     _fields_ = [('real',ctypes.c_double),('imag',ctypes.c_double)]
@@ -34,8 +21,6 @@ class c_complex(ctypes.Structure):
     def np_type():
         import numpy
         return numpy.complex128
-
-
 
 class CCodePrinter(CodePrinter):
 

@@ -51,6 +51,10 @@ def visit(printer,expr):
 
     return res
 
+@add_target_obj(printer,SymbolicConstant)
+@add_target_obj(latex,SymbolicConstant)
+def visit(printer,expr):
+    return expr.value.name
 
 @add_target(printer,Multiplication)
 def visit(printer,expr):
@@ -144,6 +148,27 @@ def visit(printer,expr):
 def visit(printer,expr):
     name = printer.format_name(expr.args[0].name)
     return r'%s \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
+
+@add_target_obj(printer, Number)
+def visit(printer,expr):
+    v = expr.value
+
+    if v == 0:
+        return '0'
+
+    o = v
+    exp = 0
+
+    while (v % 10) == 0:
+        v = v/10
+        exp = exp + 1
+    if exp > 1:
+        if v != 1:
+            return r"%se%s" % (v,exp)
+        if v == 1:
+            return r"1e%s" % exp
+
+    return str(o)
 
 @add_target_obj(latex, Number)
 def visit(printer,expr):

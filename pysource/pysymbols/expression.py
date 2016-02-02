@@ -221,7 +221,7 @@ class ReplacementMap(object):
 
         self.S = S
         
-    def __repr__(self):
+    def __str__(self):
         return str(dict(self))
     
     def __iter__(self):

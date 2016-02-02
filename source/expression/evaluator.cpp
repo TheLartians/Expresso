@@ -109,6 +109,7 @@ namespace symbols {
         
         if(is_cached(copy.get())){
           expression_stack.erase(expression_stack.find(*e));
+          add_to_cache(e->get_shared(),copy);
           return true;
         }
       }
@@ -127,7 +128,7 @@ namespace symbols {
       if(copy_function(e)) return;
       auto tmp = copy;
       copy = evaluator.evaluate(copy,*this);
-      if(*tmp!=*e) add_to_cache(tmp,copy);
+      if(*tmp!=*e) finalize(tmp.get());
       finalize(e);
     }
   
@@ -142,7 +143,7 @@ namespace symbols {
 #endif
         auto tmp = copy;
         copy = evaluator.evaluate(copy,*this);
-        if(*tmp!=*e) add_to_cache(tmp,copy);
+        if(*tmp!=*e) finalize(tmp.get());
         finalize(e);
         return;
       }
