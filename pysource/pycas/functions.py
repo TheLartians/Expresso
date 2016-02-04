@@ -36,8 +36,13 @@ Imag = Function('imag',argc = 1)
 Conjugate = Function('conjugate',argc = 1)
 
 Indicator = Function('indicator',argc = 1)
-Piecewise = BinaryOperator('}{',pysymbols.associative,pysymbols.non_commutative,-14)
+
+InnerPiecewise = BinaryOperator('}{', pysymbols.associative, pysymbols.non_commutative, -14)
+OuterPiecewise = Function('outer piecewise')
 PiecewisePart = Function('piecewise part',argc = 2)
+
+def Piecewise(*args):
+    return OuterPiecewise(InnerPiecewise(*args))
 
 # Calculus
 # --------

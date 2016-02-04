@@ -1,5 +1,5 @@
 
-import pycas as pc
+pc = __import__(__name__.split('.')[0])
 
 import canonical_form
 import logic_evaluator
@@ -7,13 +7,21 @@ import numeric_evaluator
 import type_evaluator
 import main_evaluator
 
+__cached_evaluators = {}
+
 def evaluate(expr,context = pc.global_context,cache = None,format = True):
-    main = pc.MultiEvaluator(recursive=True,split_binary=True)
-    main.add_evaluator(context)
-    main.add_evaluator(main_evaluator.main_evaluator)
-    expr = main(expr,cache)
+
+    if context in __cached_evaluators:
+        main = __cached_evaluators[context]
+    else:
+        main = pc.MultiEvaluator(recursive=True,split_binary=True)
+        main.add_evaluator(context)
+        main.add_evaluator(main_evaluator.main_evaluator)
+        __cached_evaluators[context] = main
+
+    expr = main(expr,cache = cache)
     if format:
-        expr = canonical_form.final_evaluator(canonical_form.format_evaluator(expr))
+        expr = canonical_form.format_evaluator(expr,cache = cache)
     return expr
 
 def set_debug(v):

@@ -1,5 +1,5 @@
 
-import pycas as pc
+pc = __import__(__name__.split('.')[0])
 import rule_symbols as s
 
 logic_evaluator = pc.RewriteEvaluator(recursive=True,split_binary=True)
@@ -29,7 +29,7 @@ def is_function_type(expr,function):
 
 def comp_function_evaluator(m):
     f =  m[s.x].function
-    if f is None or f != m[s.y].value:
+    if f is None or (isinstance(m[s.y].value,pc.Function) and f != m[s.y].value):
         m[s.z] = False
         return
     m[s.z] = True
@@ -65,7 +65,7 @@ from mpmath import mp
 
 def is_mpmath_evaluator(m):
     v = m[s.x].value
-    if isinstance(mp,(mp.mpf,mp.mpc)):
+    if isinstance(v,(mp.mpf,mp.mpc)):
         m[s.y] = True
     else:
         m[s.y] = False

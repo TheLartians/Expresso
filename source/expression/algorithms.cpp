@@ -188,7 +188,7 @@ namespace symbols {
     void visit(const WildcardFunction * e)override{
       auto it = wildcards.functions.find(e->get_id());
       
-      if(it == wildcards.functions.end()){
+        if(it == wildcards.functions.end()){
         
         auto f = to_match->as<Function>();
         if(f && e->arguments.size() == f->arguments.size()){
@@ -210,7 +210,6 @@ namespace symbols {
         wildcards.functions.insert(std::make_pair(e->get_id(),e->get_shared()));
         wildcards.insert(std::make_pair(e->get_shared(),to_match));
       }
-      
       else {
         auto it2 = wildcards.find(it->second);
         if(it2 == wildcards.end()){ valid = false; return; }

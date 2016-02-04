@@ -6,7 +6,7 @@ from mpmath import mp
 
 class LambdaCompiler(object):
 
-    def __init__(self,value_converter = lambda x:x,function_module = None,value_module = None):
+    def __init__(self,value_converter = lambda x:x,function_module = None,value_module = None,cache=None):
         self.dispatcher = self.visit.dispatcher
         self.value_converter = value_converter
         if function_module == None:
@@ -16,7 +16,11 @@ class LambdaCompiler(object):
             value_module = function_module
         self.function_module = function_module
         self.value_module = value_module
-        self.cache = e.ReplacementMap()
+
+        if cache:
+            self.cache = cache
+        else:
+            self.cache = {}
 
     @visitor.on('expr')
     def visit(self,expr):
@@ -33,6 +37,10 @@ class LambdaCompiler(object):
             raise ValueError('unknown function: %s' % expr.function.name)
         cargs = [self.visit(arg) for arg in expr.args]
         return lambda args:func(*[arg(args) for arg in cargs])
+
+    @visitor.function(f.OuterPiecewise)
+    def visit(self,expr):
+        return self.visit(expr.args[0])
 
     @visitor.function(f.Addition)
     def visit(self,expr):
@@ -150,7 +158,7 @@ class LambdaCompiler(object):
 
         return access
 
-    @visitor.function(f.Piecewise)
+    @visitor.function(f.InnerPiecewise)
     def visit(self,expr):
         cond_args = [self.visit(arg.args[1]) for arg in expr.args]
         eval_args = [self.visit(arg.args[0]) for arg in expr.args]

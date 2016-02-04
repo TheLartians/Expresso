@@ -1,5 +1,5 @@
 
-import pycas as pc
+pc = __import__(__name__.split('.')[0])
 import rule_symbols as s
 
 evaluator = pc.RewriteEvaluator(recursive=True, split_binary=True)
@@ -9,7 +9,11 @@ from .logic_evaluator import is_explicit_natural
 def unary_rule(f):
 
     def evaluator(m):
-        res = f(m[s.x].value)
+        try:
+            res = f(m[s.x].value)
+        except:
+            return False
+
         if res is None:
             return False
         else:
@@ -20,7 +24,10 @@ def unary_rule(f):
 def binary_rule(f):
 
     def evaluator(m):
-        res = f(m[s.x].value,m[s.y].value)
+        try:
+            res = f(m[s.x].value,m[s.y].value)
+        except:
+            return False
         if res is None:
             return False
         else:
@@ -54,7 +61,7 @@ evaluator.add_rule(s.x < -s.y, s.z, binary_rule(lambda x, y: x < -y), condition=
 evaluator.add_rule(-s.x < s.y, s.z, binary_rule(lambda x, y: -x < y), condition=are_explicit_numbers(s.x, s.y))
 
 
-evaluator.add_rule(s.a**s.x*s.b**-s.x, (s.a*s.b**-1)**(s.x),condition=are_explicit_numbers(s.a, s.b))
+#evaluator.add_rule(s.a**s.x*s.b**-s.x, (s.a*s.b**-1)**(s.x),condition=are_explicit_numbers(s.a, s.b))
 
 def is_even(x):
     return pc.Equal(pc.Mod(x,2),0)
@@ -100,6 +107,8 @@ evaluator.add_rule(s.a*(s.b+s.c),s.a*s.b+s.a*s.c,condition=pc.And(is_pure_numeri
 evaluator.add_rule(pc.I**s.n,(-1)**(s.n/2),condition=is_even(s.n))
 evaluator.add_rule(pc.I**s.n,pc.I*(-1)**(s.n/2-0.5),condition=is_uneven(s.n))
 
+evaluator.add_rule(pc.sign(-s.x),-1,condition=is_explicit_natural(s.x))
+evaluator.add_rule(pc.sign(s.x),1,condition=is_explicit_natural(s.x))
 
 import fractions
 
@@ -114,6 +123,7 @@ def evaluate_fraction(m):
 
 evaluator.add_rule(s.x*s.y**-1,s.a*s.b**-1,evaluate_fraction,condition=are_explicit_numbers(s.x, s.y))
 
+evaluator.add_rule(s.x**s.c*s.y**-s.c,s.a**s.c*s.b**-s.c,evaluate_fraction,condition=are_explicit_numbers(s.x, s.y))
 
 
 

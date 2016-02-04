@@ -9,7 +9,10 @@ def Symbol(name,type=None,positive = False,latex = None,repr = None):
         from functions import Type
         global_context.add_definition(Type(s),type)
     if positive == True:
-        global_context.add_definition(0<s,True)
+        from .functions import sign
+        global_context.add_definition(Or(0<s,Equal(s,0)),True)
+        global_context.add_definition(Or(-s<s,Equal(s,s)),True)
+        global_context.add_definition(sign(s),1)
     if latex is not None:
         latex_rep = latex
         from printer import latex,add_target
@@ -151,9 +154,6 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
 
     def __and__(self, other):
         return And(self,other)
-
-    def __max__(self, other):
-        return Max(self,other)
 
     def __abs__(self):
         return Abs(self)

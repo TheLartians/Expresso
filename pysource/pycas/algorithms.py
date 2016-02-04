@@ -1,5 +1,5 @@
 
-import pycas as pc
+pc = __import__(__name__.split('.')[0])
 
 def get_symbols_in(expr):
 

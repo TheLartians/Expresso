@@ -24,7 +24,7 @@ class NumpyCompiler(LambdaCompiler):
                 return np.__dict__[arcname]
         return None
 
-    @visitor.function(f.Piecewise)
+    @visitor.function(f.InnerPiecewise)
     def visit(self,expr):
 
         restype = f.Type(expr).evaluate(cache=self.cache).value

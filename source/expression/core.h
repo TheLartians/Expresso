@@ -269,7 +269,10 @@ namespace symbols {
     BinaryOperator(const string &_symbol,associativity_type a,commutativity_type c,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,a,c),_symbol,precedence,std::forward<argument_list>(args)),associativity(a),commutativity(c){ finalize_arguments(argument_data); }
     BinaryOperator(const string &_symbol,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,non_associative,non_commutative),_symbol,precedence,std::forward<argument_list>(args)),associativity(non_associative),commutativity(non_commutative){ finalize_arguments(argument_data); }
     void accept(Visitor * v)const override{ v->visit(this); }
-    shared clone(argument_list && args,bool finalize)const{ return make_expression<BinaryOperator>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,finalize); }
+    shared clone(argument_list && args,bool finalize)const{
+      if(args.size() == 1){ return args[0]; }
+      return make_expression<BinaryOperator>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,finalize);
+    }
     shared clone(argument_list && args)const override{ return clone(std::move(args),true); }
 
   };
@@ -302,7 +305,11 @@ namespace symbols {
     Data(const value_type &_value,const string &rep):DataExpression(typeid(D)),value(_value),representation(rep){ }
     const value_type & get_value()const{ return value; }
     using AtomicExpression::accept;
-    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Data<value_type>>()) return o->get_value() == get_value(); return false; }
+    //using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Data<value_type>>()) return o->get_value() == get_value(); return false; }
+    using Expression::is_identical; bool is_identical(const Expression * other)const override{
+      if(auto o = other->as<Data<value_type>>()) return representation == o->representation;
+      return false;
+    }
     string get_representation()const override{ return representation; }
     void accept(Visitor * v)const override{ if(auto * dv = dynamic_cast<DataVisitor<Data>*>(v)) dv->visit(this); v->visit(this); };
   };

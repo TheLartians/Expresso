@@ -114,11 +114,11 @@ latex.register_printer(Xor,lambda p,e: p.print_binary_operator(e,r"\veebar "))
 
 latex.register_printer(Tuple,lambda p,e: p.print_function(e,r""))
 
-@add_target(latex,Piecewise)
+@add_target(latex, InnerPiecewise)
 def visit(printer,expr):   
     for arg in expr.args:
         if arg.function != Tuple and arg.function != PiecewisePart:
-            return printer.print_function(expr,name="Piecewise")
+            return printer.print_function(expr,name=r"\text{Piecewise} ")
 
     outer = r"\begin{cases} %s \end{cases}"
 
@@ -135,7 +135,13 @@ def visit(printer,expr):
     inner = r"\\ ".join(inner_list)
     return outer % inner
 
-@add_target(printer,Piecewise)
+@add_target(latex, OuterPiecewise )
+@add_target(printer, OuterPiecewise)
+def visit(printer,expr):
+    return printer(expr.args[0])
+
+
+@add_target(printer, InnerPiecewise)
 def visit(printer,expr):
     return printer.print_function(expr,name="Piecewise")
 
@@ -148,6 +154,12 @@ def visit(printer,expr):
 def visit(printer,expr):
     name = printer.format_name(expr.args[0].name)
     return r'%s \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
+
+@add_target(printer,ArrayAccess)
+def visit(printer,expr):
+    name = printer.format_name(expr.args[0].name)
+    return r'%s[ %s \right]' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
+
 
 @add_target_obj(printer, Number)
 def visit(printer,expr):
@@ -190,4 +202,38 @@ def visit(printer,expr):
             return r"10^{%s}" % exp
 
     return str(o)
+
+@add_target_obj(printer, TypeInfo)
+@add_target_obj(latex, TypeInfo)
+def visit(printer,expr):
+    return printer.format_name(expr.value.name)
+
+
+from mpmath import mp
+@add_target_obj(printer, bool)
+@add_target_obj(latex, bool)
+def visit(printer,expr):
+    return printer.format_name(str(expr.value))
+
+@add_target_obj(latex, mp.mpc)
+@add_target_obj(latex, mp.mpf)
+def visit(printer,expr):
+    return r"%s \; " % str(expr.value)
+
+@add_target_obj(printer, mp.mpc)
+@add_target_obj(printer, mp.mpf)
+def visit(printer,expr):
+    return r"%s" % str(expr.value)
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -1,5 +1,5 @@
 
-import pycas as pc
+pc = __import__(__name__.split('.')[0])
 import rule_symbols as s
 
 ordered_types = (pc.Types.Boolean,pc.Types.Natural,pc.Types.Integer,pc.Types.Rational,pc.Types.Real,pc.Types.Complex)
@@ -38,8 +38,8 @@ evaluator.add_rule(pc.OperationType(s.x**pc.Types.Natural),s.x)
 evaluator.add_rule(pc.OperationType(s.x**pc.Types.Integer),pc.DominantType(s.x,pc.Types.Rational))
 evaluator.add_rule(pc.OperationType(pc.Types.Natural**pc.Types.Rational),pc.Types.Real)
 
-for t in (pc.Types.Rational,pc.Types.Real,pc.Types.Complex):
-    evaluator.add_rule(pc.OperationType(s.x**t),pc.Types.Complex)
+evaluator.add_rule(pc.OperationType(s.x**s.y),pc.Types.Complex)
+
 
 evaluator.add_rule(pc.OperationType(s.x*s.y),pc.DominantType(s.x,s.y),condition=pc.Not(pc.Or(is_function_type(s.x,pc.Type),is_function_type(s.y,pc.Type))))
 evaluator.add_rule(pc.OperationType(s.x)**s.y,pc.DominantType(s.x,s.y),condition=pc.Not(pc.Or(is_function_type(s.x,pc.Type),is_function_type(s.y,pc.Type))))
@@ -64,7 +64,7 @@ evaluator.add_rule(pc.Type(pc.Imag(s.x)),pc.Types.Real)
 evaluator.add_rule(pc.Type(pc.Conjugate(s.x)),pc.Types.Complex)
 
 evaluator.add_rule(pc.Type(pc.Indicator(s.x)),pc.Types.Natural)
-evaluator.add_rule(pc.Type(pc.Piecewise(s.a,s.b)),pc.DominantType(pc.Type(s.a),pc.Type(s.b)))
+evaluator.add_rule(pc.Type(pc.OuterPiecewise(s.a,s.b)),pc.DominantType(pc.Type(s.a),pc.Type(s.b)))
 evaluator.add_rule(pc.Type(pc.PiecewisePart(s.a,s.b)),pc.Type(s.a))
 
 evaluator.add_rule(pc.Type(pc.derivative(s.x,s.y)),pc.Type(s.x))

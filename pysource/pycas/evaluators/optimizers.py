@@ -1,7 +1,7 @@
 
 
 
-import pycas as pc
+pc = __import__(__name__.split('.')[0])
 import rule_symbols as s
 from .logic_evaluator import is_numeric,is_atomic
 
@@ -30,9 +30,7 @@ def fold_unary(f):
 compile_evaluator.add_rule(s.x*s.y,s.z,fold_binary(lambda x,y:x*y))
 compile_evaluator.add_rule(s.x+s.y,s.z,fold_binary(lambda x,y:x+y))
 compile_evaluator.add_rule(s.x**s.y,s.z,fold_binary(lambda x,y:x**y))
-
 compile_evaluator.add_rule(s.x**2,s.x*s.x,condition=is_atomic(s.x))
-
 
 from .canonical_form import canonical_form,format_evaluator
 from .logic_evaluator import logic_evaluator
@@ -47,5 +45,5 @@ compiler_opt_evaluator .add_evaluator(compile_evaluator)
 compiler_opt_evaluator .add_evaluator(logic_evaluator)
 #optimize_for_c_evaluator.add_evaluator(numeric_evaluator)
 
-def optimize_for_compilation(expr):
-    return format_evaluator(compiler_opt_evaluator (expr))
+def optimize_for_compilation(expr,cache = None):
+    return format_evaluator(compiler_opt_evaluator (expr, cache = cache), cache = cache)

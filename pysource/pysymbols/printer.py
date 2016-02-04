@@ -158,4 +158,4 @@ class LatexPrinter(Printer):
 
     @visitor.obj
     def visit(self,expr):
-        return r'\text{%s}' % str(expr.value)
+        return self.format_name(expr.name)

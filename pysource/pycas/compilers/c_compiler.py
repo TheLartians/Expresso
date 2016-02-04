@@ -170,7 +170,7 @@ template <class T,size_t ... size> struct mapped_ndarray{
     def visit(self,expr):
         return "fmod(%s,%s)" % (self(expr.args[0]),self(expr.args[1]))
 
-    @visitor.function(f.Piecewise)
+    @visitor.function(f.InnerPiecewise)
     def visit(self,expr):
         parts = ['(%s)?(%s):' % (self(arg.args[1]),self(arg.args[0])) for arg in expr.args]
         return '(%s%s)' % (''.join(parts),self(e.S(0)))

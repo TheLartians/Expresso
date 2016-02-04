@@ -14,10 +14,16 @@ class Evaluator(object):
         self.S = S
 
     def __call__(self,expr,cache = None):
-        if cache:
-            return self.S(self._evaluator.__call__(self.S(expr),cache._replacement_map))
+        if cache is not None:
+            if not isinstance(cache,dict):
+                raise ValueError('cache error: expected dict, got %s' % type(cache))
+            c = cache.get(self)
+            if not c:
+                c = ReplacementMap()
+                cache[self] = c
+            return self.S(self._evaluator(self.S(expr),c._replacement_map))
         else:
-            return self.S(self._evaluator.__call__(self.S(expr)))
+            return self.S(self._evaluator(self.S(expr)))
 
 class Rule(object):
     
