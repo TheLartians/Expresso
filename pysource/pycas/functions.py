@@ -1,5 +1,5 @@
 from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Wildcard,Number,Expression,S
-from .expression import One,Zero,NaN,I,Addition,Negative,Multiplication,Fraction,Exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,Mod,Equal,NotEqual,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
+from .expression import One,Zero,NaN,I,addition,negative,multiplication,fraction,exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,mod,equal,NotEqual,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
 
 import pysymbols
 import math
@@ -24,9 +24,9 @@ oo = create_symbolic_constant('infinity')
 factorial = UnaryOperator('!',pysymbols.postfix,0)
 
 sign = Function('sign',argc = 1)
-Floor = Function('floor',argc = 1)
-Ceil = Function('ceil',argc = 1)
-Round = Function('round',argc = 1)
+floor = Function('floor',argc = 1)
+ceil = Function('ceil',argc = 1)
+round = Function('round',argc = 1)
 
 Max = Function('max',argc = 2)
 Min = Function('min',argc = 2)
@@ -208,7 +208,7 @@ def array(name,inarray,copy = True):
 
         def __init__(self,name,array):
             self.name = name
-            self.array_obj = pysymbols.create_object(array,name)
+            self.array_obj = pysymbols.create_object(array,'%s__id%r' % (name,id(array)))
             self.argc = len(array.shape)
 
         def __repr__(self):

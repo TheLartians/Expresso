@@ -42,35 +42,35 @@ class LambdaCompiler(object):
     def visit(self,expr):
         return self.visit(expr.args[0])
 
-    @visitor.function(f.Addition)
+    @visitor.function(f.addition)
     def visit(self,expr):
         cargs = [self.visit(arg) for arg in expr.args]
         return lambda args:sum([arg(args) for arg in cargs])
 
-    @visitor.function(f.Multiplication)
+    @visitor.function(f.multiplication)
     def visit(self,expr):
         from operator import mul
         cargs = [self.visit(arg) for arg in expr.args]
         return lambda args:reduce(mul,[arg(args) for arg in cargs])
 
-    @visitor.function(f.Negative)
+    @visitor.function(f.negative)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
         return lambda args:-arg(args)
 
-    @visitor.function(f.Fraction)
+    @visitor.function(f.fraction)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
         one = self.value_converter(1.)
         return lambda args:one/arg(args)
 
-    @visitor.function(f.Exponentiation)
+    @visitor.function(f.exponentiation)
     def visit(self,expr):
         from operator import pow
         cargs = [self.visit(arg) for arg in expr.args]
         return lambda args:reduce(pow,[arg(args) for arg in cargs])
 
-    @visitor.function(f.Equal)
+    @visitor.function(f.equal)
     def visit(self,expr):
         from operator import eq
         cargs = [self.visit(arg) for arg in expr.args]

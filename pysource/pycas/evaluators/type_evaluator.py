@@ -53,11 +53,11 @@ evaluator.add_rule(pc.Type(pc.I),pc.Types.Imaginary)
 
 evaluator.add_rule(pc.Type(pc.factorial(s.x)),pc.Types.Natural)
 evaluator.add_rule(pc.Type(pc.sign(s.x)),pc.Types.Integer)
-evaluator.add_rule(pc.Type(pc.Floor(s.x)),pc.Types.Integer)
+evaluator.add_rule(pc.Type(pc.floor(s.x)),pc.Types.Integer)
 evaluator.add_rule(pc.Type(pc.Abs(s.x)),pc.Types.Natural)
-evaluator.add_rule(pc.Type(pc.Ceil(s.x)),pc.Types.Integer)
-evaluator.add_rule(pc.Type(pc.Round(s.x)),pc.Types.Integer)
-evaluator.add_rule(pc.Type(pc.Mod(s.x,s.y)),pc.Types.Integer)
+evaluator.add_rule(pc.Type(pc.ceil(s.x)),pc.Types.Integer)
+evaluator.add_rule(pc.Type(pc.round(s.x)),pc.Types.Integer)
+evaluator.add_rule(pc.Type(pc.mod(s.x,s.y)),pc.Types.Integer)
 
 evaluator.add_rule(pc.Type(pc.Real(s.x)),pc.Types.Real)
 evaluator.add_rule(pc.Type(pc.Imag(s.x)),pc.Types.Real)
@@ -79,7 +79,7 @@ for f in [pc.exp,pc.log,pc.sin,pc.cos,pc.asin ,pc.acos,pc.tan,pc.atan,pc.cot,pc.
     evaluator.add_rule(pc.Type(f(s.x)),pc.DominantType(pc.Type(s.x),pc.Types.Rational))
 
 def issubtype(x,t):
-    return pc.Equal(pc.DominantType(pc.Type(x),t),t)
+    return pc.equal(pc.DominantType(pc.Type(x),t),t)
 
 from .logic_evaluator import is_mpmath
 from mpmath import mp

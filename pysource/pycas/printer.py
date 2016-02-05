@@ -3,10 +3,10 @@ from expression import *
 from functions import *
 from pysymbols.visitor import add_target,add_target_obj
 
-@add_target(printer,Addition)
-@add_target(latex,Addition)
+@add_target(printer,addition)
+@add_target(latex,addition)
 def visit(printer,expr):
-    neg_args = [arg for arg in expr.args if arg.function == Negative]
+    neg_args = [arg for arg in expr.args if arg.function == negative]
     covered = set(neg_args)
     rest = [arg for  arg in expr.args if arg not in covered]
     rest_str = '+'.join(printer.printed_operator_arguments(expr,rest))
@@ -15,9 +15,9 @@ def visit(printer,expr):
     neg_str = '-'.join(printer.printed_operator_arguments(expr,[arg.args[0] for arg in neg_args]))
     return rest_str + '-' + neg_str
 
-@add_target(latex,Multiplication)
+@add_target(latex,multiplication)
 def visit(printer,expr):
-    denominators = [arg for arg in expr.args if arg.function == Fraction]
+    denominators = [arg for arg in expr.args if arg.function == fraction]
     if len(denominators)>0:
         numerators = [arg for arg in expr.args if arg.is_atomic and not arg == I]
         if len(numerators) == 0:
@@ -26,8 +26,8 @@ def visit(printer,expr):
         covered = set(numerators + denominators)
         rest = [arg for  arg in expr.args if arg not in covered]
 
-        denom_str = printer(Multiplication(*[arg.args[0] for arg in denominators]))
-        num_str =   printer(Multiplication(*numerators))
+        denom_str = printer(multiplication(*[arg.args[0] for arg in denominators]))
+        num_str =   printer(multiplication(*numerators))
 
         if len(rest) == 0:
             rest_str = ""
@@ -36,12 +36,12 @@ def visit(printer,expr):
             if printer.needs_brackets_in(rest[0],expr):
                 rest_str = printer.bracket_format() % rest_str
         else:
-            rest = Multiplication(*rest)
+            rest = multiplication(*rest)
             rest_str =  printer(rest)
 
         return r'\frac{%s}{%s} \, %s ' % (num_str,denom_str,rest_str)
 
-    is_numeric = lambda x: x.value != None or (x.function == Exponentiation and x.args[0].value != None)
+    is_numeric = lambda x: x.value != None or (x.function == exponentiation and x.args[0].value != None)
 
     numeric = [x for x in expr.args if is_numeric(x)]
     non_numeric = [x for x in expr.args if not is_numeric(x)]
@@ -56,21 +56,21 @@ def visit(printer,expr):
 def visit(printer,expr):
     return expr.value.name
 
-@add_target(printer,Multiplication)
+@add_target(printer,multiplication)
 def visit(printer,expr):
     res = printer.print_operator_argument(expr.args[0],expr)
     for arg in expr.args[1:]:
-        if arg.function == Fraction:
+        if arg.function == fraction:
             res += '/' + printer.print_operator_argument(arg.args[0],expr)
         else:
             res += '*' + printer.print_operator_argument(arg,expr)
     return res
 
-@add_target(latex,Fraction)
+@add_target(latex,fraction)
 def visit(printer,expr):
     return r'\frac{1}{%s}' % printer(expr.args[0])
 
-@add_target(latex,Exponentiation)
+@add_target(latex,exponentiation)
 def visit(printer,expr):
     parg = printer.printed_operator_arguments(expr,end=-1)
     parg += [printer(expr.args[-1])]
@@ -135,8 +135,8 @@ def visit(printer,expr):
     inner = r"\\ ".join(inner_list)
     return outer % inner
 
+@add_target(printer, OuterPiecewise )
 @add_target(latex, OuterPiecewise )
-@add_target(printer, OuterPiecewise)
 def visit(printer,expr):
     return printer(expr.args[0])
 
@@ -152,12 +152,12 @@ def visit(printer,expr):
 
 @add_target(latex,ArrayAccess)
 def visit(printer,expr):
-    name = printer.format_name(expr.args[0].name)
+    name = printer.format_name(expr.args[0].name.split('__id')[0])
     return r'%s \mathopen{} \left[ %s \right] \mathclose{} ' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
 
 @add_target(printer,ArrayAccess)
 def visit(printer,expr):
-    name = printer.format_name(expr.args[0].name)
+    name = printer.format_name(expr.args[0].name.split('__id')[0])
     return r'%s[ %s \right]' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
 
 

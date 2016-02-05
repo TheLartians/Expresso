@@ -10,8 +10,7 @@ def Symbol(name,type=None,positive = False,latex = None,repr = None):
         global_context.add_definition(Type(s),type)
     if positive == True:
         from .functions import sign
-        global_context.add_definition(Or(0<s,Equal(s,0)),True)
-        global_context.add_definition(Or(-s<s,Equal(s,s)),True)
+        global_context.add_definition(s>=0,True)
         global_context.add_definition(sign(s),1)
     if latex is not None:
         latex_rep = latex
@@ -43,16 +42,16 @@ def expression_converter(expr):
             return Expression(pysymbols.create_object(expr))
         else:
             expr = abs(expr)
-            return Negative(pysymbols.create_object(expr))
+            return negative(pysymbols.create_object(expr))
     if isinstance(expr,float):
         import fractions
         f = fractions.Fraction(repr(expr))
         if f.denominator == 1:
             return expression_converter(f.numerator)
         if f.numerator == 1:
-            return Fraction(f.denominator)
+            return fraction(f.denominator)
         else:
-            return f.numerator * Fraction(f.denominator)
+            return f.numerator * fraction(f.denominator)
     if isinstance(expr,complex):
         if expr.real == 0:
             if expr.imag == 0:
@@ -90,49 +89,49 @@ latex = pysymbols.printer.LatexPrinter(expression_converter)
 class Expression(pysymbols.WrappedExpression(expression_converter)):
     
     def __add__(self, other):
-        return Addition(self,other)
+        return addition(self,other)
 
     def __radd__(self, other):
-        return Addition(other,self)
+        return addition(other,self)
 
     def __neg__(self):
-        return Negative(self)
+        return negative(self)
 
     def __pos__(self):
         return self
     
     def __sub__(self, other):
-        return Addition(self, Negative(other))
+        return addition(self, negative(other))
 
     def __rsub__(self, other):
-        return Addition(other, Negative(self))
+        return addition(other, negative(self))
 
     def __mul__(self, other):
-        return Multiplication(self,other)
+        return multiplication(self,other)
     
     def __rmul__(self, other):
-        return Multiplication(other,self)
+        return multiplication(other,self)
 
     def __div__(self, other):
-        return Multiplication(self, Fraction(other))
+        return multiplication(self, fraction(other))
     
     def __rdiv__(self, other):
         other = self.S(other)
         if other == One:
-            return Fraction(self)
-        return Multiplication(other, Fraction(self))
+            return fraction(self)
+        return multiplication(other, fraction(self))
     
     def __pow__(self,other):
-        return Exponentiation(self,other)
+        return exponentiation(self,other)
 
     def __rpow__(self,other):
-        return Exponentiation(other,self)
+        return exponentiation(other,self)
 
     def __mod__(self,other):
-        return Mod(self,other)
+        return mod(self,other)
 
     def __rmod__(self,other):
-        return Mod(other,self)
+        return mod(other,self)
 
     def __lt__(self, other):
         return Less(self,other)
@@ -229,14 +228,14 @@ Zero = S(0)
 NaN = S( pysymbols.create_object(float('nan'),'undefined value') )
 I = S( pysymbols.create_object(1j,'imaginary unit') )
 
-Addition = BinaryOperator("+",pysymbols.associative,pysymbols.commutative,-11)
-Negative = UnaryOperator("-",pysymbols.prefix,-12)
-Multiplication = BinaryOperator("*",pysymbols.associative,pysymbols.commutative,-13)
-Fraction = UnaryOperator("1/",pysymbols.prefix,-14)
-Exponentiation = BinaryOperator("**",-15)
+addition = BinaryOperator("+",pysymbols.associative,pysymbols.commutative,-11)
+negative = UnaryOperator("-",pysymbols.prefix,-12)
+multiplication = BinaryOperator("*",pysymbols.associative,pysymbols.commutative,-13)
+fraction = UnaryOperator("1/",pysymbols.prefix,-14)
+exponentiation = BinaryOperator("**",-15)
 
-AdditionGroup = Group(Addition,Negative,Zero)
-MultiplicationGroup = Group(Multiplication,Fraction,One)
+AdditionGroup = Group(addition,negative,Zero)
+MultiplicationGroup = Group(multiplication,fraction,One)
 RealField = Field(AdditionGroup,MultiplicationGroup)
 ComplexField = Field(AdditionGroup,MultiplicationGroup)
 
@@ -245,9 +244,9 @@ And = BinaryOperator("&",pysymbols.associative,pysymbols.commutative,-3)
 Xor = BinaryOperator(" XOR ",pysymbols.associative,pysymbols.commutative,-3)
 
 Not = UnaryOperator("~",pysymbols.prefix,-7)
-Mod = Function('mod',argc = 2)
+mod = Function('mod',argc = 2)
 
-Equal = BinaryOperator("=",pysymbols.associative,pysymbols.commutative,-6)
+equal = BinaryOperator("=",pysymbols.associative,pysymbols.commutative,-6)
 NotEqual = BinaryOperator("!=",pysymbols.associative,pysymbols.commutative,-6);
 
 In = BinaryOperator(" in ",-6)

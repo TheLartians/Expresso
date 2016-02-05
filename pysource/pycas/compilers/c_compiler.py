@@ -134,7 +134,7 @@ template <class T,size_t ... size> struct mapped_ndarray{
             raise ValueError('cannot compile custom function %s' % expr)
         return "%s(%s)" % (f.name,','.join([self(arg) for arg in expr.args[1:]]))
 
-    @visitor.function(f.Exponentiation)
+    @visitor.function(f.exponentiation)
     def visit(self,expr):
         return 'pow(%s,%s)' % (self(expr.args[0]),self(expr.args[1]))
 
@@ -158,15 +158,15 @@ template <class T,size_t ... size> struct mapped_ndarray{
     def visit(self,expr):
         return "!(%s)" % self(expr.args[0])
 
-    @visitor.function(f.Equal)
+    @visitor.function(f.equal)
     def visit(self,expr):
         return self.print_binary_operator(expr,'==')
 
-    @visitor.function(f.Fraction)
+    @visitor.function(f.fraction)
     def visit(self,expr):
         return "1./(%s)" % self(expr.args[0])
 
-    @visitor.function(f.Mod)
+    @visitor.function(f.mod)
     def visit(self,expr):
         return "fmod(%s,%s)" % (self(expr.args[0]),self(expr.args[1]))
 

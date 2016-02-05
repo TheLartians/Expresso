@@ -112,8 +112,8 @@ logic_evaluator.add_rule(pc.Or(s.x,pc.Not(s.x)),True);
 logic_evaluator.add_rule(pc.And(s.x,s.x),s.x);
 logic_evaluator.add_rule(pc.Or(s.x,s.x),s.x);
 
-logic_evaluator.add_rule(pc.NotEqual(s.x,s.y),pc.Not(pc.Equal(s.x,s.y)));
-logic_evaluator.add_rule(pc.Equal(s.x,s.x),True);
+logic_evaluator.add_rule(pc.NotEqual(s.x,s.y),pc.Not(pc.equal(s.x,s.y)));
+logic_evaluator.add_rule(pc.equal(s.x,s.x),True);
 
 
 logic_evaluator.add_rule(-s.x<-s.y,s.x<s.y)
@@ -127,7 +127,7 @@ logic_evaluator.add_rule(s.x<=s.x,True);
 
 logic_evaluator.add_rule(s.x>s.y,s.y<s.x);
 logic_evaluator.add_rule(s.x>=s.y,s.y<=s.x);
-logic_evaluator.add_rule(s.x<=s.y,pc.Or(s.x<s.y,Equal(s.x,s.y)));
+logic_evaluator.add_rule(s.x<=s.y,pc.Or(s.x<s.y,equal(s.x,s.y)));
 
 logic_evaluator.add_rule(And(x<y,y<x),False);
 
@@ -136,10 +136,10 @@ logic_evaluator.add_rule(-oo<x,True);
 logic_evaluator.add_rule(oo<x,False);
 logic_evaluator.add_rule(x<-oo,False);
 
-logic_evaluator.add_rule(And(Equal(x,y),f(x)),And(Equal(x,y),f(y)));
+logic_evaluator.add_rule(And(equal(x,y),f(x)),And(equal(x,y),f(y)));
 logic_evaluator.add_rule(And(Or(x,y),z),Or(And(x,z),And(y,z)));
 
 logic_evaluator.add_rule(abs(x)<y,And(x<y,-x<y));
 logic_evaluator.add_rule(x<abs(y),Or(x<y,x<-y));
-logic_evaluator.add_rule(Equal(abs(x),y),Or(Equal(x,y),Equal(x,-y)));
+logic_evaluator.add_rule(equal(abs(x),y),Or(equal(x,y),equal(x,-y)));
 '''

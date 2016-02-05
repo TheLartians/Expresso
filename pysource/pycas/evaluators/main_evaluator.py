@@ -19,7 +19,7 @@ evaluator.add_rule(0**s.x, 0)
 evaluator.add_rule(s.x*s.x, s.x**2)
 evaluator.add_rule(s.x*s.x**-1, 1)
 
-evaluator.add_rule((s.x**s.a)**s.b, s.x**(s.a*s.b),condition=pc.Equal(pc.DominantType(pc.Type(s.b),pc.Types.Integer),pc.Types.Integer))
+evaluator.add_rule((s.x**s.a)**s.b, s.x**(s.a*s.b),condition=pc.equal(pc.DominantType(pc.Type(s.b),pc.Types.Integer),pc.Types.Integer))
 
 from .numeric_evaluator import is_even,is_uneven
 
@@ -47,8 +47,8 @@ evaluator.add_rule(-pc.S(0), 0)
 
 def extract_intersection(m):
 
-    ma = pc.MulplicityList(m[s.x],pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
-    mb = pc.MulplicityList(m[s.y],pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
+    ma = pc.MulplicityList(m[s.x],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
+    mb = pc.MulplicityList(m[s.y],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
 
     common = ma.intersection(mb)
     if len(common) == 0:
@@ -58,8 +58,8 @@ def extract_intersection(m):
     m[s.c] = common.as_expression()
 
 def extract_sum_intersection(m):
-    ma = pc.MulplicityList(m[s.x],pc.AdditionGroup,pc.Multiplication,pc.RealField)
-    mb = pc.MulplicityList(m[s.y],pc.AdditionGroup,pc.Multiplication,pc.RealField)
+    ma = pc.MulplicityList(m[s.x],pc.AdditionGroup,pc.multiplication,pc.RealField)
+    mb = pc.MulplicityList(m[s.y],pc.AdditionGroup,pc.multiplication,pc.RealField)
     common = ma.intersection(mb)
     if len(common) == 0:
         return False
@@ -72,15 +72,15 @@ evaluator.add_rule(s.x+s.y, s.c*(s.a+s.b), extract_intersection)
 evaluator.add_rule(s.x-s.y, s.c*(s.a-s.b), extract_intersection)
 evaluator.add_rule(-s.x-s.y, -s.c*(s.a+s.b), extract_intersection)
 
-evaluator.add_rule(pc.Equal(s.x,s.y), pc.Equal(s.a,s.b), extract_intersection)
-evaluator.add_rule(pc.Equal(s.x,-s.y), pc.Equal(s.a,-s.b), extract_intersection)
-evaluator.add_rule(pc.Equal(s.x,s.y), pc.Equal(s.a,s.b), extract_sum_intersection)
+evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_intersection)
+evaluator.add_rule(pc.equal(s.x,-s.y), pc.equal(s.a,-s.b), extract_intersection)
+evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_sum_intersection)
 
 
 def extract_comp_mul_intersection(m):
 
-    ma = pc.MulplicityList(m[s.x],pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
-    mb = pc.MulplicityList(m[s.y],pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
+    ma = pc.MulplicityList(m[s.x],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
+    mb = pc.MulplicityList(m[s.y],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
 
     common = ma.intersection(mb)
     if len(common) == 0:
@@ -118,8 +118,8 @@ from .logic_evaluator import is_function_type
 
 def evaluate_fraction(m):
     ex,ey = m[s.x],m[s.y]**m[s.z]
-    ma = pc.MulplicityList(ex,pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
-    mb = pc.MulplicityList(ey,pc.MultiplicationGroup,pc.Exponentiation,pc.RealField)
+    ma = pc.MulplicityList(ex,pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
+    mb = pc.MulplicityList(ey,pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
 
     mbs = {k for k,v in mb}
 
@@ -163,7 +163,7 @@ evaluator.add_rule(pc.OuterPiecewise(pp(s.a,s.b)),s.a*pc.Indicator(s.b))
 from .logic_evaluator import contains_atomic
 
 
-excluded_derivatives = {pp,pc.OuterPiecewise}
+excluded_derivatives = {pp,pc.InnerPiecewise}
 
 def check_if_excluded_derivative(m):
     return not m[s.y].function in excluded_derivatives
@@ -181,12 +181,12 @@ evaluator.add_rule(pc.derivative(pc.log(s.x),s.x),1/s.x)
 evaluator.add_rule(pc.derivative(pc.sin(s.x),s.x),pc.cos(s.x))
 evaluator.add_rule(pc.derivative(pc.cos(s.x),s.x),-pc.sin(s.x))
 
-evaluator.add_rule(pc.derivative(s.x**s.n,s.x),s.n*s.x**(s.n-1),condition=(pc.Equal(pc.Type(s.n))));
+evaluator.add_rule(pc.derivative(s.x**s.n,s.x),s.n*s.x**(s.n-1),condition=(pc.equal(pc.Type(s.n))));
 evaluator.add_rule(pc.derivative(s.a**s.b,s.x),pc.derivative(s.b*pc.log(s.a),s.x)*s.a**s.b);
 
 evaluator.add_rule(pc.derivative(pc.OuterPiecewise(s.a),s.x),pc.OuterPiecewise(pc.derivative(s.a,s.x)))
 evaluator.add_rule(pc.derivative(pc.InnerPiecewise(s.a,s.b),s.x),pc.InnerPiecewise(pc.derivative(s.a,s.x),pc.derivative(s.b,s.x)))
-evaluator.add_rule(pc.derivative(pp(s.a,s.b),s.x),pp(pc.derivative(s.a,s.x),s.b))
+evaluator.add_rule(pc.derivative(pp(s.a,s.b),s.x),pp(pc.derivative(s.a,s.x),s.b),condition=pc.Not(contains_atomic(s.b,s.x)))
 
 
 def create_tmp_x(m):

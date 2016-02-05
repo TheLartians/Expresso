@@ -306,7 +306,8 @@ def add_target(visitor,target):
     
     def decorator(fn):
         visitor.dispatcher.register_target(target,fn)
-    
+        return fn
+
     return decorator
 
 def add_target_obj(visitor,target):

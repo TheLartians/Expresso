@@ -6,10 +6,16 @@ import visitor
 
 from expression import associative,non_associative,left_associative,right_associative,commutative,non_commutative,postfix,prefix
 
-def create_object(value,string = None):
-    if string is None:
-        string = '%s:(%s)' % (type(value).__name__, str(value))
-    return core.create_object(value,string)
+def create_object(data,unique_name=None):
+    '''
+Create an atomic expression that holds data as the value.
+Note that two objects will be treated the the same if they
+have the same 'unique_name' (by default given by the type and
+rerp(data)).
+    '''
+    if unique_name is None:
+        unique_name = '%s:(%s)' % (type(data).__name__, repr(data))
+    return core.create_object(data,unique_name)
 
 def create_symbol(name):
     return core.create_symbol(name)
