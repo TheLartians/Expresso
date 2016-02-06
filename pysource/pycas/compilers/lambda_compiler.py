@@ -136,7 +136,9 @@ class LambdaCompiler(object):
     @visitor.function(f.Abs)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
-        return lambda args:abs(arg(args))
+        def evaluate(args):
+            return abs(arg(args))
+        return evaluate
 
     @visitor.function(f.Not)
     def visit(self,expr):

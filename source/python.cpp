@@ -143,7 +143,6 @@ template <class C> void create_iterator(C & c){
   ;
   
   c.def("__iter__",+[](const typename C::wrapped_type &o){ return iterator_wrapper(o.begin(),o.end()); });
-  
 }
 
 BOOST_PYTHON_MODULE(_symbols){

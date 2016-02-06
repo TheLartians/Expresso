@@ -215,7 +215,6 @@ def make_parallel(f):
 
     return run_parallel_thread
 
-
 def numpyfy(expr,parallel = False,restype = None):
 
     from pycas.evaluators.optimizers import optimize_for_compilation
