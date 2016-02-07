@@ -232,6 +232,7 @@ def numpyfy(expr,parallel = False,restype = None):
             restype = complex
 
     def call(**args):
+
         args,shape = prepare_arguments(args)
         cres = np.array(res(args)).astype(restype)
 

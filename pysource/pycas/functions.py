@@ -1,5 +1,5 @@
 from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Wildcard,Number,Expression,S
-from .expression import One,Zero,NaN,I,addition,negative,multiplication,fraction,exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,mod,equal,NotEqual,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
+from .expression import One,Zero,NaN,I,addition,negative,multiplication,fraction,exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,mod,equal,unequal,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
 
 import pysymbols
 import math
@@ -31,9 +31,9 @@ round = Function('round',argc = 1)
 Max = Function('max',argc = 2)
 Min = Function('min',argc = 2)
 
-Real = Function('real',argc = 1)
-Imag = Function('imag',argc = 1)
-Conjugate = Function('conjugate',argc = 1)
+real = Function('real',argc = 1)
+imag = Function('imag',argc = 1)
+conjugate = Function('conjugate',argc = 1)
 
 Indicator = Function('indicator',argc = 1)
 
@@ -41,7 +41,7 @@ InnerPiecewise = BinaryOperator('}{', pysymbols.associative, pysymbols.non_commu
 OuterPiecewise = Function('outer piecewise')
 PiecewisePart = Function('piecewise part',argc = 2)
 
-def Piecewise(*args):
+def piecewise(*args):
     return OuterPiecewise(InnerPiecewise(*args))
 
 # Calculus

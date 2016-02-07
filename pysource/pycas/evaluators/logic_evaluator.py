@@ -3,6 +3,7 @@ pc = __import__(__name__.split('.')[0])
 import rule_symbols as s
 
 logic_evaluator = pc.RewriteEvaluator(recursive=True,split_binary=True)
+evaluator = logic_evaluator
 
 is_atomic = pc.Function('is atomic')
 is_symbol = pc.Function('is symbol')
@@ -112,7 +113,6 @@ logic_evaluator.add_rule(pc.Or(s.x,pc.Not(s.x)),True);
 logic_evaluator.add_rule(pc.And(s.x,s.x),s.x);
 logic_evaluator.add_rule(pc.Or(s.x,s.x),s.x);
 
-logic_evaluator.add_rule(pc.NotEqual(s.x,s.y),pc.Not(pc.equal(s.x,s.y)));
 logic_evaluator.add_rule(pc.equal(s.x,s.x),True);
 
 

@@ -26,6 +26,11 @@ from .numeric_evaluator import is_even,is_uneven
 evaluator.add_rule((s.x**s.a)**(s.a**-1), abs(s.x),condition=is_even(s.a))
 evaluator.add_rule((s.x**s.a)**(s.a**-1), s.x,condition=is_uneven(s.a))
 
+
+evaluator.add_rule((-s.x)**(s.a), s.x**s.a ,condition=is_even(s.a))
+evaluator.add_rule((-s.x)**(s.a), -(s.x)**s.a ,condition=is_uneven(s.a))
+
+
 evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x*s.y**-1)**s.a)
 
 
@@ -145,6 +150,8 @@ evaluator.add_rule(pc.log(pc.e), 1)
 evaluator.add_rule(pc.log(1), 0)
 evaluator.add_rule(pc.sin(0), 0)
 evaluator.add_rule(pc.cos(0), 1)
+evaluator.add_rule(pc.tan(0), 0)
+evaluator.add_rule(pc.atan(0), 0)
 
 evaluator.add_rule(pc.Indicator(True), 1)
 evaluator.add_rule(pc.Indicator(False), 0)

@@ -4,6 +4,12 @@ import pycas.expression as e
 import pycas.functions as f
 from mpmath import mp
 
+def logic_reduce(op,args):
+    res = op(args[0],args[1])
+    for l,r in zip(args[0::2],args[1::2]):
+         res &= op(l,r)
+    return res
+
 class LambdaCompiler(object):
 
     def __init__(self,value_converter = lambda x:x,function_module = None,value_module = None,cache=None):
@@ -74,61 +80,66 @@ class LambdaCompiler(object):
     def visit(self,expr):
         from operator import eq
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(eq,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(eq,[arg(args) for arg in cargs])
+
+    @visitor.function(f.unequal)
+    def visit(self,expr):
+        cargs = [self.visit(arg) for arg in expr.args]
+        return lambda args: logic_reduce(lambda x,y:x!=y ,[arg(args) for arg in cargs])
 
     @visitor.function(f.Less)
     def visit(self,expr):
         from operator import lt
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(lt,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(lt,[arg(args) for arg in cargs])
 
     @visitor.function(f.Greater)
     def visit(self,expr):
         from operator import gt
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(gt,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(gt,[arg(args) for arg in cargs])
 
     @visitor.function(f.LessEqual)
     def visit(self,expr):
         from operator import le
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(le,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(le,[arg(args) for arg in cargs])
 
     @visitor.function(f.GreaterEqual)
     def visit(self,expr):
         from operator import ge
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(ge,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(ge,[arg(args) for arg in cargs])
 
     @visitor.function(f.And)
     def visit(self,expr):
         from operator import __and__
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(__and__,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(__and__,[arg(args) for arg in cargs])
 
     @visitor.function(f.Or)
     def visit(self,expr):
         from operator import __or__
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(__or__,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(__or__,[arg(args) for arg in cargs])
 
     @visitor.function(f.Xor)
     def visit(self,expr):
         from operator import __xor__
         cargs = [self.visit(arg) for arg in expr.args]
-        return lambda args:reduce(__xor__,[arg(args) for arg in cargs])
+        return lambda args:logic_reduce(__xor__,[arg(args) for arg in cargs])
 
-    @visitor.function(f.Real)
+    @visitor.function(f.real)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
         return lambda args:arg(args).real
 
-    @visitor.function(f.Imag)
+    @visitor.function(f.imag)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
         return lambda args:arg(args).imag
 
-    @visitor.function(f.Conjugate)
+    @visitor.function(f.conjugate)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
         return lambda args:arg(args).conjugate()

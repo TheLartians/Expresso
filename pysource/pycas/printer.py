@@ -99,8 +99,8 @@ latex.register_printer(Abs,lambda p,e: r"\left| %s \right|" % p(e.args[0]))
 latex.register_printer(tmp,lambda p,e: p.print_postfix_operator(e,r"'"))
 latex.register_printer(sqrt,lambda p,e:r"\sqrt{%s} '" % p(e.args[0]))
 
-latex.register_printer(Real,lambda p,e: p.print_function(e,r"\Re "))
-latex.register_printer(Imag,lambda p,e: p.print_function(e,r"\Im "))
+latex.register_printer(real,lambda p,e: p.print_function(e,r"\Re "))
+latex.register_printer(imag,lambda p,e: p.print_function(e,r"\Im "))
 
 latex.register_printer(Indicator,lambda p,e: p.print_function(e,r"\, \mathbb{1} "))
 latex.register_printer(Not,lambda p,e: p.print_unary_operator(e,r"\neg "))
@@ -118,7 +118,7 @@ latex.register_printer(Tuple,lambda p,e: p.print_function(e,r""))
 def visit(printer,expr):   
     for arg in expr.args:
         if arg.function != Tuple and arg.function != PiecewisePart:
-            return printer.print_function(expr,name=r"\text{Piecewise} ")
+            return printer.print_function(expr,name=r"\text{piecewise} ")
 
     outer = r"\begin{cases} %s \end{cases}"
 
@@ -143,7 +143,11 @@ def visit(printer,expr):
 
 @add_target(printer, InnerPiecewise)
 def visit(printer,expr):
-    return printer.print_function(expr,name="Piecewise")
+    return printer.print_function(expr,name="piecewise")
+
+@add_target(latex,unequal)
+def visit(printer,expr):
+    return printer.print_binary_operator(expr,r" \neq ")
 
 @add_target(latex,CustomFunction)
 def visit(printer,expr):

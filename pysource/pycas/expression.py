@@ -247,7 +247,7 @@ Not = UnaryOperator("~",pysymbols.prefix,-7)
 mod = Function('mod',argc = 2)
 
 equal = BinaryOperator("=",pysymbols.associative,pysymbols.commutative,-6)
-NotEqual = BinaryOperator("!=",pysymbols.associative,pysymbols.commutative,-6);
+unequal = BinaryOperator("!=",pysymbols.associative,pysymbols.commutative,-6);
 
 In = BinaryOperator(" in ",-6)
 NotIn = BinaryOperator(" not in ",-6)

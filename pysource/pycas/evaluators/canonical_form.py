@@ -40,6 +40,7 @@ canonical_form.add_rule(pc.sqrt(s.x),s.x**(1/pc.S(2)))
 canonical_form.add_rule(s.x>s.y,s.y<s.x)
 canonical_form.add_rule(s.x>=s.y,s.y<=s.x)
 canonical_form.add_rule(s.x<=s.y,pc.Or(s.x<s.y,pc.equal(s.x,s.y)))
+canonical_form.add_rule(pc.unequal(s.x,s.y),pc.Not(pc.equal(s.x,s.y)));
 
 
 canonical_form.add_rule(abs(s.x),pc.Max(s.x,-s.x),condition=pc.equal(pc.DominantType(pc.Type(s.x),pc.Types.Real),pc.Types.Real))
@@ -82,6 +83,7 @@ format_evaluator.add_rule(pc.equal(s.a,s.a),True)
 format_evaluator.add_rule(-(s.a+s.b),-s.a-s.b)
 
 format_evaluator.add_rule((-s.a)*s.b,-(s.a*s.b))
+format_evaluator.add_rule(pc.Not(pc.equal(s.x,s.y)),pc.unequal(s.x,s.y));
 
 
 
