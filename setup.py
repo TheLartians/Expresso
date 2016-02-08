@@ -3,16 +3,17 @@ from glob import glob
 
 setup(
     name='expresso',
-    version='0.2',
+    version='0.1',
     description='A symbolic expression manipulation library.',
+    licence='MIT',
     author='Lars Melchior',
-
     author_email='thelartians@gmail.com',
 
     url='https://github.com/TheLartians/Expresso',
-    #include_package_data=True,
-
+    
     packages=find_packages(exclude=['tests*']),
+    
+    keywords='expression symbolic manipulation algebra',
 
     extras_require={
         'pycas':['numpy','mpmath']
@@ -21,6 +22,8 @@ setup(
     zip_safe=False,
 
     classifiers=[
+        'Development Status :: 3 - Alpha',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7'
     ],
 

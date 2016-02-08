@@ -66,7 +66,7 @@ namespace expresso {
         auto op = (*it)->as<BinaryOperator>();
         if(op && op->get_name() == get_name()){
           it = args.erase(it);
-          it = args.insert(it,op->arguments.begin(), op->arguments.end()) + op->arguments.size();
+          it = args.insert(it,op->arguments.begin(), op->arguments.end()) + op->arguments.size(); // if gcc fails here, you may need to upgrade to a newer version
           end = args.end();
         }
         else ++it;
