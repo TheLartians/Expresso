@@ -242,7 +242,7 @@ template <class T,size_t ... size> struct mapped_ndarray{
         return "complex<double>(%s,%s)" % (repr(float(v.real)),repr(float(v.imag)))
 
     def optimize_function(self,expr):
-        from pycas.evaluators.optimizers import optimize_for_compilation
+        from expresso.pycas.evaluators.optimizers import optimize_for_compilation
         return optimize_for_compilation(expr)
 
     def get_body_code(self,definition):

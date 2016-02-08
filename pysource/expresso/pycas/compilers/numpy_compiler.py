@@ -217,7 +217,7 @@ def make_parallel(f):
 
 def numpyfy(expr,parallel = False,restype = None):
 
-    from pycas.evaluators.optimizers import optimize_for_compilation
+    from expresso.pycas.evaluators.optimizers import optimize_for_compilation
 
     compiler = NumpyCompiler()
     res = compiler.visit(optimize_for_compilation(e.S(expr)))
