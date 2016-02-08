@@ -18,9 +18,9 @@
 
 #include <boost/python/implicit.hpp>
 
-#include "expression/core.h"
-#include "expression/evaluator.h"
-#include "expression/algorithms.h"
+#include "expresso/core.h"
+#include "expresso/evaluator.h"
+#include "expresso/algorithms.h"
 
 namespace python = boost::python;
 

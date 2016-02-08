@@ -11,10 +11,10 @@ project(Expresso)
 
 set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/source)
 set (PROJECT_LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
-set (PROJECT_PYSOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pysource)
+set (PROJECT_PYSOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/expresso)
 
-file (GLOB sources ${PROJECT_SOURCE_DIR}/expression/*.cpp)
-file (GLOB headers ${PROJECT_SOURCE_DIR}/expression/*.h)
+file (GLOB sources ${PROJECT_SOURCE_DIR}/expresso/*.cpp)
+file (GLOB headers ${PROJECT_SOURCE_DIR}/expresso/*.h)
 file (GLOB_RECURSE pysources ${PROJECT_PYSOURCES_DIR}/*.py)
 
 # ---- group python sources ----
@@ -63,5 +63,5 @@ add_subdirectory (${PROJECT_LIBS_DIR}/lars)
 # ---- install ----
 
 install(TARGETS _expresso DESTINATION expresso)
-install(DIRECTORY ${PROJECT_PYSOURCES_DIR}/ DESTINATION .)
+install(DIRECTORY ${PROJECT_PYSOURCES_DIR} DESTINATION .)
 
