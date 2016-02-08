@@ -30,28 +30,28 @@
 
 #include <lars/iterators.h>
 
-namespace symbols {
+namespace expresso {
   
-  struct CommutativeAssociativeIterator{
+  struct BinaryIterator{
     virtual void init(const BinaryOperator *) = 0;
     virtual const std::vector<unsigned> & get_indices() = 0;
     virtual bool step() = 0;
-    virtual std::shared_ptr<CommutativeAssociativeIterator> clone()const = 0;
+    virtual std::shared_ptr<BinaryIterator> clone()const = 0;
   };
   
-  namespace CAIterators {
+  namespace BinaryIterators {
     
     using namespace lars;
     
-    struct All:public CommutativeAssociativeIterator{
+    struct All:public BinaryIterator{
       std::vector<unsigned> indices;
       void init(const BinaryOperator * op)override{ indices.resize(op->arguments.size()); for(auto i:range(op->arguments.size())) indices[i] = i; }
       const std::vector<unsigned> & get_indices()override{ return indices; }
       bool step()override{ return false; }
-      std::shared_ptr<CommutativeAssociativeIterator> clone()const override{ return std::make_shared<All>(); }
+      std::shared_ptr<BinaryIterator> clone()const override{ return std::make_shared<All>(); }
     };
     
-    struct Window:public CommutativeAssociativeIterator{
+    struct Window:public BinaryIterator{
       std::vector<unsigned> indices;
       unsigned N;
       unsigned size;
@@ -59,27 +59,27 @@ namespace symbols {
       void init(const BinaryOperator * op)override{ size = op->arguments.size(); indices.resize(std::min(size,N)); for(auto i:range(std::min(size,N))) indices[i] = i; }
       const std::vector<unsigned> & get_indices()override{ return indices; }
       bool step()override{ for(auto &i:indices)i++; return indices.back() != size;  }
-      std::shared_ptr<CommutativeAssociativeIterator> clone()const override{ return std::make_shared<Window>(N); }
+      std::shared_ptr<BinaryIterator> clone()const override{ return std::make_shared<Window>(N); }
     };
     
-    struct SingleOrdered:public CommutativeAssociativeIterator{
+    struct SingleOrdered:public BinaryIterator{
       subarray_indices::iterator it;
       unsigned N;
       SingleOrdered(unsigned _N = 2):N(_N){}
       void init(const BinaryOperator * op)override{ unsigned s = op->arguments.size(); it.init(std::min(s,N),s); }
       const std::vector<unsigned> & get_indices()override{ return *it; }
       bool step()override{ return it.step(); }
-      std::shared_ptr<CommutativeAssociativeIterator> clone()const override{ return std::make_shared<SingleOrdered>(N); }
+      std::shared_ptr<BinaryIterator> clone()const override{ return std::make_shared<SingleOrdered>(N); }
     };
     
-    struct SingleUnordered:public CommutativeAssociativeIterator{
+    struct SingleUnordered:public BinaryIterator{
       permutated_subarray_indices::iterator it;
       unsigned N;
       SingleUnordered(unsigned _N = 2):N(_N){}
       void init(const BinaryOperator * op)override{ unsigned s = op->arguments.size(); it.init(std::min(s,N),s); }
       const std::vector<unsigned> & get_indices()override{ return *it; }
       bool step()override{ return it.step(); }
-      std::shared_ptr<CommutativeAssociativeIterator> clone()const override{ return std::make_shared<SingleUnordered>(N); }
+      std::shared_ptr<BinaryIterator> clone()const override{ return std::make_shared<SingleUnordered>(N); }
     };
     
   }
@@ -90,41 +90,37 @@ namespace symbols {
     Expression::shared copy;
     const Evaluator & evaluator;
     bool modified = false;
-    std::shared_ptr<CommutativeAssociativeIterator> CAIt;
     argument_list CAargs;
-    
-    std::unordered_set<unsigned> ignore_indices;
-    argument_list new_args;
     
     bool get_from_cache(expression e,expression &res);
     bool is_cached(const Expression * e);
     void add_to_cache(expression e,expression res);
     void finalize(const Expression * e);
-    void copy_function(const Function * e);
+    bool copy_function(const Function * e);
     void visit(const Function * e)override;
-    void visit_CA(const BinaryOperator * e);
+    void visit_binary(const BinaryOperator * e);
     void visit(const BinaryOperator * e)override;
     void visit(const AtomicExpression * e)override;
     
     public:
     replacement_map & cache;
+    std::unordered_set<expression> expression_stack;
 
     EvaluatorVisitor(const Evaluator &_evaluator,replacement_map & _cache);
-    const expression & evaluate(expression e){ e->accept(this); return copy; }
+    expression evaluate(expression e);
   };
-
   
   class Evaluator{
     public:
     
-    bool recursive = false;
-    
-    std::shared_ptr<CommutativeAssociativeIterator> CAIterator;
-    
-    Evaluator(std::shared_ptr<CommutativeAssociativeIterator> _CAIterator = std::make_shared<CAIterators::SingleOrdered>()):CAIterator(_CAIterator){}
+    struct settings_t{
+      bool recursive = false;
+      bool split_binary = true;
+      bool preorder = false;
+      bool postorder = true;
+    } settings;
     
     using ignore_set = std::unordered_set<expression>;
-    
     virtual expression evaluate(expression,EvaluatorVisitor &) const = 0;
     
     virtual expression run(expression e)const;
@@ -132,22 +128,24 @@ namespace symbols {
 
     expression operator()(expression e)const{ return run(e); }
     expression operator()(expression e,replacement_map &cache)const{ return run(e,cache); }
-
   };
   
   template <typename F> class FunctionEvaluator:public Evaluator{
     F function;
   public:
-    FunctionEvaluator(F f):Evaluator(std::make_shared<CAIterators::All>()),function(f){  }
+    FunctionEvaluator(F f):function(f){  }
     virtual expression evaluate(expression expr)const{ return function(expr); }
   };
   
   template <typename F> FunctionEvaluator<F> create_function_evaluator(F f){ return FunctionEvaluator<F>(f); }
   
   class ReplaceEvaluator:public Evaluator{
-  public:
-    ReplaceEvaluator():Evaluator(std::make_shared<CAIterators::SingleOrdered>()){}
     replacement_map replacements;
+  public:
+    ReplaceEvaluator(){}
+    ReplaceEvaluator(const replacement_map &rep):replacements(rep){}
+    void clear(){ replacements.clear(); }
+    void add_replacement(expression search,expression replace);
     expression evaluate(expression,EvaluatorVisitor &)const override;
     void extend();
   };
@@ -155,16 +153,24 @@ namespace symbols {
   struct Rule{
     using expression_evaluator = std::function<bool(replacement_map &,EvaluatorVisitor &)>;
     using minimal_expression_evaluator = std::function<bool(replacement_map &)>;
-    expression search,replacement;
+    expression search,replacement,condition,valid;
     expression_evaluator evaluator;
     
     Rule(expression _search,expression _replacement,expression_evaluator ev = expression_evaluator()):search(_search),replacement(_replacement),evaluator(ev){}
     Rule(expression _search,expression _replacement,minimal_expression_evaluator ev):search(_search),replacement(_replacement),evaluator([ev](replacement_map &m,EvaluatorVisitor &){ return ev(m); }){}
-    
+    Rule(expression _search,expression _replacement,expression _condition,expression _valid,expression_evaluator ev = expression_evaluator()):search(_search),replacement(_replacement),condition(_condition),valid(_valid),evaluator(ev){}
+    Rule(expression _search,expression _replacement,expression _condition,expression _valid,minimal_expression_evaluator ev):search(_search),replacement(_replacement),condition(_condition),valid(_valid),evaluator([ev](replacement_map &m,EvaluatorVisitor &){ return ev(m); }){}
   };
-    
+  
+
   std::ostream & operator<<(std::ostream &stream,const Rule &rule);
 
+  
+  /*
+   TODO: add lazy evaluation
+   */
+  
+  
   class RuleEvaluator:public Evaluator{
     using expression_evaluator = std::function<void(replacement_map &)>;
 
@@ -187,9 +193,7 @@ namespace symbols {
   public:
     
     using rule_id = CompressedNode::ID;
-    
-    static void verbose_apply_callback(const Rule &rule,const replacement_map &wildcards);
-    
+        
     using CallbackFunction = std::function<void(const Rule &,const replacement_map &)>;
     CallbackFunction apply_callback;
         
@@ -213,10 +217,22 @@ namespace symbols {
   };
   
   class MultiEvaluator:public Evaluator{
+  protected:
+    std::vector<Evaluator*> evaluators;
+  public:
+    void add_evaluator(Evaluator*e);
+    expression evaluate(expression expr,EvaluatorVisitor &)const override;
+  };
+
+  
+  class StepEvaluator:public Evaluator{
+  protected:
     std::vector<Evaluator*> evaluators;
   public:
     void add_evaluator(Evaluator*e){ evaluators.emplace_back(e); }
     expression evaluate(expression expr,EvaluatorVisitor &)const override;
   };
 
+  
+  
 }

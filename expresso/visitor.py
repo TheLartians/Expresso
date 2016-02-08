@@ -65,9 +65,7 @@ class Dispatcher(object):
             else:
                 v = arg.value
                 if v is not None:
-                    d = self.targets.get(v)
-                    if d: return d
-                    d = self.targets.get(type(v))
+                    d = self.targets.get((obj,type(v)))
                     if d: return d
                     d = self.targets.get(obj)
                     if d: return d
@@ -90,8 +88,10 @@ class Dispatcher(object):
     def __call__(self, *args, **kw):
         arg = args[self.param_index]
         d = self.get_target(arg)
-        return d(*args, **kw)
-            
+        if hasattr(d,'__call__'):
+            return d(*args, **kw)
+        return d
+
     def register_binary_operator(self, target):
         self.targets[binary_operator] = target
         
@@ -188,7 +188,7 @@ def obj(arg):
         if typ is None:
             dispatcher.register_object(fn)
         else:
-            dispatcher.register_target(typ, fn)
+            dispatcher.register_target((obj,typ), fn)
         def ff(*args, **kw):
             return dispatcher(*args, **kw)
         ff.dispatcher = dispatcher
@@ -302,12 +302,22 @@ def visitor_class(visit_name = 'visit'):
     return Visitor
 
 
-def add_target(visitor,target,visit_name = 'visit'):
+def add_target(visitor,target):
     
     def decorator(fn):
         visitor.dispatcher.register_target(target,fn)
-    
+        return fn
+
     return decorator
+
+def add_target_obj(visitor,target):
+
+    def decorator(fn):
+        visitor.dispatcher.register_target((obj,target),fn)
+        return fn
+
+    return decorator
+
 
 
 

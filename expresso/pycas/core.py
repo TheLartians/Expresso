@@ -1,6 +1,6 @@
 
-import pysymbols as ex
-from printer import latex
+import expresso as ex
+from .printer import latex
 
 def S(expr):
     if isinstance(expr,ex.core.Expression):
@@ -14,7 +14,7 @@ def S(expr):
             return Expression(ex.core.create_object(expr,str(expr)))
         else:
             expr = abs(expr)
-            return Negative(ex.core.create_object(expr,str(expr)))
+            return negative(ex.core.create_object(expr,str(expr)))
 
     raise ValueError('Unsupported expression type: %s' % type(expr))
 
@@ -27,43 +27,43 @@ def WF(name):
 class Expression(ex.WrappedExpression(S)):
     
     def __add__(self, other):
-        return Addition(self,self.S(other))
+        return addition(self,self.S(other))
 
     def __radd__(self, other):
-        return Addition(self.S(other),self)
+        return addition(self.S(other),self)
 
     def __neg__(self):
-        return Negative(self)
+        return negative(self)
 
     def __pos__(self):
         return self
     
     def __sub__(self, other):
-        return Addition(self, Negative(self.S(other)))
+        return addition(self, negative(self.S(other)))
 
     def __rsub__(self, other):
-        return Addition(self.S(other), Negative(self))
+        return addition(self.S(other), negative(self))
 
     def __mul__(self, other):
-        return Multiplication(self,self.S(other))
+        return multiplication(self,self.S(other))
 
     def __rmul__(self, other):
-        return Multiplication(self.S(other),self)
+        return multiplication(self.S(other),self)
 
     def __div__(self, other):
-        return Multiplication(self, Fraction(self.S(other)))
+        return multiplication(self, fraction(self.S(other)))
 
     def __rdiv__(self, other):
         other = self.S(other)
         if other == One:
-            return Fraction(self)
-        return Multiplication(self.S(other), Fraction(self))
+            return fraction(self)
+        return multiplication(self.S(other), fraction(self))
     
     def __pow__(self,other):
-        return Exponentiation(self,self.S(other))
+        return exponentiation(self,self.S(other))
 
     def __rpow__(self,other):
-        return Exponentiation(self.S(other),self)
+        return exponentiation(self.S(other),self)
 
     def _repr_latex_(self):
          return "$$%s$$" % latex(self)
@@ -85,21 +85,21 @@ MulplicityList = ex.WrappedMulplicityList(S)
 
 
 
-Equal = BinaryOperator("=",ex.core.associative,ex.core.commutative,-6)
+equal = BinaryOperator("=",ex.core.associative,ex.core.commutative,-6)
 
 
-Addition = BinaryOperator("+",ex.core.associative,ex.core.commutative,-11)
-Negative = UnaryOperator("-",ex.core.prefix,-12)
-Multiplication = BinaryOperator("*",ex.core.associative,ex.core.commutative,-13)
-Fraction = UnaryOperator("1/",ex.core.prefix,-14)
-Exponentiation = BinaryOperator("**",-15)
+addition = BinaryOperator("+",ex.core.associative,ex.core.commutative,-11)
+negative = UnaryOperator("-",ex.core.prefix,-12)
+multiplication = BinaryOperator("*",ex.core.associative,ex.core.commutative,-13)
+fraction = UnaryOperator("1/",ex.core.prefix,-14)
+exponentiation = BinaryOperator("**",-15)
 
 Group = ex.WrappedGroup(S)
 Field = ex.WrappedField(S)
 
 
-AdditionGroup = Group(Addition,Negative,Zero)
-MultiplicationGroup = Group(Multiplication,Fraction,One)
+AdditionGroup = Group(addition,negative,Zero)
+MultiplicationGroup = Group(multiplication,fraction,One)
 
 RealField = Field(AdditionGroup,MultiplicationGroup)
 
@@ -113,7 +113,7 @@ RealField = Field(AdditionGroup,MultiplicationGroup)
 
 
 def __latex_print_addition(printer,expr):
-    neg_args = [arg for arg in expr.args if arg.function == Negative]
+    neg_args = [arg for arg in expr.args if arg.function == negative]
     covered = set(neg_args)
     rest = [arg for  arg in expr.args if arg not in covered]
     rest_str = '+'.join(printer._printed_operator_arguments(expr,rest))
@@ -122,10 +122,10 @@ def __latex_print_addition(printer,expr):
     neg_str = '-'.join(printer._printed_operator_arguments(expr,[arg.args[0] for arg in neg_args]))
     return rest_str + '-' + neg_str
 
-latex.register_printer(Addition,__latex_print_addition)
+latex.register_printer(addition,__latex_print_addition)
 
 def __latex_print_multiplication(printer,expr):
-    denominators = [arg for arg in expr.args if arg.function == Fraction]
+    denominators = [arg for arg in expr.args if arg.function == fraction]
     if len(denominators)>0:
         numerators = [arg for arg in expr.args if arg.is_atomic]
         if len(numerators) == 0:
@@ -134,8 +134,8 @@ def __latex_print_multiplication(printer,expr):
         covered = set(numerators + denominators)
         rest = [arg for  arg in expr.args if arg not in covered]
 
-        denom_str = printer(Multiplication(*[arg.args[0] for arg in denominators]))
-        num_str =   printer(Multiplication(*numerators))
+        denom_str = printer(multiplication(*[arg.args[0] for arg in denominators]))
+        num_str =   printer(multiplication(*numerators))
         
         if len(rest) == 0:
             rest_str = ""
@@ -144,12 +144,12 @@ def __latex_print_multiplication(printer,expr):
             if printer._needs_brackets_in(rest[0],expr):
                 rest_str = printer._bracket_format() % rest_str
         else:
-            rest = Multiplication(*rest)
+            rest = multiplication(*rest)
             rest_str =  printer(rest)
         
         return r'\frac{%s}{%s} \, %s ' % (num_str,denom_str,rest_str)
 
-    is_numeric = lambda x: x.value != None or (x.function == Exponentiation and x.args[0].value != None)
+    is_numeric = lambda x: x.value != None or (x.function == exponentiation and x.args[0].value != None)
     
     numeric = [x for x in expr.args if is_numeric(x)]
     non_numeric = [x for x in expr.args if not is_numeric(x)]
@@ -159,12 +159,12 @@ def __latex_print_multiplication(printer,expr):
 
     return res
 
-latex.register_printer(Multiplication,__latex_print_multiplication)
+latex.register_printer(multiplication,__latex_print_multiplication)
 
 def __latex_print_fraction(printer,expr):
     return r'\frac{1}{%s}' % printer(expr.args[0])
 
-latex.register_printer(Fraction,__latex_print_fraction)
+latex.register_printer(fraction,__latex_print_fraction)
 
 # Here brackets are not set correctly
 def __latex_print_exp(printer,expr):
@@ -172,7 +172,7 @@ def __latex_print_exp(printer,expr):
     parg += [printer(expr.args[-1])]
     return '^'.join(['{%s}' % arg for arg in parg])
 
-latex.register_printer(Exponentiation,__latex_print_exp)
+latex.register_printer(exponentiation,__latex_print_exp)
 
 
 

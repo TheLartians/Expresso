@@ -9,11 +9,9 @@
 #include <sstream>
 #include <algorithm>
 
-#include <iostream>
-
 using namespace lars;
 
-namespace symbols {
+namespace expresso {
   
   Expression::shared copy(const Expression::shared &s){ replacement_map rep; return replace(s, rep); }
 
@@ -94,18 +92,11 @@ namespace symbols {
   
 #pragma mark match
   
-  Function RHS_Associative("__rhs_associative__");
-  
-  expression rhs_associative(expression x){
-    return RHS_Associative(x);
-  }
-  
   struct MatchVisitor:public Visitor{
     replacement_map &wildcards;
     Expression::shared to_match;
 
     bool valid = true;
-    bool lhs_associative = true;
     
     MatchVisitor(Expression::shared _to_match,replacement_map &_wildcards):wildcards(_wildcards),to_match(_to_match){
     
@@ -116,15 +107,6 @@ namespace symbols {
     }
     
     void visit(const Function * e)override{
-      if(RHS_Associative.is_identical(e)){
-        auto lhs_prev = lhs_associative;
-        lhs_associative = false;
-        e->arguments[0]->accept(this);
-        if(!valid) return;
-        lhs_associative = lhs_prev;
-        return;
-      }
-      
       test(e);
       if(!valid) return;
       
@@ -146,7 +128,9 @@ namespace symbols {
     }
     
     void visit(const BinaryOperator * e)override{
-      if(e->associativity != BinaryOperator::associative){ visit((Function*)e); return; }
+      
+      // TODO: add directional associativity to Binary operator?
+      // if(e->associativity != BinaryOperator::associative){ visit((Function*)e); return; }
       
       test(e);
       if(!valid) return;
@@ -159,27 +143,31 @@ namespace symbols {
       }
       else {
         if(e->arguments.size() == 2){
-          
+        
           Expression::shared lhs,rhs;
           
-          if(lhs_associative){
+          if(e->associativity == BinaryOperator::left_associative || e->associativity == BinaryOperator::associative){
             lhs = tm->arguments.front();
             to_match = lhs; e->arguments[0]->accept(this); if(!valid) return;
             rhs = tm->clone(Function::argument_list(tm->arguments.begin()+1,tm->arguments.end()));
             to_match = rhs; e->arguments[1]->accept(this); if(!valid) return;
           }
-          else{
+          else if(e->associativity == BinaryOperator::right_associative){
             lhs = tm->clone(Function::argument_list(tm->arguments.begin(),tm->arguments.end()-1));
             to_match = lhs; e->arguments[0]->accept(this); if(!valid) return;
             rhs = tm->arguments.back();
             to_match = rhs; e->arguments[1]->accept(this); if(!valid) return;
           }
-          
+          else {
+            valid = false;
+            return;
+          };
+
         }
         else {
           valid = false;
           return;
-        }
+        };
       }
     }
     
@@ -198,7 +186,7 @@ namespace symbols {
     void visit(const WildcardFunction * e)override{
       auto it = wildcards.functions.find(e->get_id());
       
-      if(it == wildcards.functions.end()){
+        if(it == wildcards.functions.end()){
         
         auto f = to_match->as<Function>();
         if(f && e->arguments.size() == f->arguments.size()){
@@ -220,7 +208,6 @@ namespace symbols {
         wildcards.functions.insert(std::make_pair(e->get_id(),e->get_shared()));
         wildcards.insert(std::make_pair(e->get_shared(),to_match));
       }
-      
       else {
         auto it2 = wildcards.find(it->second);
         if(it2 == wildcards.end()){ valid = false; return; }
@@ -239,30 +226,7 @@ namespace symbols {
     }
     
   };
-  
-  bool commutative_match( const Expression::shared &expr,const Expression::shared &search,replacement_map &wildcards ){
     
-    if(auto b = search->as<BinaryOperator>())if(b->is_commutative()){
-      auto args = b->arguments;
-      replacement_map tmp = wildcards;
-      
-      do{
-        auto search = b->clone(argument_list(args), false);
-        tmp = wildcards;
-        MatchVisitor v(expr,tmp);
-        search->accept(&v);
-        if(v.valid){
-          wildcards = tmp;
-          return true;
-        }
-      } while(std::next_permutation(args.begin(), args.end()));
-      
-      return false;
-    }
-    
-    return match(expr, search, wildcards);
-  }
-  
   bool match( const Expression::shared &expr,const Expression::shared &search,replacement_map &wildcards ){
     MatchVisitor v(expr,wildcards);
     search->accept(&v);
@@ -408,8 +372,9 @@ namespace symbols {
     
     std::sort(this->begin(), this->end(), [](const mulplicity_list::value_type &a,const mulplicity_list::value_type &b){ return a.first < b.first; });
   
-    for(int i=0;i<size()-1;){
+    for(int i=0;size()>0 && i<size()-1;){
       auto &a = (*this)[i], &b = (*this)[i+1];
+      
       if(a.first == b.first){
         a.second = real_field.additive_group.operation(a.second,b.second);
         erase(begin()+i+1);
@@ -522,7 +487,7 @@ namespace symbols {
           return b;
         });
         
-        if(intersection.size() == 0) return symbols::expression();
+        if(intersection.size() == 0) return expresso::expression();
         
         return intersection.as_expression();
       };
@@ -547,11 +512,24 @@ namespace symbols {
   }
   
   argument_list mulplicity_list::as_argument_list()const{
+    
+    std::unordered_map<expression, argument_list> inverted_mlist;
     argument_list res;
+    
     for(const auto &arg:*this){
-      if(arg.second == real_field.multiplicative_group.neutral) res.emplace_back(arg.first);
-      else res.emplace_back(mulplicity(arg.first,arg.second));
+      if(arg.second == real_field.multiplicative_group.neutral){
+        res.emplace_back(arg.first);
+      }
+      else{
+        inverted_mlist[arg.second].emplace_back(arg.first);
+      }
     }
+    
+    for(auto &im:inverted_mlist){
+      res.emplace_back(mulplicity(base.operation(std::move(im.second)),im.first));
+    }
+    
+    
     return std::move(res);
   }
   

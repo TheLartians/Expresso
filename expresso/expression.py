@@ -1,5 +1,5 @@
-import _symbols as core
-from _symbols import associative,non_associative,commutative,non_commutative,postfix,prefix
+import _expresso as core
+from _expresso import associative,left_associative,right_associative,non_associative,commutative,non_commutative,postfix,prefix
 
 class Expression(core.Expression):
 
@@ -69,7 +69,7 @@ class Expression(core.Expression):
             return v
         return None
 
-    def substitute(self,*args):
+    def replace(self,*args):
         if len(args) == 1:
             if isinstance(args[0],ReplacementMap):
                 rep = args[0]._replacement_map
@@ -85,10 +85,19 @@ class Expression(core.Expression):
             rep[self.S(args[0])] = self.S(args[1])
         else:
             raise ValueError('invalid substitution arguments')
+
+        #from evaluator import ReplaceEvaluator
+        #return ReplaceEvaluator(rep,S=self.S)(self)
+
         return self.S(core.replace(self,rep))
 
+
     def match(self,search):
-        return ReplacementMap(core.match(self,search),self.S)
+        for expr in core.commutative_permutations(search):
+            res = core.match(self,expr)
+            if res:
+                return ReplacementMap(core.match(self,expr),self.S)
+        return None
 
 def WrappedType(T,**parameters):
     
@@ -199,18 +208,20 @@ def WrappedFunction(F,S,argc = None):
 
 class ReplacementMap(object):
 
-    def __init__(self,rep,S):
+    def __init__(self,rep = None,S = None):
         
         if isinstance(rep,core.replacement_map):
             self._replacement_map = rep
-        else:
+        elif rep != None:
             self._replacement_map = core.replacement_map()
             for key, value in dict(rep).iteritems():
                 self._replacement_map[S(key)] = S(value)
-                
+        else:
+            self._replacement_map = core.replacement_map()
+
         self.S = S
         
-    def __repr__(self):
+    def __str__(self):
         return str(dict(self))
     
     def __iter__(self):
@@ -224,6 +235,7 @@ class ReplacementMap(object):
 
     def __setitem__(self,key,value):
         self._replacement_map[self.S(key)] = self.S(value)
+
 
 
 WrappedReplacementMap = lambda S:WrappedType(ReplacementMap,S=S)
@@ -329,8 +341,6 @@ class MulplicityList(object):
     def __pow__(self,other):
         return self.pow(other)
 
-
-    
 WrappedMulplicityList = lambda S:WrappedType(MulplicityList,S=S)
     
 def wrapped_postorder_traversal(S):

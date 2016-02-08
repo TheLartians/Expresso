@@ -38,7 +38,7 @@
 #include <lars/shared_object.h>
 #include <lars/to_string.h>
 
-namespace symbols {
+namespace expresso {
   
   class Expression;
   class AtomicExpression;
@@ -100,7 +100,7 @@ namespace symbols {
       
       bool operator==(const Expression::shared &other)const{ if(!*this) return !other; return *other.get() == (*get()); }
       bool operator!=(const Expression::shared &other)const{ if(!*this) return bool(other); if(!other) return bool(*this); return *other.get() != (*get());  }
-      bool operator!=(const Expression * other)const{ return *other != (*get());  }
+      bool operator!=(const Expression * other)const{ if(!*this) return true; return *other != (*get());  }
       bool operator<(const Expression::shared & other)const{ return *get() < *other; }
       
       shared & operator=(const shared &other){ std::shared_ptr<const Expression>::operator=(other); return *this; }
@@ -115,7 +115,7 @@ namespace symbols {
     
     // type
     template <class R> const std::shared_ptr<const R> as() const { return std::dynamic_pointer_cast<const R>(shared_from_this()); }
-    template <class R> const R * static_as() const { return static_cast<const R *>(this); }
+    template <class R> const std::shared_ptr<const R> static_as() const { return std::static_pointer_cast<const R>(shared_from_this()); }
     template <class R> bool is() const { return dynamic_cast<const R*>(this); }
     
     shared get_shared()const{ return shared(shared_from_this()); }
@@ -252,7 +252,7 @@ namespace symbols {
     void finalize_arguments(argument_list &args)const;
     
   public:
-    enum associativity_type:char{ associative='a',non_associative='n' };
+    enum associativity_type:char{ associative='a',left_associative = 'l',right_associative = 'r',non_associative='n' };
     enum commutativity_type:char{ non_commutative='n',commutative='c' };
     
     static string create_name(const string &_symbol,associativity_type a ,commutativity_type c){
@@ -269,7 +269,10 @@ namespace symbols {
     BinaryOperator(const string &_symbol,associativity_type a,commutativity_type c,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,a,c),_symbol,precedence,std::forward<argument_list>(args)),associativity(a),commutativity(c){ finalize_arguments(argument_data); }
     BinaryOperator(const string &_symbol,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,non_associative,non_commutative),_symbol,precedence,std::forward<argument_list>(args)),associativity(non_associative),commutativity(non_commutative){ finalize_arguments(argument_data); }
     void accept(Visitor * v)const override{ v->visit(this); }
-    shared clone(argument_list && args,bool finalize)const{ if(args.size() == 1) return args[0]; return make_expression<BinaryOperator>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,finalize); }
+    shared clone(argument_list && args,bool finalize)const{
+      if(args.size() == 1){ return args[0]; }
+      return make_expression<BinaryOperator>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,finalize);
+    }
     shared clone(argument_list && args)const override{ return clone(std::move(args),true); }
 
   };
@@ -302,7 +305,11 @@ namespace symbols {
     Data(const value_type &_value,const string &rep):DataExpression(typeid(D)),value(_value),representation(rep){ }
     const value_type & get_value()const{ return value; }
     using AtomicExpression::accept;
-    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Data<value_type>>()) return o->get_value() == get_value(); return false; }
+    //using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Data<value_type>>()) return o->get_value() == get_value(); return false; }
+    using Expression::is_identical; bool is_identical(const Expression * other)const override{
+      if(auto o = other->as<Data<value_type>>()) return representation == o->representation;
+      return false;
+    }
     string get_representation()const override{ return representation; }
     void accept(Visitor * v)const override{ if(auto * dv = dynamic_cast<DataVisitor<Data>*>(v)) dv->visit(this); v->visit(this); };
   };
@@ -356,9 +363,9 @@ namespace symbols {
 #pragma mark -
   
 namespace std{
-  template<> struct hash<symbols::Expression::shared> {
+  template<> struct hash<expresso::Expression::shared> {
     
-    typedef symbols::Expression::shared argument_type;
+    typedef expresso::Expression::shared argument_type;
     typedef std::size_t result_type;
     
     result_type operator()(argument_type const& s) const{
@@ -368,7 +375,7 @@ namespace std{
   };
 }
 
-namespace symbols {
+namespace expresso {
   struct replacement_map:public std::unordered_map<Expression::shared,Expression::shared>{
     using unordered_map::unordered_map;
     std::unordered_map<string,Expression::shared> functions;

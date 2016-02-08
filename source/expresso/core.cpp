@@ -8,7 +8,7 @@
 #include <cmath>
 #include <stdio.h>
 
-namespace symbols {
+namespace expresso {
   using namespace lars;
 
   void MinimalVisitor::visit(const Function * e){
@@ -66,7 +66,7 @@ namespace symbols {
         auto op = (*it)->as<BinaryOperator>();
         if(op && op->get_name() == get_name()){
           it = args.erase(it);
-          it = args.insert(it,op->arguments.begin(), op->arguments.end()) + op->arguments.size();
+          it = args.insert(it,op->arguments.begin(), op->arguments.end()) + op->arguments.size(); // if gcc fails here, you may need to upgrade to a newer version
           end = args.end();
         }
         else ++it;
@@ -77,7 +77,7 @@ namespace symbols {
       std::sort(args.begin(), args.end());
     }
     
-    if(arguments.size() == 1) throw std::runtime_error("created binary operator with only one argument");
+    //if(arguments.size() == 1) throw std::runtime_error("created binary operator with only one argument");
     
   }
   
@@ -193,6 +193,10 @@ namespace symbols {
     
     //*
     void visit(const BinaryOperator * e){
+      if(e->arguments.size() < 2){
+        visit((const Function *)e);
+        return;
+      }
       print_with_brackets_in(print_operator_symbol(e->get_symbol(),e->arguments.front(),true), e);
       for (auto i : range<unsigned>(1,e->arguments.size())) {
         print_with_brackets_in(print_operator_symbol(e->get_symbol(),e->arguments[i]), e);

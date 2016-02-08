@@ -5,15 +5,17 @@ import visitor
 __all__ = ["Printer","LatexPrinter"]
 
 class Printer(visitor.visitor_class()):
-    
-    def bracket_format(self):
-        return "(%s)"
-    
+
+    def __init__(self,S):
+        self.S = S
+
+    def format_name(self,name):
+        return name
+
     def register_printer(self,expr,printer):
         self.dispatcher.register_target(expr,printer)
     
-    @staticmethod
-    def needs_brackets_in(expr,parent):
+    def needs_brackets_in(self,expr,parent):
         if expr.is_atomic:
             return False
         if not expr.function.is_operator and parent.function.is_operator:
@@ -21,7 +23,7 @@ class Printer(visitor.visitor_class()):
         return parent.function.precedence <= expr.function.precedence
     
     def print_symbol(self,expr):
-        return expr.name
+        return self.format_name(expr.name)
     
     def print_wildcard_symbol(self,expr):
         return self.print_symbol(expr)
@@ -32,8 +34,11 @@ class Printer(visitor.visitor_class()):
     def bracket_format(self):
         return "(%s)"
     
+    def function_format(self):
+        return "%s(%s)"
+
     def print_operator_argument(self,expr,parent):
-        if Printer.needs_brackets_in(expr,parent):
+        if self.needs_brackets_in(expr,parent):
             return self.bracket_format() % self(expr)
         return self(expr)
     
@@ -64,8 +69,8 @@ class Printer(visitor.visitor_class()):
     
     def print_function(self,expr,name = None):
         if name == None:
-            name = expr.function.name
-        return "%s(%s)" % (name,','.join([ self(e) for e in expr.args ]))
+            name = self.format_name(expr.function.name)
+        return self.function_format() % (name,','.join([ self(e) for e in expr.args ]))
         
     @visitor.on('expr')
     def visit(self,expr):
@@ -74,10 +79,14 @@ class Printer(visitor.visitor_class()):
     @visitor.function
     def visit(self,expr):
         return self.print_function(expr)
-        
+
     @visitor.atomic
     def visit(self,expr):
         return self.print_symbol(expr)
+
+    @visitor.obj
+    def visit(self,expr):
+        return str(expr.value)
 
     @visitor.wildcard_symbol
     def visit(self,expr):
@@ -89,17 +98,26 @@ class Printer(visitor.visitor_class()):
 
     @visitor.binary_operator
     def visit(self,expr):
-        return self.print_binary_operator(expr)
+        if len(expr.args) >= 2:
+            return self.print_binary_operator(expr)
+        else:
+            return self.print_function(expr)
 
     @visitor.unary_operator
     def visit(self,expr):
         return self.print_unary_operator(expr)
 
     def __call__(self,expr):
-        return self.dispatcher(self,expr)
+        return self.dispatcher(self,self.S(expr))
     
 class LatexPrinter(Printer):
-        
+
+    def __init__(self,*args,**kwargs):
+        super(LatexPrinter,self).__init__(*args,**kwargs)
+
+        self.latex_replacements = {}
+        self.latex_replacements.update({w:r'\%s ' % w for w in ['alpha', 'theta', 'tauXbeta', 'vartheta', 'pi', 'upsilonXgamma', 'gamma', 'varpi', 'phiXdelta', 'kappa', 'rho', 'varphiXepsilon', 'lambda', 'varrho', 'chiXvarepsilon', 'mu', 'sigma', 'psiXzeta', 'nu', 'varsigma', 'omegaXeta', 'xiXGamma', 'Lambda', 'Sigma', 'PsiXDelta', 'Xi', 'Upsilon', 'OmegaXTheta', 'Pi', 'Phi', 'phi', 'varphi','psi','Psi','nabla']})
+
     @visitor.on('expr',parent = Printer)
     def visit(self,expr):
         raise ValueError('cannot print expression %s' % expr.name)
@@ -113,25 +131,31 @@ class LatexPrinter(Printer):
         return r"\left( %s \right) "
     
     def print_wildcard_symbol(self,expr):
-        return '\mathbf{%s}' % expr.name[1:]
-    
+        return '\mathbf{%s}' % self.format_name(expr.name[1:])
+
     def function_format(self):
         return r"%s \mathopen{} \left(%s \right) \mathclose{} "
-    
-    def print_function(self,expr,name = None):
-        if name == None:
-            f = expr.function
-            name = f.name
-            if len(name) > 1:
-                name = r'\text{%s} ' % name
-        return self.function_format() % (name,','.join([ self(e) for e in expr.args ]))
-    
+
+    def format_name(self,name):
+
+        underscore_parts = name.split('_')
+
+        for i,p in enumerate(underscore_parts):
+            if p in self.latex_replacements:
+                underscore_parts[i] = self.latex_replacements[p]
+                continue
+            if len(p) > 1:
+                underscore_parts[i] = r'\text{%s} ' % p
+                continue
+
+        return reduce(lambda p1,p2:'{%s}_{%s}' % (p2,p1),underscore_parts[::-1])
+
     def print_wildcard_function(self,expr):
         f = expr.function
-        name = f.name[1:]
-        if len(name) > 1:
-            name = r'\text{%s} ' % name
+        name = self.format_name(f.name[1:])
         name = '\mathbf{%s} ' % name
-        return self.function_format() % (name,','.join([ self(e) for e in expr.args ]))
+        return self.print_function(expr,name=name)
 
-
+    @visitor.obj
+    def visit(self,expr):
+        return self.format_name(expr.name)

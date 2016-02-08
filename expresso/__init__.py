@@ -4,12 +4,18 @@ import evaluator
 import printer
 import visitor
 
-from expression import associative,non_associative,commutative,non_commutative,postfix,prefix
+from expression import associative,non_associative,left_associative,right_associative,commutative,non_commutative,postfix,prefix
 
-def create_object(value,string = None):
-    if string is None:
-        string = str(value)
-    return core.create_object(value,string)
+def create_object(data,unique_name=None):
+    '''
+Create an atomic expression that holds data as the value.
+Note that two objects will be treated the the same if they
+have the same 'unique_name' (by default given by the type and
+rerp(data)).
+    '''
+    if unique_name is None:
+        unique_name = '%s:(%s)' % (type(data).__name__, repr(data))
+    return core.create_object(data,unique_name)
 
 def create_symbol(name):
     return core.create_symbol(name)
@@ -33,7 +39,9 @@ class WrappedExpressionTypes(object):
         self.Rule = evaluator.WrappedRule(S)
         self.RewriteEvaluator = evaluator.WrappedRewriteEvaluator(S)
         self.MultiEvaluator = evaluator.WrappedMultiEvaluator(S)
-           
+        self.StepEvaluator = evaluator.WrappedStepEvaluator(S)
+        self.ReplaceEvaluator = evaluator.WrappedReplaceEvaluator(S)
+
         self.postorder_traversal = expression.wrapped_postorder_traversal(S)
         self.preorder_traversal = expression.wrapped_preorder_traversal(S)    
         self.commutative_permutations = expression.wrapped_commutative_permutations(S) 
