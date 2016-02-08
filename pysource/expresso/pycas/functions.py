@@ -39,7 +39,6 @@ Indicator = Function('indicator',argc = 1)
 
 InnerPiecewise = BinaryOperator('}{', expresso.associative, expresso.non_commutative, -14)
 OuterPiecewise = Function('outer piecewise')
-PiecewisePart = Function('piecewise part',argc = 2)
 
 def piecewise(*args):
     return OuterPiecewise(InnerPiecewise(*args))
@@ -80,7 +79,7 @@ acoth = Function('acoth',argc = 1)
 # ----
 
 Type = Function('Type',argc = 1)
-DominantType = BinaryOperator('<>',expresso.associative,expresso.commutative,0)
+DominantType = BinaryOperator('<>',expresso.left_associative,expresso.commutative,0)
 OperationType = Function('OperationType',argc = 1)
 
 

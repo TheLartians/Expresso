@@ -53,12 +53,6 @@ canonical_form.add_rule(pc.Max(s.a,s.b),-pc.Min(-s.a,-s.b))
 
 #canonical_form.add_rule(abs(s.x)<s.y,pc.And(s.x<s.y,-s.x<s.y),condition=pc.And(s.y>0,pc.equal(pc.DominantType(pc.Type(s.x),pc.Types.Real),pc.Types.Real)))
 
-pp = pc.PiecewisePart
-canonical_form.add_rule(pc.InnerPiecewise((s.a,s.b),(s.x,s.y)),pc.InnerPiecewise(pp(s.a,s.b),pp(s.x,s.y)))
-canonical_form.add_rule(pc.InnerPiecewise((s.a,s.b),s.x),pc.InnerPiecewise(pp(s.a,s.b),s.x))
-canonical_form.add_rule(pc.InnerPiecewise(s.x,(s.a,s.b)),pc.InnerPiecewise(s.x,pp(s.a,s.b)))
-
-
 
 
 format_evaluator = pc.RewriteEvaluator(recursive=True,split_binary=True)

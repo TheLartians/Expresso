@@ -72,8 +72,10 @@ evaluator.add_rule(pc.Type(pc.imag(s.x)),pc.Types.Real)
 evaluator.add_rule(pc.Type(pc.conjugate(s.x)),pc.Types.Complex)
 
 evaluator.add_rule(pc.Type(pc.Indicator(s.x)),pc.Types.Natural)
-evaluator.add_rule(pc.Type(pc.OuterPiecewise(s.a,s.b)),pc.DominantType(pc.Type(s.a),pc.Type(s.b)))
-evaluator.add_rule(pc.Type(pc.PiecewisePart(s.a,s.b)),pc.Type(s.a))
+evaluator.add_rule(pc.Type(pc.OuterPiecewise(s.x)),pc.Type(s.x))
+evaluator.add_rule(pc.Type(pc.InnerPiecewise((s.a,s.b),s.x)),pc.DominantType(pc.Type(s.a),pc.Type(pc.InnerPiecewise(s.x))))
+evaluator.add_rule(pc.Type(pc.InnerPiecewise((s.a,s.b))),pc.Type(s.a))
+
 
 evaluator.add_rule(pc.Type(pc.derivative(s.x,s.y)),pc.Type(s.x))
 evaluator.add_rule(pc.Type(pc.evaluated_at(s.x,s.y,s.z)),pc.DominantType(pc.Type(s.x),pc.Type(s.z)))

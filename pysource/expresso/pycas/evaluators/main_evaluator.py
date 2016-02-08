@@ -157,20 +157,20 @@ evaluator.add_rule(pc.Indicator(True), 1)
 evaluator.add_rule(pc.Indicator(False), 0)
 
 
-pp = pc.PiecewisePart
-evaluator.add_rule(pc.InnerPiecewise(pp(s.a,True),s.x),pp(s.a,True))
-evaluator.add_rule(pc.InnerPiecewise(pp(s.a,False),s.x),s.x)
-evaluator.add_rule(pc.InnerPiecewise(s.x,pp(s.a,False)),s.x)
-evaluator.add_rule(pc.InnerPiecewise(pp(s.a,s.x),pp(s.b,s.x)),pp(s.a,s.x))
-evaluator.add_rule(pc.InnerPiecewise(pp(s.x,s.a),pp(s.x,s.b)),pp(s.x,pc.Or(s.a,s.b)))
+evaluator.add_rule(pc.InnerPiecewise((s.a,True),s.x),(s.a,True))
+evaluator.add_rule(pc.InnerPiecewise((s.a,False),s.x),s.x)
+evaluator.add_rule(pc.InnerPiecewise(s.x,(s.a,False)),s.x)
+evaluator.add_rule(pc.InnerPiecewise((s.a,s.x),(s.b,s.x)),(s.a,s.x))
+evaluator.add_rule(pc.InnerPiecewise((s.x,s.a),(s.x,s.b)),(s.x,pc.Or(s.a,s.b)))
+evaluator.add_rule(pc.InnerPiecewise(pc.InnerPiecewise(s.x)),pc.InnerPiecewise(s.x))
 
-evaluator.add_rule(pc.OuterPiecewise(pp(s.a,s.b)),s.a*pc.Indicator(s.b))
+evaluator.add_rule(pc.OuterPiecewise((s.a,s.b)),s.a*pc.Indicator(s.b))
 
 
 from .logic_evaluator import contains_atomic
 
 
-excluded_derivatives = {pp,pc.InnerPiecewise}
+excluded_derivatives = {pc.InnerPiecewise,pc.Tuple}
 
 def check_if_excluded_derivative(m):
     return not m[s.y].function in excluded_derivatives
@@ -192,8 +192,9 @@ evaluator.add_rule(pc.derivative(s.x**s.n,s.x),s.n*s.x**(s.n-1),condition=(pc.eq
 evaluator.add_rule(pc.derivative(s.a**s.b,s.x),pc.derivative(s.b*pc.log(s.a),s.x)*s.a**s.b);
 
 evaluator.add_rule(pc.derivative(pc.OuterPiecewise(s.a),s.x),pc.OuterPiecewise(pc.derivative(s.a,s.x)))
-evaluator.add_rule(pc.derivative(pc.InnerPiecewise(s.a,s.b),s.x),pc.InnerPiecewise(pc.derivative(s.a,s.x),pc.derivative(s.b,s.x)))
-evaluator.add_rule(pc.derivative(pp(s.a,s.b),s.x),pp(pc.derivative(s.a,s.x),s.b),condition=pc.Not(contains_atomic(s.b,s.x)))
+evaluator.add_rule(pc.derivative(pc.InnerPiecewise((s.a,s.b),s.c),s.x),pc.InnerPiecewise((pc.derivative(s.a,s.x),s.b),pc.derivative(pc.InnerPiecewise(s.c),s.x)),condition=pc.Not(contains_atomic(s.b,s.x)))
+evaluator.add_rule(pc.derivative(pc.InnerPiecewise((s.a,s.b)),s.x),(pc.derivative(s.a,s.x),s.b),condition=pc.Not(contains_atomic(s.b,s.x)))
+
 
 
 def create_tmp_x(m):
