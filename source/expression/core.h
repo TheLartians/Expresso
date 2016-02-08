@@ -38,7 +38,7 @@
 #include <lars/shared_object.h>
 #include <lars/to_string.h>
 
-namespace symbols {
+namespace expresso {
   
   class Expression;
   class AtomicExpression;
@@ -363,9 +363,9 @@ namespace symbols {
 #pragma mark -
   
 namespace std{
-  template<> struct hash<symbols::Expression::shared> {
+  template<> struct hash<expresso::Expression::shared> {
     
-    typedef symbols::Expression::shared argument_type;
+    typedef expresso::Expression::shared argument_type;
     typedef std::size_t result_type;
     
     result_type operator()(argument_type const& s) const{
@@ -375,7 +375,7 @@ namespace std{
   };
 }
 
-namespace symbols {
+namespace expresso {
   struct replacement_map:public std::unordered_map<Expression::shared,Expression::shared>{
     using unordered_map::unordered_map;
     std::unordered_map<string,Expression::shared> functions;

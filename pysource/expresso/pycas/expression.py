@@ -1,10 +1,10 @@
 
-import pysymbols
+import expresso
 
 Number = long
 
 def Symbol(name,type=None,positive = False,latex = None,repr = None):
-    s = Expression(pysymbols.create_symbol(name))
+    s = Expression(expresso.create_symbol(name))
     if type != None:
         from functions import Type
         global_context.add_definition(Type(s),type)
@@ -26,23 +26,23 @@ def Symbol(name,type=None,positive = False,latex = None,repr = None):
     return s
 
 def expression_converter(expr):
-    if isinstance(expr,pysymbols.core.Expression):
+    if isinstance(expr,expresso.core.Expression):
         return Expression(expr)
     if isinstance(expr,Expression):
         return expr
     if isinstance(expr,bool):
         if expr == True:
-            return Expression(pysymbols.create_object(expr))
+            return Expression(expresso.create_object(expr))
         if expr == False:
-            return Expression(pysymbols.create_object(expr))
+            return Expression(expresso.create_object(expr))
     if isinstance(expr,(int)):
         expr = Number(expr)
     if isinstance(expr, Number):
         if expr >= 0:
-            return Expression(pysymbols.create_object(expr))
+            return Expression(expresso.create_object(expr))
         else:
             expr = abs(expr)
-            return negative(pysymbols.create_object(expr))
+            return negative(expresso.create_object(expr))
     if isinstance(expr,float):
         import fractions
         f = fractions.Fraction(repr(expr))
@@ -70,10 +70,10 @@ def S(value):
     return expression_converter(value)
     
 def Wildcard(name):
-    return S(pysymbols.core.create_wildcard_symbol(name))
+    return S(expresso.core.create_wildcard_symbol(name))
 
 def WildcardFunction(name):
-    return pysymbols.expression.Function(pysymbols.core.WildcardFunction(name),S=expression_converter)
+    return expresso.expression.Function(expresso.core.WildcardFunction(name),S=expression_converter)
 
 def symbols(string,**kwargs):
     string = string.replace(" ", "")
@@ -83,10 +83,10 @@ def wildcard_symbols(string):
     string = string.replace(" ", "")
     return [Wildcard(s) for s in string.split(',')]
 
-printer = pysymbols.printer.Printer(expression_converter)
-latex = pysymbols.printer.LatexPrinter(expression_converter)
+printer = expresso.printer.Printer(expression_converter)
+latex = expresso.printer.LatexPrinter(expression_converter)
 
-class Expression(pysymbols.WrappedExpression(expression_converter)):
+class Expression(expresso.WrappedExpression(expression_converter)):
     
     def __add__(self, other):
         return addition(self,other)
@@ -214,7 +214,7 @@ class Expression(pysymbols.WrappedExpression(expression_converter)):
             raise RuntimeError('expression %s is not convertable to long' % self)
 
 
-locals().update(pysymbols.WrappedExpressionTypes(Expression).__dict__)
+locals().update(expresso.WrappedExpressionTypes(Expression).__dict__)
 
 class Context(ReplaceEvaluator):
 
@@ -225,13 +225,13 @@ global_context = Context()
 
 One = S(1)
 Zero = S(0)
-NaN = S( pysymbols.create_object(float('nan'),'undefined value') )
-I = S( pysymbols.create_object(1j,'imaginary unit') )
+NaN = S( expresso.create_object(float('nan'),'undefined value') )
+I = S( expresso.create_object(1j,'imaginary unit') )
 
-addition = BinaryOperator("+",pysymbols.associative,pysymbols.commutative,-11)
-negative = UnaryOperator("-",pysymbols.prefix,-12)
-multiplication = BinaryOperator("*",pysymbols.associative,pysymbols.commutative,-13)
-fraction = UnaryOperator("1/",pysymbols.prefix,-14)
+addition = BinaryOperator("+",expresso.associative,expresso.commutative,-11)
+negative = UnaryOperator("-",expresso.prefix,-12)
+multiplication = BinaryOperator("*",expresso.associative,expresso.commutative,-13)
+fraction = UnaryOperator("1/",expresso.prefix,-14)
 exponentiation = BinaryOperator("**",-15)
 
 AdditionGroup = Group(addition,negative,Zero)
@@ -239,23 +239,23 @@ MultiplicationGroup = Group(multiplication,fraction,One)
 RealField = Field(AdditionGroup,MultiplicationGroup)
 ComplexField = Field(AdditionGroup,MultiplicationGroup)
 
-Or = BinaryOperator("|",pysymbols.associative,pysymbols.commutative,-3)
-And = BinaryOperator("&",pysymbols.associative,pysymbols.commutative,-3)
-Xor = BinaryOperator(" XOR ",pysymbols.associative,pysymbols.commutative,-3)
+Or = BinaryOperator("|",expresso.associative,expresso.commutative,-3)
+And = BinaryOperator("&",expresso.associative,expresso.commutative,-3)
+Xor = BinaryOperator(" XOR ",expresso.associative,expresso.commutative,-3)
 
-Not = UnaryOperator("~",pysymbols.prefix,-7)
+Not = UnaryOperator("~",expresso.prefix,-7)
 mod = Function('mod',argc = 2)
 
-equal = BinaryOperator("=",pysymbols.associative,pysymbols.commutative,-6)
-unequal = BinaryOperator("!=",pysymbols.associative,pysymbols.commutative,-6);
+equal = BinaryOperator("=",expresso.associative,expresso.commutative,-6)
+unequal = BinaryOperator("!=",expresso.associative,expresso.commutative,-6);
 
 In = BinaryOperator(" in ",-6)
 NotIn = BinaryOperator(" not in ",-6)
 
-Less = BinaryOperator("<",pysymbols.associative,pysymbols.non_commutative,-6)
-LessEqual = BinaryOperator("<=",pysymbols.associative,pysymbols.non_commutative,-6)
-Greater = BinaryOperator(">",pysymbols.associative,pysymbols.non_commutative,-6)
-GreaterEqual = BinaryOperator(">=",pysymbols.associative,pysymbols.non_commutative,-6)
+Less = BinaryOperator("<",expresso.associative,expresso.non_commutative,-6)
+LessEqual = BinaryOperator("<=",expresso.associative,expresso.non_commutative,-6)
+Greater = BinaryOperator(">",expresso.associative,expresso.non_commutative,-6)
+GreaterEqual = BinaryOperator(">=",expresso.associative,expresso.non_commutative,-6)
 
 Abs = Function('abs',argc = 1)
 Tuple = Function('tuple')

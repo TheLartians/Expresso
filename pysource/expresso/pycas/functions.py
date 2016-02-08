@@ -1,7 +1,7 @@
 from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Wildcard,Number,Expression,S
 from .expression import One,Zero,NaN,I,addition,negative,multiplication,fraction,exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,mod,equal,unequal,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
 
-import pysymbols
+import expresso
 import math
 
 # Symbols
@@ -12,7 +12,7 @@ class SymbolicConstant(object):
         self.name = name
 
 def create_symbolic_constant(name):
-    return S(pysymbols.create_object(SymbolicConstant(name),'symbolic constant %s' % name))
+    return S(expresso.create_object(SymbolicConstant(name),'symbolic constant %s' % name))
 
 e = create_symbolic_constant('e')
 pi = create_symbolic_constant('pi')
@@ -21,7 +21,7 @@ oo = create_symbolic_constant('infinity')
 # Various Functions
 # -----------------
 
-factorial = UnaryOperator('!',pysymbols.postfix,0)
+factorial = UnaryOperator('!',expresso.postfix,0)
 
 sign = Function('sign',argc = 1)
 floor = Function('floor',argc = 1)
@@ -37,7 +37,7 @@ conjugate = Function('conjugate',argc = 1)
 
 Indicator = Function('indicator',argc = 1)
 
-InnerPiecewise = BinaryOperator('}{', pysymbols.associative, pysymbols.non_commutative, -14)
+InnerPiecewise = BinaryOperator('}{', expresso.associative, expresso.non_commutative, -14)
 OuterPiecewise = Function('outer piecewise')
 PiecewisePart = Function('piecewise part',argc = 2)
 
@@ -49,7 +49,7 @@ def piecewise(*args):
 
 derivative = Function('derivative',argc = 2)
 evaluated_at = Function('evaluated_at',argc = 3)
-tmp = UnaryOperator('tmp_',pysymbols.prefix,0)
+tmp = UnaryOperator('tmp_',expresso.prefix,0)
 
 # Trigonometric Functions
 # -----------------------
@@ -80,7 +80,7 @@ acoth = Function('acoth',argc = 1)
 # ----
 
 Type = Function('Type',argc = 1)
-DominantType = BinaryOperator('<>',pysymbols.associative,pysymbols.commutative,0)
+DominantType = BinaryOperator('<>',expresso.associative,expresso.commutative,0)
 OperationType = Function('OperationType',argc = 1)
 
 
@@ -95,7 +95,7 @@ class TypeInfo(object):
 inverse_python_types = {}
 
 def create_type(name,**kwargs):
-    res = S(pysymbols.create_object(TypeInfo(name=name,**kwargs),'pyCAS type ' + name))
+    res = S(expresso.create_object(TypeInfo(name=name,**kwargs),'pyCAS type ' + name))
     if 'python_type' in kwargs:
         inverse_python_types[kwargs['python_type']] = res
     return res
@@ -123,7 +123,7 @@ def custom_function(name,argc = None,return_type = None,**kwargs):
         def __init__(self,**kwargs):
             self.__dict__.update(kwargs)
 
-    func_obj = pysymbols.create_object(CustomFunctionData(name=name,**kwargs),name)
+    func_obj = expresso.create_object(CustomFunctionData(name=name,**kwargs),name)
     
     if argc is not None and not isinstance(argc,(tuple,list)):
         argc = [argc]
@@ -208,7 +208,7 @@ def array(name,inarray,copy = True):
 
         def __init__(self,name,array):
             self.name = name
-            self.array_obj = pysymbols.create_object(array,'%s__id%r' % (name,id(array)))
+            self.array_obj = expresso.create_object(array,'%s__id%r' % (name,id(array)))
             self.argc = len(array.shape)
 
         def __repr__(self):

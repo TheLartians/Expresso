@@ -1,8 +1,8 @@
 
 from .lambda_compiler import LambdaCompiler,visitor
 import numpy as np
-import pycas.expression as e
-import pycas.functions as f
+from .. import expression as e
+from .. import functions as f
 from mpmath import mp
 
 class NumpyCompiler(LambdaCompiler):

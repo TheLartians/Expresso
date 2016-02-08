@@ -8,7 +8,7 @@
 #include <cmath>
 #include <stdio.h>
 
-namespace symbols {
+namespace expresso {
   using namespace lars;
 
   void MinimalVisitor::visit(const Function * e){

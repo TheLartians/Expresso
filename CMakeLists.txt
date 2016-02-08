@@ -5,7 +5,7 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
       message(FATAL_ERROR "Source and build directories cannot be the same.")
 endif()
 
-project (Symbols)
+project(Expresso)
 
 # ---- add sources ----
 
@@ -45,16 +45,16 @@ LINK_LIBRARIES(${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) # Deprecated but so conve
 # ---- create module ----
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC"  )
-add_library(symbols STATIC ${sources} ${headers} )
-PYTHON_ADD_MODULE(_symbols ${PROJECT_SOURCE_DIR}/python.cpp ${pysources})
-TARGET_LINK_LIBRARIES(_symbols symbols)
+add_library(expresso STATIC ${sources} ${headers} )
+PYTHON_ADD_MODULE(_expresso ${PROJECT_SOURCE_DIR}/python.cpp ${pysources})
+TARGET_LINK_LIBRARIES(_expresso expresso)
 
 include_directories (${PROJECT_LIBS_DIR})
 
 # ---- libs -----
 
 add_subdirectory (${PROJECT_LIBS_DIR}/sha256)
-target_link_libraries(symbols sha256)
+target_link_libraries(expresso sha256)
 
 # ---- lars libs ----
 
@@ -62,6 +62,6 @@ add_subdirectory (${PROJECT_LIBS_DIR}/lars)
 
 # ---- install ----
 
-install(TARGETS _symbols DESTINATION pysymbols)
+install(TARGETS _expresso DESTINATION expresso)
 install(DIRECTORY ${PROJECT_PYSOURCES_DIR}/ DESTINATION .)
 

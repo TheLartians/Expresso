@@ -1,5 +1,5 @@
-import _symbols as core
-from _symbols import associative,left_associative,right_associative,non_associative,commutative,non_commutative,postfix,prefix
+import _expresso as core
+from _expresso import associative,left_associative,right_associative,non_associative,commutative,non_commutative,postfix,prefix
 
 class Expression(core.Expression):
 

@@ -1,7 +1,7 @@
 
-import pysymbols.visitor as visitor
-import pycas.expression as e
-import pycas.functions as f
+import expresso.visitor as visitor
+from .. import expression as e
+from .. import functions as f
 from mpmath import mp
 
 def logic_reduce(op,args):

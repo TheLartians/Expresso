@@ -1,6 +1,5 @@
 
-pc = __import__(__name__.split('.')[0])
-
+import expresso.pycas as pc
 import canonical_form
 import logic_evaluator
 import numeric_evaluator

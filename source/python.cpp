@@ -25,19 +25,19 @@
 namespace python = boost::python;
 
 
-namespace symbols_wrapper {
+namespace expresso_wrapper {
   
-  using namespace symbols;
+  using namespace expresso;
   
-  using expression_ptr = std::shared_ptr<const symbols::Expression>;
-  using Object = symbols::Data<python::object>;
+  using expression_ptr = std::shared_ptr<const expresso::Expression>;
+  using Object = expresso::Data<python::object>;
 
   expression create_symbol(const std::string &name){
-    return make_expression<symbols::Symbol>(name) ;
+    return make_expression<expresso::Symbol>(name) ;
   }
   
   expression create_wildcard_symbol(const std::string &name){
-    return make_expression<symbols::WildcardSymbol>(name) ;
+    return make_expression<expresso::WildcardSymbol>(name) ;
   }
   
   expression create_object(const python::object &o,const std::string &rep){
@@ -109,7 +109,7 @@ namespace symbols_wrapper {
   
   python::object match(expression expr,expression search){
     replacement_map rep;
-    if(symbols::match(expr, search, rep)){
+    if(expresso::match(expr, search, rep)){
       return python::object(rep);
     }
     return python::object();
@@ -145,239 +145,239 @@ template <class C> void create_iterator(C & c){
   c.def("__iter__",+[](const typename C::wrapped_type &o){ return iterator_wrapper(o.begin(),o.end()); });
 }
 
-BOOST_PYTHON_MODULE(_symbols){
+BOOST_PYTHON_MODULE(_expresso){
 #pragma mark -
 
   using namespace boost::python;
   
-  class_<symbols::argument_list,boost::noncopyable>("argument_list")
-  .def(vector_indexing_suite<symbols::argument_list>())
-  .def("__repr__",+[](const symbols::argument_list &l){ return str(list(l)); });
+  class_<expresso::argument_list,boost::noncopyable>("argument_list")
+  .def(vector_indexing_suite<expresso::argument_list>())
+  .def("__repr__",+[](const expresso::argument_list &l){ return str(list(l)); });
   
-  class_<symbols::replacement_map>("replacement_map")
-  .def(init<const symbols::replacement_map &>())
-  .def(map_indexing_suite<symbols::replacement_map,false,symbols_wrapper::replacement_map_policies>());
+  class_<expresso::replacement_map>("replacement_map")
+  .def(init<const expresso::replacement_map &>())
+  .def(map_indexing_suite<expresso::replacement_map,false,expresso_wrapper::replacement_map_policies>());
   
-  register_ptr_to_python<std::shared_ptr<const symbols::Expression>>();
-  register_ptr_to_python<std::shared_ptr<const symbols::Function>>();
-  register_ptr_to_python<std::shared_ptr<const symbols::UnaryOperator>>();
-  register_ptr_to_python<std::shared_ptr<const symbols::BinaryOperator>>();
+  register_ptr_to_python<std::shared_ptr<const expresso::Expression>>();
+  register_ptr_to_python<std::shared_ptr<const expresso::Function>>();
+  register_ptr_to_python<std::shared_ptr<const expresso::UnaryOperator>>();
+  register_ptr_to_python<std::shared_ptr<const expresso::BinaryOperator>>();
   
 #pragma mark Expression
 
-  class_<symbols::expression>("Expression",init<symbols::expression>())
-  .def("__repr__",lars::to_string<symbols::expression>)
-  .def("is_function",+[](const symbols::expression &e){ return e->is_function(); })
-  .def("is_atomic",+[](const symbols::expression &e){ return e->is_atomic(); })
-  .def("is_symbol",+[](const symbols::expression &e){ return e->is_atomic() && e->is<symbols::Symbol>(); })
-  .def("is_wildcard_symbol",+[](const symbols::expression &e){ return e->is<symbols::WildcardSymbol>(); })
-  .def("is_wildcard_function",+[](const symbols::expression &e){ return e->is<symbols::WildcardFunction>(); })
-  .def("get_arguments",symbols_wrapper::get_arguments)
-  .def("get_value",+[](const symbols::expression &e){
-    auto o = e->as<symbols_wrapper::Object>();
+  class_<expresso::expression>("Expression",init<expresso::expression>())
+  .def("__repr__",lars::to_string<expresso::expression>)
+  .def("is_function",+[](const expresso::expression &e){ return e->is_function(); })
+  .def("is_atomic",+[](const expresso::expression &e){ return e->is_atomic(); })
+  .def("is_symbol",+[](const expresso::expression &e){ return e->is_atomic() && e->is<expresso::Symbol>(); })
+  .def("is_wildcard_symbol",+[](const expresso::expression &e){ return e->is<expresso::WildcardSymbol>(); })
+  .def("is_wildcard_function",+[](const expresso::expression &e){ return e->is<expresso::WildcardFunction>(); })
+  .def("get_arguments",expresso_wrapper::get_arguments)
+  .def("get_value",+[](const expresso::expression &e){
+    auto o = e->as<expresso_wrapper::Object>();
     if(!o) return object();
     return o->get_value();
   })
-  .def("__hash__",+[](const symbols::expression &e){ return e->get_hash().quick_hash; })
+  .def("__hash__",+[](const expresso::expression &e){ return e->get_hash().quick_hash; })
   .def(self == self)
   .def(self != self)
   .def(self < self)
-  .def("function",+[](const symbols::expression &e){
-    auto f = e->as<symbols::Function>();
+  .def("function",+[](const expresso::expression &e){
+    auto f = e->as<expresso::Function>();
     if(f) return object( f );
     return object();
   });
   
-  def("create_symbol", symbols_wrapper::create_symbol);
-  def("create_object", symbols_wrapper::create_object);
-  def("create_wildcard_symbol", symbols_wrapper::create_wildcard_symbol);
+  def("create_symbol", expresso_wrapper::create_symbol);
+  def("create_object", expresso_wrapper::create_object);
+  def("create_wildcard_symbol", expresso_wrapper::create_wildcard_symbol);
 
-  def("create_call",symbols_wrapper::create_call);
+  def("create_call",expresso_wrapper::create_call);
   
-  def("match",symbols_wrapper::match);
-  def("replace",+[](const symbols::expression &s,const symbols::replacement_map &r){
-    return symbols::replace(s,r);
+  def("match",expresso_wrapper::match);
+  def("replace",+[](const expresso::expression &s,const expresso::replacement_map &r){
+    return expresso::replace(s,r);
   });
   
 #pragma mark -
 #pragma mark Function
   
-  class_<symbols::Function>("Function",init<std::string>())
-  .def("get_name", +[](const symbols::Function &f)->std::string{ return f.get_name(); } )
-  .def("__call__", raw_function(symbols_wrapper::call_function<symbols::Function>,1))
-  .def("__repr__",+[](const symbols::Function &f)->std::string{ return f.get_name(); })
-  .def("get_symbol",+[](const symbols::Function &o)->std::string{ return ""; });
+  class_<expresso::Function>("Function",init<std::string>())
+  .def("get_name", +[](const expresso::Function &f)->std::string{ return f.get_name(); } )
+  .def("__call__", raw_function(expresso_wrapper::call_function<expresso::Function>,1))
+  .def("__repr__",+[](const expresso::Function &f)->std::string{ return f.get_name(); })
+  .def("get_symbol",+[](const expresso::Function &o)->std::string{ return ""; });
   
 #pragma mark WildcardFunction
   
-  class_<symbols::WildcardFunction,bases<symbols::Function>>("WildcardFunction",init<std::string>());
+  class_<expresso::WildcardFunction,bases<expresso::Function>>("WildcardFunction",init<std::string>());
   
 #pragma mark Operator
   
-  class_<symbols::Operator,bases<symbols::Function>,boost::noncopyable>("Operator",no_init)
-  .def("get_symbol",+[](const symbols::Operator &o)->std::string{ return o.get_symbol(); })
-  .def("get_precedence",&symbols::Operator::get_precedence);
+  class_<expresso::Operator,bases<expresso::Function>,boost::noncopyable>("Operator",no_init)
+  .def("get_symbol",+[](const expresso::Operator &o)->std::string{ return o.get_symbol(); })
+  .def("get_precedence",&expresso::Operator::get_precedence);
   
 #pragma mark UnaryOperator
   
-  enum_<symbols::UnaryOperator::fix_type>("fix_type")
-  .value("prefix", symbols::UnaryOperator::fix_type::prefix)
-  .value("postfix", symbols::UnaryOperator::fix_type::postfix);
+  enum_<expresso::UnaryOperator::fix_type>("fix_type")
+  .value("prefix", expresso::UnaryOperator::fix_type::prefix)
+  .value("postfix", expresso::UnaryOperator::fix_type::postfix);
   
-  boost::python::scope().attr("prefix") = symbols::UnaryOperator::fix_type::prefix;
-  boost::python::scope().attr("postfix") = symbols::UnaryOperator::fix_type::postfix;
+  boost::python::scope().attr("prefix") = expresso::UnaryOperator::fix_type::prefix;
+  boost::python::scope().attr("postfix") = expresso::UnaryOperator::fix_type::postfix;
   
-  class_<symbols::UnaryOperator,bases<symbols::Operator>>("UnaryOperator",init<std::string,symbols::UnaryOperator::fix_type,int>())
-  .def("is_prefix", &symbols::UnaryOperator::is_prefix)
-  .def("is_postfix", &symbols::UnaryOperator::is_postfix);
+  class_<expresso::UnaryOperator,bases<expresso::Operator>>("UnaryOperator",init<std::string,expresso::UnaryOperator::fix_type,int>())
+  .def("is_prefix", &expresso::UnaryOperator::is_prefix)
+  .def("is_postfix", &expresso::UnaryOperator::is_postfix);
 
 #pragma mark BinaryOperator
   
-  enum_<symbols::BinaryOperator::associativity_type>("associativity_type")
-  .value("associative", symbols::BinaryOperator::associativity_type::associative)
-  .value("non_associative", symbols::BinaryOperator::associativity_type::non_associative);
-  boost::python::scope().attr("associative") = symbols::BinaryOperator::associativity_type::associative;
-  boost::python::scope().attr("left_associative") = symbols::BinaryOperator::associativity_type::left_associative;
-  boost::python::scope().attr("right_associative") = symbols::BinaryOperator::associativity_type::right_associative;
-  boost::python::scope().attr("non_associative") = symbols::BinaryOperator::associativity_type::non_associative;
+  enum_<expresso::BinaryOperator::associativity_type>("associativity_type")
+  .value("associative", expresso::BinaryOperator::associativity_type::associative)
+  .value("non_associative", expresso::BinaryOperator::associativity_type::non_associative);
+  boost::python::scope().attr("associative") = expresso::BinaryOperator::associativity_type::associative;
+  boost::python::scope().attr("left_associative") = expresso::BinaryOperator::associativity_type::left_associative;
+  boost::python::scope().attr("right_associative") = expresso::BinaryOperator::associativity_type::right_associative;
+  boost::python::scope().attr("non_associative") = expresso::BinaryOperator::associativity_type::non_associative;
   
-  enum_<symbols::BinaryOperator::commutativity_type>("commutativity_type")
-  .value("commutative", symbols::BinaryOperator::commutativity_type::commutative)
-  .value("non_commutative", symbols::BinaryOperator::commutativity_type::non_commutative);
-  boost::python::scope().attr("commutative") = symbols::BinaryOperator::commutativity_type::commutative;
-  boost::python::scope().attr("non_commutative") = symbols::BinaryOperator::commutativity_type::non_commutative;
+  enum_<expresso::BinaryOperator::commutativity_type>("commutativity_type")
+  .value("commutative", expresso::BinaryOperator::commutativity_type::commutative)
+  .value("non_commutative", expresso::BinaryOperator::commutativity_type::non_commutative);
+  boost::python::scope().attr("commutative") = expresso::BinaryOperator::commutativity_type::commutative;
+  boost::python::scope().attr("non_commutative") = expresso::BinaryOperator::commutativity_type::non_commutative;
   
-  class_<symbols::BinaryOperator,bases<symbols::Operator>>("BinaryOperator",init<std::string,int>())
-  .def(init<std::string,symbols::BinaryOperator::associativity_type,symbols::BinaryOperator::commutativity_type,int>())
-  .def("is_associative", &symbols::BinaryOperator::is_associative)
-  .def("is_commutative", &symbols::BinaryOperator::is_commutative);
+  class_<expresso::BinaryOperator,bases<expresso::Operator>>("BinaryOperator",init<std::string,int>())
+  .def(init<std::string,expresso::BinaryOperator::associativity_type,expresso::BinaryOperator::commutativity_type,int>())
+  .def("is_associative", &expresso::BinaryOperator::is_associative)
+  .def("is_commutative", &expresso::BinaryOperator::is_commutative);
   
 #pragma mark MatchCondition
 
-  class_<symbols::MatchCondition,bases<symbols::Function>>("MatchCondition",no_init)
-  .def("__init__",make_constructor(symbols_wrapper::create_match_condition));
+  class_<expresso::MatchCondition,bases<expresso::Function>>("MatchCondition",no_init)
+  .def("__init__",make_constructor(expresso_wrapper::create_match_condition));
   
 #pragma mark -
 #pragma mark Evaluator
   
-  class_<symbols::EvaluatorVisitor,boost::noncopyable>("EvaluatorVisitor",no_init)
-  .def("evaluate",&symbols::EvaluatorVisitor::evaluate);
+  class_<expresso::EvaluatorVisitor,boost::noncopyable>("EvaluatorVisitor",no_init)
+  .def("evaluate",&expresso::EvaluatorVisitor::evaluate);
   
-  class_<symbols::Evaluator::settings_t,boost::noncopyable>("Evaluator.settings",no_init)
-  .def_readwrite("recursive",&symbols::Evaluator::settings_t::recursive)
-  .def_readwrite("split_binary",&symbols::Evaluator::settings_t::split_binary)
+  class_<expresso::Evaluator::settings_t,boost::noncopyable>("Evaluator.settings",no_init)
+  .def_readwrite("recursive",&expresso::Evaluator::settings_t::recursive)
+  .def_readwrite("split_binary",&expresso::Evaluator::settings_t::split_binary)
   ;
   
-  class_<symbols::Evaluator,boost::noncopyable>("Evaluator",no_init)
-  .def_readwrite("settings",&symbols::Evaluator::settings)
-  .def("__call__",+[](const symbols::Evaluator &r,const symbols::expression &e){ return r(e); })
-  .def("__call__",+[](const symbols::Evaluator &r,const symbols::expression &e,symbols::replacement_map &m){ return r(e,m); })
+  class_<expresso::Evaluator,boost::noncopyable>("Evaluator",no_init)
+  .def_readwrite("settings",&expresso::Evaluator::settings)
+  .def("__call__",+[](const expresso::Evaluator &r,const expresso::expression &e){ return r(e); })
+  .def("__call__",+[](const expresso::Evaluator &r,const expresso::expression &e,expresso::replacement_map &m){ return r(e,m); })
   ;
 
 #pragma mark MultiEvaluator
   
-  class_<symbols::MultiEvaluator,bases<symbols::Evaluator>>("MultiEvaluator")
-  .def("add_evaluator",+[](symbols::MultiEvaluator &m,symbols::Evaluator &e){ m.add_evaluator(&e); })
+  class_<expresso::MultiEvaluator,bases<expresso::Evaluator>>("MultiEvaluator")
+  .def("add_evaluator",+[](expresso::MultiEvaluator &m,expresso::Evaluator &e){ m.add_evaluator(&e); })
   ;
   
-  class_<symbols::StepEvaluator,bases<symbols::Evaluator>>("StepEvaluator")
-  .def("add_evaluator",+[](symbols::StepEvaluator &m,symbols::Evaluator &e){ m.add_evaluator(&e); })
+  class_<expresso::StepEvaluator,bases<expresso::Evaluator>>("StepEvaluator")
+  .def("add_evaluator",+[](expresso::StepEvaluator &m,expresso::Evaluator &e){ m.add_evaluator(&e); })
   ;
   
 #pragma mark ReplaceEvaluator
   
-  class_<symbols::ReplaceEvaluator,bases<symbols::Evaluator>>("ReplaceEvaluator")
-  .def(init<const symbols::replacement_map &>())
-  .def("add_replacement",&symbols::ReplaceEvaluator::add_replacement)
-  .def("clear",&symbols::ReplaceEvaluator::clear)
+  class_<expresso::ReplaceEvaluator,bases<expresso::Evaluator>>("ReplaceEvaluator")
+  .def(init<const expresso::replacement_map &>())
+  .def("add_replacement",&expresso::ReplaceEvaluator::add_replacement)
+  .def("clear",&expresso::ReplaceEvaluator::clear)
   ;
     
 #pragma mark Rule
   
-  class_<symbols::Rule>("Rule",init<symbols::expression,symbols::expression>())
-  .def("__init__",make_constructor(symbols_wrapper::create_rule))
-  .def("__init__",make_constructor(symbols_wrapper::create_conditional_rule))
-  .def("__init__",make_constructor(symbols_wrapper::create_conditional_rule_f))
-  .def(init<const symbols::Rule &>())
-  .def("has_evaluator",+[](const symbols::Rule &r){ return bool(r.evaluator); })
-  .def_readonly("search",&symbols::Rule::search)
-  .def_readonly("replacement",&symbols::Rule::replacement)
-  .def("get_condition",+[](const symbols::Rule &r){ if(r.condition) return object(r.condition); return object(); })
-  .def("__repr__",lars::to_string<symbols::Rule>);
+  class_<expresso::Rule>("Rule",init<expresso::expression,expresso::expression>())
+  .def("__init__",make_constructor(expresso_wrapper::create_rule))
+  .def("__init__",make_constructor(expresso_wrapper::create_conditional_rule))
+  .def("__init__",make_constructor(expresso_wrapper::create_conditional_rule_f))
+  .def(init<const expresso::Rule &>())
+  .def("has_evaluator",+[](const expresso::Rule &r){ return bool(r.evaluator); })
+  .def_readonly("search",&expresso::Rule::search)
+  .def_readonly("replacement",&expresso::Rule::replacement)
+  .def("get_condition",+[](const expresso::Rule &r){ if(r.condition) return object(r.condition); return object(); })
+  .def("__repr__",lars::to_string<expresso::Rule>);
   
 #pragma mark RuleEvaluator
   
-  class_<symbols::RuleEvaluator,bases<symbols::Evaluator>>("RuleEvaluator")
-  .def("add_rule",&symbols::RuleEvaluator::add_rule<symbols::Rule>)
-  .def("add_rule",+[](symbols::RuleEvaluator &e,const symbols::Rule &r,int p){
+  class_<expresso::RuleEvaluator,bases<expresso::Evaluator>>("RuleEvaluator")
+  .def("add_rule",&expresso::RuleEvaluator::add_rule<expresso::Rule>)
+  .def("add_rule",+[](expresso::RuleEvaluator &e,const expresso::Rule &r,int p){
     e.add_rule(r,p);
   })
-  .def("add_rule",&symbols::RuleEvaluator::add_rule<symbols::expression,symbols::expression>)
-  .def("__len__",&symbols::RuleEvaluator::size)
-  .def("get_rule",+[](const symbols::RuleEvaluator &r,size_t idx){
+  .def("add_rule",&expresso::RuleEvaluator::add_rule<expresso::expression,expresso::expression>)
+  .def("__len__",&expresso::RuleEvaluator::size)
+  .def("get_rule",+[](const expresso::RuleEvaluator &r,size_t idx){
     if(idx < r.size()) return r.get_rule(idx);
     else throw std::range_error("invalid rule index");
   })
-  .def("set_apply_callback",+[](symbols::RuleEvaluator &r,object f){
-    if(f)r.apply_callback = [=](const symbols::Rule &r,const symbols::replacement_map &m){
+  .def("set_apply_callback",+[](expresso::RuleEvaluator &r,object f){
+    if(f)r.apply_callback = [=](const expresso::Rule &r,const expresso::replacement_map &m){
       f(r,m);
     };
-    else r.apply_callback = symbols::RuleEvaluator::CallbackFunction();
+    else r.apply_callback = expresso::RuleEvaluator::CallbackFunction();
   })
   ;
   
 #pragma mark Traversal
   
-  class_<symbols::postorder_traversal> postorder_traversal("postorder_traversal",init<symbols::expression>());
+  class_<expresso::postorder_traversal> postorder_traversal("postorder_traversal",init<expresso::expression>());
   create_iterator(postorder_traversal);
   
-  class_<symbols::preorder_traversal> preorder_traversal("preorder_traversal",init<symbols::expression>());
+  class_<expresso::preorder_traversal> preorder_traversal("preorder_traversal",init<expresso::expression>());
   create_iterator(preorder_traversal);
   
-  class_<symbols::commutative_permutations> commutative_permutations("commutative_permutations",init<symbols::expression>());
+  class_<expresso::commutative_permutations> commutative_permutations("commutative_permutations",init<expresso::expression>());
   create_iterator(commutative_permutations);
   
 #pragma mark groups and fields
   
-  class_<symbols::group>("Group",init<const symbols::Function &,const symbols::Function &,const symbols::expression &>())
-  .def("get_operation", +[](const symbols::group &g)->const symbols::Function &{
+  class_<expresso::group>("Group",init<const expresso::Function &,const expresso::Function &,const expresso::expression &>())
+  .def("get_operation", +[](const expresso::group &g)->const expresso::Function &{
     return g.operation;
   },return_internal_reference<>())
-  .def("get_inverse", +[](const symbols::group &g)->const symbols::Function &{
+  .def("get_inverse", +[](const expresso::group &g)->const expresso::Function &{
     return g.inverse;
   },return_internal_reference<>())
-  .def_readonly("neutral", &symbols::group::neutral);
+  .def_readonly("neutral", &expresso::group::neutral);
 
-  class_<symbols::field>("Field",init<const symbols::group &,const symbols::group &>())
-  .def_readonly("additive_group", &symbols::field::additive_group)
-  .def_readonly("multiplicative_group", &symbols::field::multiplicative_group);
+  class_<expresso::field>("Field",init<const expresso::group &,const expresso::group &>())
+  .def_readonly("additive_group", &expresso::field::additive_group)
+  .def_readonly("multiplicative_group", &expresso::field::multiplicative_group);
   
 #pragma mark MulplicityList
   
-  class_<symbols::mulplicity_list::value_type>("Mulplicity",init<symbols::expression,symbols::expression>())
-  .def_readonly("value", &symbols::mulplicity_list::value_type::first)
-  .def_readonly("mulplicity", &symbols::mulplicity_list::value_type::second);
+  class_<expresso::mulplicity_list::value_type>("Mulplicity",init<expresso::expression,expresso::expression>())
+  .def_readonly("value", &expresso::mulplicity_list::value_type::first)
+  .def_readonly("mulplicity", &expresso::mulplicity_list::value_type::second);
   
-  class_<symbols::mulplicity_list>("MulplicityList",init<const symbols::group &,const symbols::Function &,const symbols::field &>())
-  .def(init<const symbols::expression &,const symbols::group &,const symbols::Function &,const symbols::field &>())
-  .def("__iter__",iterator<symbols::mulplicity_list>())
-  .def("__len__",&symbols::mulplicity_list::size)
-  .def("__getitem__",+[](const symbols::mulplicity_list &m,size_t idx){ return m[idx]; })
-  .def("intersection",+[](const symbols::mulplicity_list &m,const symbols::mulplicity_list &other){ return m.intersection(other); })
-  .def("intersection",+[](const symbols::mulplicity_list &m,const symbols::mulplicity_list &other,object f){
-    return m.intersection(other,[&](const symbols::expression &a,const symbols::expression &b)->symbols::expression{
+  class_<expresso::mulplicity_list>("MulplicityList",init<const expresso::group &,const expresso::Function &,const expresso::field &>())
+  .def(init<const expresso::expression &,const expresso::group &,const expresso::Function &,const expresso::field &>())
+  .def("__iter__",iterator<expresso::mulplicity_list>())
+  .def("__len__",&expresso::mulplicity_list::size)
+  .def("__getitem__",+[](const expresso::mulplicity_list &m,size_t idx){ return m[idx]; })
+  .def("intersection",+[](const expresso::mulplicity_list &m,const expresso::mulplicity_list &other){ return m.intersection(other); })
+  .def("intersection",+[](const expresso::mulplicity_list &m,const expresso::mulplicity_list &other,object f){
+    return m.intersection(other,[&](const expresso::expression &a,const expresso::expression &b)->expresso::expression{
       auto res =  f(a,b);
-      if(res == object()) return symbols::expression();
-      return extract<symbols::expression>(res);
+      if(res == object()) return expresso::expression();
+      return extract<expresso::expression>(res);
     });
   })
-  .def("difference",+[](const symbols::mulplicity_list &m,const symbols::mulplicity_list &other){ return m.difference(other); })
-  .def("sum",+[](const symbols::mulplicity_list &m,const symbols::mulplicity_list &other){ return m.sum(other); })
-  .def("power",&symbols::mulplicity_list::power)
-  .def("as_expression",&symbols::mulplicity_list::as_expression)
-  .def("get_real_field",+[](const symbols::mulplicity_list &m)->const symbols::field &{ return m.real_field; },return_internal_reference<>())
-  .def("get_base",+[](const symbols::mulplicity_list &m)->const symbols::group &{ return m.base; },return_internal_reference<>())
-  .def("get_mulplicity_function",+[](const symbols::mulplicity_list &m)->const symbols::Function &{ return m.mulplicity; },return_internal_reference<>())
+  .def("difference",+[](const expresso::mulplicity_list &m,const expresso::mulplicity_list &other){ return m.difference(other); })
+  .def("sum",+[](const expresso::mulplicity_list &m,const expresso::mulplicity_list &other){ return m.sum(other); })
+  .def("power",&expresso::mulplicity_list::power)
+  .def("as_expression",&expresso::mulplicity_list::as_expression)
+  .def("get_real_field",+[](const expresso::mulplicity_list &m)->const expresso::field &{ return m.real_field; },return_internal_reference<>())
+  .def("get_base",+[](const expresso::mulplicity_list &m)->const expresso::group &{ return m.base; },return_internal_reference<>())
+  .def("get_mulplicity_function",+[](const expresso::mulplicity_list &m)->const expresso::Function &{ return m.mulplicity; },return_internal_reference<>())
   ;
 
   

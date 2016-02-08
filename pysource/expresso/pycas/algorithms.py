@@ -1,7 +1,7 @@
 
-pc = __import__(__name__.split('.')[0])
 
 def get_symbols_in(expr):
+    from . import pycas as pc
 
     symbols = set()
     for e in pc.postorder_traversal(expr):

@@ -33,7 +33,7 @@
 #include <functional>
 #include <iterator>
 
-namespace symbols{
+namespace expresso{
   
   class expression_exception:public std::exception{
     const Expression * cause;

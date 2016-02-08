@@ -30,7 +30,7 @@
 
 #include <lars/iterators.h>
 
-namespace symbols {
+namespace expresso {
   
   struct BinaryIterator{
     virtual void init(const BinaryOperator *) = 0;
@@ -193,9 +193,7 @@ namespace symbols {
   public:
     
     using rule_id = CompressedNode::ID;
-    
-    static void verbose_apply_callback(const Rule &rule,const replacement_map &wildcards);
-    
+        
     using CallbackFunction = std::function<void(const Rule &,const replacement_map &)>;
     CallbackFunction apply_callback;
         

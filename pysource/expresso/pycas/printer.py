@@ -1,7 +1,7 @@
 
 from expression import *
 from functions import *
-from pysymbols.visitor import add_target,add_target_obj
+from expresso.visitor import add_target,add_target_obj
 
 @add_target(printer,addition)
 @add_target(latex,addition)

@@ -9,11 +9,9 @@
 #include <sstream>
 #include <algorithm>
 
-#include <iostream>
-
 using namespace lars;
 
-namespace symbols {
+namespace expresso {
   
   Expression::shared copy(const Expression::shared &s){ replacement_map rep; return replace(s, rep); }
 
@@ -489,7 +487,7 @@ namespace symbols {
           return b;
         });
         
-        if(intersection.size() == 0) return symbols::expression();
+        if(intersection.size() == 0) return expresso::expression();
         
         return intersection.as_expression();
       };

@@ -1,6 +1,6 @@
 
-import pysymbols.visitor as visitor
-from pysymbols.printer import Printer
+import expresso.visitor as visitor
+from expresso.printer import Printer
 from mpmath import mp
 
 import functions as f

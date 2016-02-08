@@ -1,5 +1,5 @@
 
-pc = __import__(__name__.split('.')[0])
+import expresso.pycas as pc
 import rule_symbols as s
 
 evaluator = pc.RewriteEvaluator(recursive=True, split_binary=True)

@@ -1,5 +1,5 @@
 
-import pysymbols as ex
+import expresso as ex
 from .printer import latex
 
 def S(expr):

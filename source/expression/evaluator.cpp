@@ -3,13 +3,12 @@
 
 #include <lars/iterators.h>
 
-#include <iostream>
 #include <algorithm>
 
 
 //#define VERBOSE
 
-namespace symbols {
+namespace expresso {
   
   using namespace lars;
   
@@ -276,10 +275,6 @@ namespace symbols {
   }
   
 #pragma mark RuleEvaluator
-  
-  void RuleEvaluator::verbose_apply_callback(const Rule &rule,const replacement_map &wildcards){
-    std::cout << "Apply: " << replace(rule.search,wildcards) << " => " << replace(rule.replacement,wildcards) << std::endl;
-  };
     
   std::ostream & operator<<(std::ostream &stream,const Rule &rule){
     stream << rule.search << " -> " << rule.replacement;

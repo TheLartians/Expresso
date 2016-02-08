@@ -1,5 +1,5 @@
 
-pc = __import__(__name__.split('.')[0])
+import expresso.pycas as pc
 import rule_symbols as s
 
 logic_evaluator = pc.RewriteEvaluator(recursive=True,split_binary=True)
@@ -26,7 +26,7 @@ def is_explicit_natural_evaluator(m):
 logic_evaluator.add_rule(is_explicit_natural(s.x),s.y,is_explicit_natural_evaluator)
 
 def is_function_type(expr,function):
-    return is_function(expr,pc.pysymbols.create_object(function))
+    return is_function(expr,pc.expresso.create_object(function))
 
 def comp_function_evaluator(m):
     f =  m[s.x].function
