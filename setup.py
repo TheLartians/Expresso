@@ -5,7 +5,7 @@ setup(
     name='expresso',
     version='0.1',
     description='A symbolic expression manipulation library.',
-    licence='MIT',
+    license='MIT',
     author='Lars Melchior',
     author_email='thelartians@gmail.com',
 
