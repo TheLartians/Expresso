@@ -39,6 +39,7 @@ def are_explicit_numbers(*args):
     return pc.And(*[is_explicit_natural(arg) for arg in args])
 
 evaluator.add_rule(s.x + s.y, s.z, binary_rule(lambda x, y: x + y), condition=are_explicit_numbers(s.x, s.y))
+evaluator.add_rule(-s.x-s.y, -s.z, binary_rule(lambda x, y: x + y), condition=are_explicit_numbers(s.x, s.y))
 evaluator.add_rule(s.x - s.y, s.z, binary_rule(lambda x, y: x - y), condition=are_explicit_numbers(s.x, s.y))
 evaluator.add_rule(s.x * s.y, s.z, binary_rule(lambda x, y: x * y), condition=are_explicit_numbers(s.x, s.y))
 evaluator.add_rule(s.x ** s.a * s.y ** s.a, s.z ** s.a, binary_rule(lambda x, y: x * y), condition=are_explicit_numbers(s.x, s.y))

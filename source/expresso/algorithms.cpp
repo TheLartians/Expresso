@@ -372,7 +372,7 @@ namespace expresso {
     
     std::sort(this->begin(), this->end(), [](const mulplicity_list::value_type &a,const mulplicity_list::value_type &b){ return a.first < b.first; });
   
-    for(int i=0;size()>0 && i<size()-1;){
+    for(int i=0; i+1<size();){
       auto &a = (*this)[i], &b = (*this)[i+1];
       
       if(a.first == b.first){
@@ -691,7 +691,7 @@ namespace expresso {
   void commutative_permutations::iterator::add_expression(const expression &e,expression_location loc,unsigned parent_index){
     if(auto b = e->as<BinaryOperator>()){ if(b->is_commutative()){
       commutable_expressions.emplace_back(b,loc);
-      if(parent_index != -1){
+      if(parent_index != unsigned(-1)){
         expression_location inner_loc{0};
         inner_loc.insert(inner_loc.end(),loc.begin() + commutable_expressions[parent_index].location.size(),loc.end());
         commutable_expressions[parent_index].inner_commutable_expressions.emplace_back(commutable_expressions.size()-1,inner_loc);
