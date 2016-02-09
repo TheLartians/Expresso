@@ -141,12 +141,13 @@ class LatexPrinter(Printer):
         underscore_parts = name.split('_')
 
         for i,p in enumerate(underscore_parts):
-            if p in self.latex_replacements:
-                underscore_parts[i] = self.latex_replacements[p]
-                continue
-            if len(p) > 1:
-                underscore_parts[i] = r'\text{%s} ' % p
-                continue
+            space_parts = p.split(' ')
+            for i2,p2 in enumerate(space_parts):
+                if p2 in self.latex_replacements:
+                    space_parts[i2] = self.latex_replacements[p2]
+                elif len(p2) > 1:
+                    space_parts[i2] = r'\text{%s} ' % p2
+            underscore_parts[i] = ' '.join(space_parts)
 
         return reduce(lambda p1,p2:'{%s}_{%s}' % (p2,p1),underscore_parts[::-1])
 

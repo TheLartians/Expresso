@@ -76,12 +76,11 @@ def WildcardFunction(name):
     return expresso.expression.Function(expresso.core.WildcardFunction(name),S=expression_converter)
 
 def symbols(string,**kwargs):
-    string = string.replace(" ", "")
     return [Symbol(s,**kwargs) for s in string.split(',')]
 
 def wildcard_symbols(string):
     string = string.replace(" ", "")
-    return [Wildcard(s) for s in string.split(',')]
+    return [Wildcard(s.strip()) for s in string.split(',')]
 
 printer = expresso.printer.Printer(expression_converter)
 latex = expresso.printer.LatexPrinter(expression_converter)

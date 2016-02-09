@@ -298,7 +298,13 @@ def visitor_class(visit_name = 'visit'):
                 return self.visit
             else:
                 return self.visit.dispatcher
-    
+
+        def register_target(self,target):
+            def register(f):
+                self.dispatcher.register_target(target,f)
+                return f
+            return register
+
     return Visitor
 
 
