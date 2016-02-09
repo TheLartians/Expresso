@@ -266,6 +266,8 @@ BOOST_PYTHON_MODULE(_expresso){
   class_<expresso::Evaluator::settings_t,boost::noncopyable>("Evaluator.settings",no_init)
   .def_readwrite("recursive",&expresso::Evaluator::settings_t::recursive)
   .def_readwrite("split_binary",&expresso::Evaluator::settings_t::split_binary)
+  .def_readwrite("split_binary_size",&expresso::Evaluator::settings_t::split_binary_size)
+  .def_readwrite("commutate_binary",&expresso::Evaluator::settings_t::commutate_binary)
   ;
   
   class_<expresso::Evaluator,boost::noncopyable>("Evaluator",no_init)

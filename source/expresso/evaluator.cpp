@@ -136,7 +136,7 @@ namespace expresso {
       
       auto c = copy->static_as<BinaryOperator>();
       
-      if(e->associativity == BinaryOperator::non_associative || c->arguments.size()<=2){
+      if(e->associativity == BinaryOperator::non_associative || c->arguments.size()<=evaluator.settings.split_binary_size){
 #ifdef VERBOSE
         std::cout << "visit binary as function: " << *e << std::endl;
 #endif
@@ -155,10 +155,12 @@ namespace expresso {
       
       std::unique_ptr<BinaryIterator> bit;
       
-      if(e->is_commutative()) bit.reset(new BinaryIterators::SingleOrdered(2));
+      if(e->is_commutative() && evaluator.settings.commutate_binary){
+        bit.reset(new BinaryIterators::SingleOrdered(evaluator.settings.split_binary_size));
+      }
       else{
           // TODO: add real associativity support
-          bit.reset(new BinaryIterators::Window(2));
+          bit.reset(new BinaryIterators::Window(evaluator.settings.split_binary_size));
       }
       bit->init(c.get());
       

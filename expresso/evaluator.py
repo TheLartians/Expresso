@@ -2,7 +2,7 @@ from expression import core,Function,WrappedType,ReplacementMap
 
 class Evaluator(object):
 
-    def __init__(self,evaluator,recursive = False,split_binary = True,S = None):
+    def __init__(self,evaluator,recursive = False,split_binary = True, split_binary_size = 2,S = None):
 
         if S == None:
             raise ValueError('missing argument S')
@@ -10,6 +10,7 @@ class Evaluator(object):
         self._evaluator = evaluator
         self._evaluator.settings.recursive = recursive
         self._evaluator.settings.split_binary = split_binary
+        self._evaluator.settings.split_binary_size = split_binary_size
 
         self.S = S
 

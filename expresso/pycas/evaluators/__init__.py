@@ -7,6 +7,7 @@ import type_evaluator
 import main_evaluator
 
 __cached_evaluators = {}
+__use_global_cache = False
 
 def evaluate(expr,context = pc.global_context,cache = None,format = True):
 
@@ -18,10 +19,16 @@ def evaluate(expr,context = pc.global_context,cache = None,format = True):
         main.add_evaluator(main_evaluator.main_evaluator)
         __cached_evaluators[context] = main
 
+    if cache == None and __use_global_cache:
+        cache = __cached_evaluators
+
     expr = main(expr,cache = cache)
     if format:
         expr = canonical_form.format_evaluator(expr,cache = cache)
     return expr
+
+def use_global_cache(v):
+    __use_global_cache = v
 
 def set_debug(v):
 

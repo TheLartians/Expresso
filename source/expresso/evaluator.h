@@ -116,8 +116,8 @@ namespace expresso {
     struct settings_t{
       bool recursive = false;
       bool split_binary = true;
-      bool preorder = false;
-      bool postorder = true;
+      unsigned split_binary_size = 2;
+      bool commutate_binary = true;
     } settings;
     
     using ignore_set = std::unordered_set<expression>;
