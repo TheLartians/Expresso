@@ -233,10 +233,10 @@ multiplication = BinaryOperator("*",expresso.associative,expresso.commutative,-1
 fraction = UnaryOperator("1/",expresso.prefix,-14)
 exponentiation = BinaryOperator("**",-15)
 
-AdditionGroup = Group(addition,negative,Zero)
-MultiplicationGroup = Group(multiplication,fraction,One)
-RealField = Field(AdditionGroup,MultiplicationGroup)
-ComplexField = Field(AdditionGroup,MultiplicationGroup)
+addition_group = Group(addition,negative,Zero)
+multiplication_group = Group(multiplication,fraction,One)
+real_field = Field(addition_group,multiplication_group)
+complex_field = Field(addition_group,multiplication_group)
 
 Or = BinaryOperator("|",expresso.associative,expresso.commutative,-3)
 And = BinaryOperator("&",expresso.associative,expresso.commutative,-3)

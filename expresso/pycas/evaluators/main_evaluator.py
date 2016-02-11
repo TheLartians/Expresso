@@ -52,22 +52,24 @@ evaluator.add_rule(-pc.S(0), 0)
 
 def extract_intersection(m):
 
-    ma = pc.MulplicityList(m[s.x],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
-    mb = pc.MulplicityList(m[s.y],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
+    ma = pc.MulplicityList(m[s.x],pc.multiplication_group,pc.exponentiation,pc.real_field)
+    mb = pc.MulplicityList(m[s.y],pc.multiplication_group,pc.exponentiation,pc.real_field)
 
     common = ma.intersection(mb)
     if len(common) == 0:
         return False
+
     m[s.a] = (ma-common).as_expression()
     m[s.b] = (mb-common).as_expression()
     m[s.c] = common.as_expression()
 
 def extract_sum_intersection(m):
-    ma = pc.MulplicityList(m[s.x],pc.AdditionGroup,pc.multiplication,pc.RealField)
-    mb = pc.MulplicityList(m[s.y],pc.AdditionGroup,pc.multiplication,pc.RealField)
+    ma = pc.MulplicityList(m[s.x],pc.addition_group,pc.multiplication,pc.real_field)
+    mb = pc.MulplicityList(m[s.y],pc.addition_group,pc.multiplication,pc.real_field)
     common = ma.intersection(mb)
     if len(common) == 0:
         return False
+    
     m[s.a] = (ma-common).as_expression()
     m[s.b] = (mb-common).as_expression()
     m[s.c] = common.as_expression()
@@ -84,8 +86,8 @@ evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_sum_intersectio
 
 def extract_comp_mul_intersection(m):
 
-    ma = pc.MulplicityList(m[s.x],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
-    mb = pc.MulplicityList(m[s.y],pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
+    ma = pc.MulplicityList(m[s.x],pc.multiplication_group,pc.exponentiation,pc.real_field)
+    mb = pc.MulplicityList(m[s.y],pc.multiplication_group,pc.exponentiation,pc.real_field)
 
     common = ma.intersection(mb)
     if len(common) == 0:
@@ -123,8 +125,8 @@ from .logic_evaluator import is_function_type
 
 def evaluate_fraction(m):
     ex,ey = m[s.x],m[s.y]**m[s.z]
-    ma = pc.MulplicityList(ex,pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
-    mb = pc.MulplicityList(ey,pc.MultiplicationGroup,pc.exponentiation,pc.RealField)
+    ma = pc.MulplicityList(ex,pc.multiplication_group,pc.exponentiation,pc.real_field)
+    mb = pc.MulplicityList(ey,pc.multiplication_group,pc.exponentiation,pc.real_field)
 
     mbs = {k for k,v in mb}
 

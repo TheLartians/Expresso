@@ -8,6 +8,8 @@
 #include <cmath>
 #include <stdio.h>
 
+#include <iostream>
+
 namespace expresso {
   using namespace lars;
 
@@ -17,7 +19,15 @@ namespace expresso {
     
 #pragma mark compare
   
-  bool less(const Expression &a,const Expression &b){
+  
+  void check_less(const Expression &a,const Expression &b);
+  
+  bool less(const Expression &a,const Expression &b,bool check = true){
+    
+    if(check)check_less(a,b);
+    
+    return a.get_hash() < b.get_hash();
+    
     
     if(auto A = a.as<AtomicExpression>()){
       if(auto B = b.as<AtomicExpression>()){
@@ -38,6 +48,21 @@ namespace expresso {
     }
     
     return false;
+  }
+  
+  void check_less(const Expression &a,const Expression &b){
+    
+    if(!(less(a,b,false)^less(b,a,false))){
+      if(a != b){
+        std::cerr << "less brocken:\n" << a << std::endl;
+        std::cerr << b << std::endl;
+      }
+    }
+    else if(a == b){
+      std::cerr << "less brocken:\n" << a << std::endl;
+      std::cerr << b << std::endl;
+    }
+    
   }
   
   bool Expression::operator<(const Expression & other)const{

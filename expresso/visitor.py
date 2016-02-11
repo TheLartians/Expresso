@@ -305,6 +305,14 @@ def visitor_class(visit_name = 'visit'):
                 return f
             return register
 
+        def register_targets(self,*targets):
+            def register(f):
+                for target in targets:
+                    self.dispatcher.register_target(target,f)
+                return f
+            return register
+
+
     return Visitor
 
 

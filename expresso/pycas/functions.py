@@ -1,5 +1,5 @@
 from .expression import Function,BinaryOperator,UnaryOperator,Symbol,Wildcard,Number,Expression,S
-from .expression import One,Zero,NaN,I,addition,negative,multiplication,fraction,exponentiation,AdditionGroup,MultiplicationGroup,RealField,ComplexField,Or,And,Xor,Not,mod,equal,unequal,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
+from .expression import One,Zero,NaN,I,addition,negative,multiplication,fraction,exponentiation,addition_group,multiplication_group,real_field,complex_field,Or,And,Xor,Not,mod,equal,unequal,In,NotIn,Less,LessEqual,Greater,GreaterEqual,Abs,Tuple
 
 import expresso
 import math

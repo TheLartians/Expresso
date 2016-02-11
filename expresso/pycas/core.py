@@ -98,10 +98,10 @@ Group = ex.WrappedGroup(S)
 Field = ex.WrappedField(S)
 
 
-AdditionGroup = Group(addition,negative,Zero)
-MultiplicationGroup = Group(multiplication,fraction,One)
+addition_group = Group(addition,negative,Zero)
+multiplication_group = Group(multiplication,fraction,One)
 
-RealField = Field(AdditionGroup,MultiplicationGroup)
+real_field = Field(addition_group,multiplication_group)
 
 
 
