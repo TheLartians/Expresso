@@ -60,7 +60,7 @@ class Printer(visitor.visitor_class()):
     def printed_operator_arguments(self,parent,args=None,begin=0,end=None):
         if args == None:
             args = parent.args
-        return [self.print_operator_argument(arg,parent) for arg in args[begin:end]]
+        return sorted([self.print_operator_argument(arg,parent) for arg in args[begin:end]])
     
     def print_binary_operator(self,expr,symbol = None):
         if symbol == None:

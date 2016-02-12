@@ -373,7 +373,7 @@ def ccompile(*function_definitions,**kwargs):
             self.cf = cf
             self.cf_vector = cf_vector
 
-        def __call__(self,*args):
+        def __call__(self,*args,**kwargs):
             if(len(args) == 0):
                 return self.cf()
             if any([isinstance(arg,(list,tuple)) for arg in args]):
@@ -399,9 +399,15 @@ def ccompile(*function_definitions,**kwargs):
                 else:
                     restype = argtypes[1]._type_
 
-                res = np.zeros(args[0].shape,dtype=restype)
+                res = kwargs.get('res')
+                if res is None:
+                    res = np.zeros(args[0].shape,dtype=restype)
+                else:
+                    assert res.dtype == restype
+                    assert res.shape == shape
+                    assert res.flags['C_CONTIGUOUS']
 
-                call_args = [res.size,res.ctypes.data_as(argtypes[1])]
+                call_args  = [res.size,res.ctypes.data_as(argtypes[1])]
                 call_args += [arg.ctypes.data_as(t) for t,arg in zip(argtypes[2:],args)]
                 self.cf_vector(*call_args)
                 return res
