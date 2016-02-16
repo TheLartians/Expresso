@@ -234,10 +234,7 @@ def numpyfy(expr,parallel = False,restype = None):
     def call(**args):
 
         args,shape = prepare_arguments(args)
-        cres = np.array(res(args))
-
-        if restype:
-            cres = cres.astype(restype)
+        cres = np.array(res(args)).astype(restype)
 
         if not shape:
             if cres.shape:
