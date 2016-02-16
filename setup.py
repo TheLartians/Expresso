@@ -3,7 +3,7 @@ from glob import glob
 
 setup(
     name='expresso',
-    version='0.1a3',
+    version='0.1a4',
     description='A symbolic expression manipulation library.',
     license='MIT',
     author='Lars Melchior',

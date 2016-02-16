@@ -372,7 +372,7 @@ namespace expresso {
     
     std::sort(this->begin(), this->end(), [](const mulplicity_list::value_type &a,const mulplicity_list::value_type &b){ return a.first < b.first; });
   
-    for(int i=0; i+1<size();){
+    for(unsigned i=0; i+1<size();){
       auto &a = (*this)[i], &b = (*this)[i+1];
       
       if(a.first == b.first){
