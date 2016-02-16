@@ -60,8 +60,11 @@ class Printer(visitor.visitor_class()):
     def printed_operator_arguments(self,parent,args=None,begin=0,end=None):
         if args == None:
             args = parent.args
-        return sorted([self.print_operator_argument(arg,parent) for arg in args[begin:end]])
-    
+        printed_args = [self.print_operator_argument(arg,parent) for arg in args[begin:end]]
+        if parent.function.is_commutative:
+            return sorted(printed_args)
+        return printed_args
+
     def print_binary_operator(self,expr,symbol = None):
         if symbol == None:
             symbol = expr.function.symbol

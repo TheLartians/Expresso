@@ -63,6 +63,8 @@ def extract_intersection(m):
     m[s.b] = (mb-common).as_expression()
     m[s.c] = common.as_expression()
 
+# TODO: implement commutative mulplicity list
+'''
 def extract_sum_intersection(m):
     ma = pc.MulplicityList(m[s.x],pc.addition_group,pc.multiplication,pc.real_field)
     mb = pc.MulplicityList(m[s.y],pc.addition_group,pc.multiplication,pc.real_field)
@@ -73,15 +75,19 @@ def extract_sum_intersection(m):
     m[s.a] = (ma-common).as_expression()
     m[s.b] = (mb-common).as_expression()
     m[s.c] = common.as_expression()
-
+'''
 
 evaluator.add_rule(s.x+s.y, s.c*(s.a+s.b), extract_intersection)
 evaluator.add_rule(s.x-s.y, s.c*(s.a-s.b), extract_intersection)
 evaluator.add_rule(-s.x-s.y, -s.c*(s.a+s.b), extract_intersection)
 
-evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_intersection)
-evaluator.add_rule(pc.equal(s.x,-s.y), pc.equal(s.a,-s.b), extract_intersection)
-evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_sum_intersection)
+# equal or c == 0 but we dont want to return pc.Or instead of pc.equal
+#evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_intersection)
+#evaluator.add_rule(pc.equal(s.x,-s.y), pc.equal(s.a,s.b), extract_intersection)
+
+#evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_sum_intersection)
+#evaluator.add_rule(pc.equal(s.x,-s.y), pc.equal(s.a,-s.b), extract_sum_intersection)
+#evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_sum_intersection)
 
 
 def extract_comp_mul_intersection(m):

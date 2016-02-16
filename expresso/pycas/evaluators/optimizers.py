@@ -21,7 +21,7 @@ def fold(m):
 compile_evaluator.add_rule(s.x,s.y,fold)
 compile_evaluator.add_rule(s.x**2,s.x*s.x,condition=is_atomic(s.x))
 
-compiler_opt_evaluator = pc.MultiEvaluator(recursive = False, split_binary=True)
+compiler_opt_evaluator = pc.MultiEvaluator(recursive = True, split_binary=True)
 compiler_opt_evaluator.add_evaluator(compile_evaluator)
 compiler_opt_evaluator.add_evaluator(logic_evaluator)
 

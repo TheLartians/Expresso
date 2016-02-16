@@ -19,7 +19,7 @@ def visit(printer,expr):
 def visit(printer,expr):
     denominators = [arg for arg in expr.args if arg.function == fraction]
     if len(denominators)>0:
-        numerators = [arg for arg in expr.args if arg.is_atomic and not arg == I]
+        numerators = [arg for arg in expr.args if arg.is_atomic]
         if len(numerators) == 0:
             numerators = [One]
 
