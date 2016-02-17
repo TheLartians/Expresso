@@ -204,6 +204,11 @@ evaluator.add_rule(pc.derivative(pc.InnerPiecewise((s.a,s.b),s.c),s.x),pc.InnerP
 evaluator.add_rule(pc.derivative(pc.InnerPiecewise((s.a,s.b)),s.x),(pc.derivative(s.a,s.x),s.b),condition=pc.Not(contains_atomic(s.b,s.x)))
 
 
+evaluator.add_rule(pc.OuterPiecewise(s.a)**s.x,pc.OuterPiecewise(s.a**s.x))
+evaluator.add_rule(pc.InnerPiecewise((s.a,s.b),s.c)**s.x,pc.InnerPiecewise((s.a**s.x,s.b),pc.InnerPiecewise(s.c)**s.x))
+evaluator.add_rule(pc.InnerPiecewise((s.a,s.b))**s.x,(s.a**s.x,s.b))
+
+
 
 def create_tmp_x(m):
     m[c] = pc.tmp(s.x)
