@@ -14,7 +14,7 @@ fold_accuracy = 20
 
 def fold(m):
     try:
-        m[s.y] = pc.expresso.create_object(m[s.x].N(fold_accuracy))
+        m[s.y] = pc.expresso.create_object(m[s.x].N(fold_accuracy,folding=True))
     except Exception as e:
         return False
 

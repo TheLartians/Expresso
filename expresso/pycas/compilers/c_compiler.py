@@ -90,21 +90,25 @@ template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F
         self.preamble.add(parallel_for)
 
         ndarray = '''
-template<size_t _size, size_t... sizes> struct ndarray_index_calculator {
+template<size_t _size,size_t _stride, size_t... sizes> struct ndarray_index_calculator {
   using rest = ndarray_index_calculator<sizes...>;
   static size_t size(){ return _size; }
   template <typename ... Args> static bool is_valid(size_t idx,Args ... args){ if(!rest::is_valid(args...)) return false; return idx < size(); }
-  template <typename ... Args> static size_t get_index(size_t idx,Args ... args){ return idx + rest::size() * rest::get_index(args...); }
+  static size_t stride(){ return _stride; }
+  template <typename ... Args> static size_t get_index(size_t idx,Args ... args){ return stride() * idx + rest::get_index(args...); }
 };
-template<size_t _size> struct ndarray_index_calculator <_size> {
+
+template<size_t _size,size_t _stride> struct ndarray_index_calculator <_size,_stride> {
   static size_t size(){ return _size; }
   static bool is_valid(size_t idx){ return idx < size(); }
+  static size_t stride(){ return _stride; }
   static size_t get_index(size_t idx){ return idx; }
 };
-template <class T,size_t ... size> struct mapped_ndarray{
+
+template <class T,size_t ... size_stride> struct mapped_ndarray{
   T * data;
   T default_value;
-  using index_calculator = ndarray_index_calculator<size...>;
+  using index_calculator = ndarray_index_calculator<size_stride...>;
   mapped_ndarray(T * d,const T &_default_value = 0):data(d),default_value(_default_value){ }
   template <typename ... Args> T & operator()(Args ... indices){
     if(!index_calculator::is_valid(indices...)){ return default_value; }
@@ -222,15 +226,19 @@ template <class T,size_t ... size> struct mapped_ndarray{
             return ctypes.POINTER(self.get_ctype(typename[:-1]))
         return self.ctype_map[typename]
 
+    @visitor.function(f.unfoldable)
+    def visit(self,expr):
+        return self.visit(expr.args[0])
+
     @visitor.function(f.ArrayAccess)
     def visit(self,expr):
         arr = expr.args[0].value
         pointer = arr.ctypes.data
         type = f.type_converters.numpy_c_typenames[arr.dtype.name]
-        size = ','.join([str(s) for s in arr.shape])
+        size = ','.join(["%s,%s" % (size,stride/arr.itemsize) for size,stride in zip(arr.shape,arr.strides)])
         name = expr.args[0].name
         self.globals.add('mapped_ndarray<%s,%s> %s((%s*)%s);' % (type,size,name,type,pointer))
-        return "%s(%s)" % (name,','.join([self(arg) for arg in expr.args[1:]]))
+        return "%s(%s)" % (name,','.join([self(arg) for arg in reversed(expr.args[1:])]))
 
     @visitor.obj(mp.mpf)
     def visit(self,expr):

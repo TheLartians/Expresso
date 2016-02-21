@@ -76,7 +76,7 @@ def WildcardFunction(name):
     return expresso.expression.Function(expresso.core.WildcardFunction(name),S=expression_converter)
 
 def symbols(string,**kwargs):
-    return [Symbol(s,**kwargs) for s in string.split(',')]
+    return [Symbol(s.strip(),**kwargs) for s in string.split(',')]
 
 def wildcard_symbols(string):
     string = string.replace(" ", "")
