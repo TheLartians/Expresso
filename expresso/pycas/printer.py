@@ -18,6 +18,7 @@ def visit(printer,expr):
 @add_target(latex,multiplication)
 def visit(printer,expr):
     denominators = [arg for arg in expr.args if arg.function == fraction]
+
     if len(denominators)>0:
         numerators = [arg for arg in expr.args if arg.is_atomic]
         if len(numerators) == 0:
@@ -30,7 +31,7 @@ def visit(printer,expr):
         num_str =   printer(multiplication(*numerators))
 
         if len(rest) == 0:
-            rest_str = ""
+            rest_str = ''
         elif len(rest) == 1:
             rest_str = printer(rest[0])
             if printer.needs_brackets_in(rest[0],expr):
@@ -41,13 +42,17 @@ def visit(printer,expr):
 
         return r'\frac{%s}{%s} \, %s ' % (num_str,denom_str,rest_str)
 
-    is_numeric = lambda x: x.value != None or (x.function == exponentiation and x.args[0].value != None)
+    needs_dot = lambda x: type(x.value)==Number
 
-    numeric = [x for x in expr.args if is_numeric(x)]
-    non_numeric = [x for x in expr.args if not is_numeric(x)]
+    need_dot = [x for x in expr.args if needs_dot(x)]
+    rest     = [x for x in expr.args if not needs_dot(x)]
 
-    res  = '\cdot '.join(printer.printed_operator_arguments(expr,numeric)) 
-    res += '\, '.join(printer.printed_operator_arguments(expr,non_numeric))
+    res  = '\cdot '.join(printer.printed_operator_arguments(expr,need_dot))
+    if len(need_dot) > 1:
+        res += '\cdot '
+    elif len(need_dot) == 1:
+        res += '\, '
+    res += '\, '.join(printer.printed_operator_arguments(expr,rest))
 
     return res
 
