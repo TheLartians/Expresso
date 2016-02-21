@@ -164,15 +164,6 @@ class type_converters:
 
     import numpy as np
 
-    compatible_numpy_types = {
-        bool:bool,
-        int:int,
-        float:float,
-        np.float64:np.float64,
-        complex:np.complex128,
-        np.complex128:np.complex128
-    }
-
     numpy_c_typenames = {
         np.bool.__name__:'bool',
         np.int.__name__:'int',
@@ -180,34 +171,28 @@ class type_converters:
         np.int16.__name__:'int16_t',
         np.int32.__name__:'int32_t',
         np.int64.__name__:'int64_t',
-        np.float.__name__:'float',
+        np.float32.__name__:'float',
+        np.float.__name__:'double',
         np.float64.__name__:'double',
+        np.complex:'complex<double>',
         np.complex128.__name__:'complex<double>'
     }
 
 
-def array(name,inarray,copy = True):
+def array(name,inarray):
     import numpy as np
 
-    cast_type = type_converters.compatible_numpy_types.get(inarray.dtype)
+    if not inarray.dtype.name in type_converters.numpy_c_typenames:
+        raise ValueError('Array dtype must be one of the following: %s' % ','.join(type_converters.numpy_c_typenames.keys()))
 
-    if not cast_type:
-        for t in type_converters.compatible_numpy_types:
-            if isinstance(inarray.dtype,t):
-                cast_type = type_converters.compatible_numpy_types[t]
-
-    array = np.ascontiguousarray(inarray,dtype=cast_type)
+    array = inarray #np.ascontiguousarray(inarray,dtype=cast_type)
     pointer = array.ctypes.data
-
-    if copy == False:
-        if pointer != inarray.ctypes.data:
-            raise ValueError('cannot include array in expression without copying (not contigous or incompatible type)')
 
     class ArrayAccessDelegate(object):
 
         def __init__(self,name,array):
             self.name = name
-            self.array_obj = expresso.create_object(array,'%s__id%r' % (name,id(array)))
+            self.array_obj = expresso.create_object(array,'%s__id_%r' % (name,id(array)))
             self.argc = len(array.shape)
 
         def __repr__(self):
@@ -228,10 +213,29 @@ def array(name,inarray,copy = True):
 
     return ArrayAccessDelegate(name,array)
 
+unfoldable = Function('unfoldable',argc=1)
 
+def parameter(name,value):
+    import numpy as np
+    value = np.array([value])
 
+    def set_value(new_value):
+        value[0] = new_value
+    def get_value():
+        return value[0]
 
+    svalue = array(name,value)(unfoldable(0))
 
+    from .expression import latex,printer
+    @latex.register_target(svalue)
+    @printer.register_target(svalue)
+    def print_value(printer,expr):
+        return name
+
+    svalue.set_value = set_value
+    svalue.get_value = get_value
+
+    return svalue
 
 
 

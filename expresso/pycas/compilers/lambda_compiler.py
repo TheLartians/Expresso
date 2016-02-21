@@ -6,9 +6,10 @@ from mpmath import mp
 
 class LambdaCompiler(object):
 
-    def __init__(self,value_converter = lambda x:x,function_module = None,value_module = None,cache=None):
+    def __init__(self,value_converter = lambda x:x,function_module = None,value_module = None,cache=None,folding=False):
         self.dispatcher = self.visit.dispatcher
         self.value_converter = value_converter
+        self.folding = folding
         if function_module == None:
             import math
             function_module = math
@@ -153,8 +154,15 @@ class LambdaCompiler(object):
         arg = self.visit(expr.args[0])
         return lambda args:not arg(args)
 
+    @visitor.function(f.unfoldable)
+    def visit(self,expr):
+        if self.folding:
+            raise RuntimeError('folding unfoldable value')
+        return self.visit(expr.args[0])
+
     @visitor.function(f.ArrayAccess)
     def visit(self,expr):
+
         array = expr.args[0].value
         indices = [self.visit(arg) for arg in expr.args[1:]]
 
@@ -189,7 +197,7 @@ class LambdaCompiler(object):
             try:
                 return self.value_converter(args[name])
             except KeyError:
-                raise ValueError('undefined symbol %s' % name)
+                raise ValueError('undefined symbol %r' % name)
 
         return get_symbol
 
@@ -238,10 +246,10 @@ def lambdify(expr,**kwargs):
     compiled = compiler.visit(e.S(expr))
     return lambda **args:compiled(args)
 
-def mpmathify(expr):
+def mpmathify(expr,**kwargs):
     from mpmath import mp
     vc = lambda x:mp.mpc(x) if isinstance(x,(complex,mp.mpc)) else mp.mpf(x)
-    compiler = LambdaCompiler(value_converter=vc,function_module=mp)
+    compiler = LambdaCompiler(value_converter=vc,function_module=mp,**kwargs)
     f = compiler.visit(e.S(expr))
     return lambda **args:f(args)
 
@@ -249,6 +257,6 @@ def N(expr,mp_dps = None,**kwargs):
     from mpmath import mp
     if mp_dps != None:
         mp.dps = mp_dps;
-    f = mpmathify(expr)
-    res = f(**kwargs)
+    f = mpmathify(expr,**kwargs)
+    res = f()
     return res
