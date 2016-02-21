@@ -81,9 +81,34 @@ def visit(printer,expr):
     parg += [printer(expr.args[-1])]
     return '^'.join(['{%s}' % arg for arg in parg])
 
-@add_target(latex,derivative)
+@latex.register_target(derivative)
 def visit(printer,expr):
-    return printer.function_format() % (r"\partial_{%s}" % printer(expr.args[1]),printer(expr.args[0]))
+
+    def flatten(expr,arguments=[]):
+        arguments.append(expr.args[1])
+        inner = expr.args[0]
+        if inner.function == derivative:
+            return flatten(inner,arguments)
+        return inner,arguments
+    
+    inner,arguments = flatten(expr)
+    
+    argc = len(arguments)
+    mul_args = [(arguments[0],1)]
+    for arg in arguments[1:]:
+        if mul_args[-1][0] == arg:
+            mul_args[-1] = (arg,mul_args[-1][1]+1)
+        else:
+            mul_args.append((arg,1))
+        
+    formatted_arguments = [r'{\partial %s}' % printer(arg[0]) if arg[1] == 1 else r'{\partial{%s}^{%s}}' % (printer(arg[0]),arg[1]) for arg in mul_args]
+    
+    if argc == 1:
+        formated_inner = '\partial %s' % printer(inner)
+    else:
+        formated_inner = '\partial^{%s} %s' % (argc,printer(inner))
+    
+    return r'\frac{%s}{%s}' % (formated_inner,'\,'.join(formatted_arguments))
 
 @add_target(latex,evaluated_at)
 def visit(printer,expr):
@@ -216,7 +241,6 @@ def visit(printer,expr):
 @add_target_obj(latex, TypeInfo)
 def visit(printer,expr):
     return printer.format_name(expr.value.name)
-
 
 from mpmath import mp
 @add_target_obj(printer, bool)
