@@ -30,7 +30,7 @@ There are still many possible improvements to expresso/pyCAS. Feel free to fork 
 
 ### Expresso:
 - Match an arbitrary number of patterns at once in constant time using a lookup table
-- Add support for full commutative patterns (at the moment only the outermost pattern is matched commutatively)
+- Add support for full commutative patterns (at the moment only the outermost function is matched commutatively)
 - Add documentation
 
 ### PyCAS:
