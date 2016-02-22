@@ -22,6 +22,7 @@ PyCAS is a minimalistic computer algebra system based on expresso (it also serve
 ### Dependencies
 
 - pyhton 2.7
+- boost.python
 - numpy
 - mpmath
 
