@@ -12,19 +12,18 @@ Installing the latest realease of Expresso can be done by cloning directly from 
 
 ### Dependencies
 
-#### Expresso
-
 - A c++11 compatible compiler (such as gcc-4.9)
 - cmake (optional)
 
-#### PyCAS
+## PyCAS
+PyCAS is a minimalistic computer algebra system based on expresso (it also serves as an example for writing your own modules with expresso). Since it is developed in parallel it is distributed inside the expresso module as expresso.pycas. In the examples directory you can find an introductory tutorial for PyCAS.
+
+
+### Dependencies
 
 - pyhton 2.7
 - numpy
 - mpmath
-
-## PyCAS
-PyCAS is a minimalistic computer algebra system based on expresso (it also serves as an example for writing your own modules with expresso). Since it is developed in parallel it is distributed inside the expresso module as expresso.pycas. In the examples directory you can find an introductory tutorial for PyCAS.
 
 ## Citing Expresso/PyCAS
 When using Expresso in your work it would be very appriciated to give us a citation. You can use the following BibTeX template:
