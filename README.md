@@ -1,7 +1,7 @@
 # Expresso/PyCAS
 
 ## Expresso
-A c++11 symbolic expression manipulation library with wrappers for python 2.7. It it mainly based on expression rewriting.
+A c++11 symbolic expression manipulation library with wrappers for python 2.7. It it based on pattern matching and expression rewriting.
 
 ### Installation
 Installing the latest realease of Expresso can be done by cloning directly from the repository:
