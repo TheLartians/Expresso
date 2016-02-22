@@ -5,8 +5,9 @@ A c++11 symbolic expression manipulation library with wrappers for python 2.7. I
 
 ### Installation
 Installing the latest realease of Expresso can be done by cloning directly from the repository:
-    git clone https://github.com/TheLartians/Expresso.git
-    pip2 install .
+
+        git clone https://github.com/TheLartians/Expresso.git
+        pip2 install .
 
 Please be aware that the core of expresso uses c++11 and therefore needs a relatively new compiler (e.g. gcc-4.9).
 
