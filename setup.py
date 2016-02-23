@@ -3,7 +3,7 @@ from glob import glob
 
 setup(
     name='expresso',
-    version='0.1a10',
+    version='0.1',
     description='A symbolic expression manipulation library.',
     license='MIT',
     author='Lars Melchior',
@@ -32,7 +32,6 @@ setup(
                   sources = glob('source/expresso/*.cpp') + ['libs/sha256/sha256.cpp','source/python.cpp'],
                   include_dirs=['source','source/expresso','libs'], 
                   libraries=['boost_python'], 
-#                 library_dirs=['/'],
                   extra_compile_args=['-g','-std=c++11','-Wno-unknown-pragmas','-Wno-unused-local-typedef','-O3'] 
                   ),
         ],
