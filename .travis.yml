@@ -14,11 +14,9 @@ before_install:
   - pip install nose
   - pip install numpy
 
-# command to install
 install: 
-  - CC=/usr/bin/gcc-4.9 pip install --verbose .[pycas]
+  - CC=/usr/bin/gcc-4.9 pip install .[pycas]
 
-# command to run tests
 script: nosetests
  
 notifications:
