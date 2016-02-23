@@ -11,13 +11,12 @@ before_install:
   - sudo apt-get install -qq libboost-python1.55-dev
   - sudo apt-get install -qq gcc-4.9
   - sudo apt-get install -qq g++-4.9
-
-install: 
-#  - CC=/usr/bin/gcc-4.9 pip install .[pycas]
   - export CC=/usr/bin/gcc-4.9
   - export CXX=/usr/bin/g++-4.9
   - pip install --upgrade pip
   - pip install nose
+
+install: 
   - pip install .[pycas]
 
 script: nosetests
