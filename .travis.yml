@@ -5,9 +5,10 @@ python:
 
 before_install:
   - sudo apt-get install libboost-python-dev
+  - sudo apt-get install g++-4.9
 
 # command to install
-install: "pip install ."
+install: "CC=/usr/bin/gcc-4.9 sudo pip install ."
 
 # command to run tests
 script: nosetest
