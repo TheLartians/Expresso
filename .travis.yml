@@ -12,10 +12,12 @@ before_install:
   - sudo apt-get install -qq gcc-4.9
   - sudo apt-get install -qq g++-4.9
   - pip install nose
+  - pip install mpmath
   - pip install numpy
 
 install: 
-  - CC=/usr/bin/gcc-4.9 pip install .[pycas]
+#  - CC=/usr/bin/gcc-4.9 pip install .[pycas]
+  - CC=/usr/bin/gcc-4.9 python setup.py install 
 
 script: nosetests
  
