@@ -12,6 +12,7 @@ before_install:
   - sudo apt-get install python-numpy
   - sudo apt-get install -qq gcc-4.9
   - sudo apt-get install -qq g++-4.9
+  - sudo pip install nose
 
 # command to install
 install: "CC=/usr/bin/gcc-4.9 sudo pip install .[pycas]"
