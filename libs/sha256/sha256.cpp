@@ -179,7 +179,7 @@ std::string sha256_hash::hex_string()const{
   std::string buf;
   buf.resize(2*SHA256::DIGEST_SIZE+1);
   buf[2*SHA256::DIGEST_SIZE] = 0;
-  for (int i = 0; i < SHA256::DIGEST_SIZE; i++) sprintf(&buf[0]+i*2, "%02x", data()[i]);
+  for (unsigned i = 0; i < SHA256::DIGEST_SIZE; i++) sprintf(&buf[0]+i*2, "%02x", data()[i]);
   return buf;
 }
 

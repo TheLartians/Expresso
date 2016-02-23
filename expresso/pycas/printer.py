@@ -18,6 +18,7 @@ def visit(printer,expr):
 @add_target(latex,multiplication)
 def visit(printer,expr):
     denominators = [arg for arg in expr.args if arg.function == fraction]
+
     if len(denominators)>0:
         numerators = [arg for arg in expr.args if arg.is_atomic]
         if len(numerators) == 0:
@@ -30,7 +31,7 @@ def visit(printer,expr):
         num_str =   printer(multiplication(*numerators))
 
         if len(rest) == 0:
-            rest_str = ""
+            rest_str = ''
         elif len(rest) == 1:
             rest_str = printer(rest[0])
             if printer.needs_brackets_in(rest[0],expr):
@@ -41,13 +42,17 @@ def visit(printer,expr):
 
         return r'\frac{%s}{%s} \, %s ' % (num_str,denom_str,rest_str)
 
-    is_numeric = lambda x: x.value != None or (x.function == exponentiation and x.args[0].value != None)
+    needs_dot = lambda x: type(x.value)==Number
 
-    numeric = [x for x in expr.args if is_numeric(x)]
-    non_numeric = [x for x in expr.args if not is_numeric(x)]
+    need_dot = [x for x in expr.args if needs_dot(x)]
+    rest     = [x for x in expr.args if not needs_dot(x)]
 
-    res  = '\cdot '.join(printer.printed_operator_arguments(expr,numeric)) 
-    res += '\, '.join(printer.printed_operator_arguments(expr,non_numeric))
+    res  = '\cdot '.join(printer.printed_operator_arguments(expr,need_dot))
+    if len(need_dot) > 1:
+        res += '\cdot '
+    elif len(need_dot) == 1:
+        res += '\, '
+    res += '\, '.join(printer.printed_operator_arguments(expr,rest))
 
     return res
 
@@ -76,9 +81,34 @@ def visit(printer,expr):
     parg += [printer(expr.args[-1])]
     return '^'.join(['{%s}' % arg for arg in parg])
 
-@add_target(latex,derivative)
+@latex.register_target(derivative)
 def visit(printer,expr):
-    return printer.function_format() % (r"\partial_{%s}" % printer(expr.args[1]),printer(expr.args[0]))
+
+    def flatten(expr,arguments=[]):
+        arguments.append(expr.args[1])
+        inner = expr.args[0]
+        if inner.function == derivative:
+            return flatten(inner,arguments)
+        return inner,arguments
+    
+    inner,arguments = flatten(expr)
+    
+    argc = len(arguments)
+    mul_args = [(arguments[0],1)]
+    for arg in arguments[1:]:
+        if mul_args[-1][0] == arg:
+            mul_args[-1] = (arg,mul_args[-1][1]+1)
+        else:
+            mul_args.append((arg,1))
+        
+    formatted_arguments = [r'{\partial %s}' % printer(arg[0]) if arg[1] == 1 else r'{\partial{%s}^{%s}}' % (printer(arg[0]),arg[1]) for arg in mul_args]
+    
+    if argc == 1:
+        formated_inner = '\partial %s' % printer(inner)
+    else:
+        formated_inner = '\partial^{%s} %s' % (argc,printer(inner))
+    
+    return r'\frac{%s}{%s}' % (formated_inner,'\,'.join(formatted_arguments))
 
 @add_target(latex,evaluated_at)
 def visit(printer,expr):
@@ -211,7 +241,6 @@ def visit(printer,expr):
 @add_target_obj(latex, TypeInfo)
 def visit(printer,expr):
     return printer.format_name(expr.value.name)
-
 
 from mpmath import mp
 @add_target_obj(printer, bool)
