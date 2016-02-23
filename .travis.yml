@@ -16,10 +16,9 @@ install:
 #  - CC=/usr/bin/gcc-4.9 pip install .[pycas]
   - export CC=/usr/bin/gcc-4.9
   - export CXX=/usr/bin/g++-4.9
+  - pip install --upgrade pip
   - pip install nose
-  - pip install mpmath
-  - pip install numpy
-  - python setup.py install 
+  - pip install .[pycas]
 
 script: nosetests
  
