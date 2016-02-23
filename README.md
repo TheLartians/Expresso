@@ -4,7 +4,7 @@
 A c++11 symbolic expression manipulation library with wrappers for python 2.7. It it based on pattern matching and expression rewriting.
 
 ### Installation
-Installing the latest realease of Expresso can be done by cloning directly from the repository:
+Installing the latest release of Expresso can be done by cloning directly from the repository:
 
         git clone https://github.com/TheLartians/Expresso.git
         pip2 install .
@@ -21,13 +21,13 @@ PyCAS is a minimalistic computer algebra system based on expresso (it also serve
 
 ### Dependencies
 
-- pyhton 2.7
+- python 2.7
 - boost.python
 - numpy
 - mpmath
 
 ## Citing Expresso/PyCAS
-When using Expresso in your work it would be very appriciated to give us a citation. You can use the following BibTeX template:
+When using Expresso in your work it would be very appreciated to give us a citation. You can use the following BibTeX template:
 
     @misc{LMExpresso2016,
       author = {Lars Melchior},
