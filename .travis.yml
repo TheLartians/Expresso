@@ -18,5 +18,5 @@ before_install:
 install: "CC=/usr/bin/gcc-4.9 sudo pip install .[pycas]"
 
 # command to run tests
-script: nosetest
+script: nosetests
  
