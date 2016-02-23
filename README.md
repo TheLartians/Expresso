@@ -22,7 +22,8 @@ PyCAS is a minimalistic computer algebra system based on expresso (it also serve
 ### Dependencies
 
 - python 2.7
-- boost.python
+- pip >= 8.0
+- boost.python >= 1.55
 - numpy
 - mpmath
 
@@ -40,11 +41,11 @@ When using Expresso in your work it would be very appreciated to give us a citat
     }
     
 ## Outlook
-There are still many possible improvements to expresso/pyCAS. Feel free to fork the project and add your own contributions:
+There are still many possible improvements to expresso/pyCAS. Feel free to fork the project and add your own contributions. Planned features include:
 
 ### Expresso
 - Match an arbitrary number of patterns at once in even faster time (near constant instead of logarithmic) using a lookup table
-- Add support for full commutative patterns (at the moment only the outermost function is matched commutatively)
+- Add better support for commutative patterns (at the moment only the outermost function is matched commutatively)
 - Add documentation
 
 ### PyCAS
