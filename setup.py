@@ -32,7 +32,7 @@ setup(
                   sources = glob('source/expresso/*.cpp') + ['libs/sha256/sha256.cpp','source/python.cpp'],
                   include_dirs=['source','source/expresso','libs'], 
                   libraries=['boost_python'], 
-                  library_dirs=['/'],
+#                 library_dirs=['/'],
                   extra_compile_args=['-g','-std=c++11','-Wno-unknown-pragmas','-Wno-unused-local-typedef','-O3'] 
                   ),
         ],
