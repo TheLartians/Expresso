@@ -24,6 +24,18 @@
 
 namespace python = boost::python;
 
+namespace boost { 
+  
+  template<class T> const T* get_pointer(const std::shared_ptr<T>& ptr) {
+    return ptr.get();
+  }
+
+  template<class T> T* get_pointer(std::shared_ptr<T>& ptr) {
+    return ptr.get();
+  }
+
+}
+
 
 namespace expresso_wrapper {
   

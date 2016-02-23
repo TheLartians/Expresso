@@ -33,7 +33,7 @@ setup(
                   include_dirs=['source','source/expresso','libs'], 
                   libraries=['boost_python'], 
                   library_dirs=['/'],
-                  extra_compile_args=['-g','-std=c++11','-Wno-unknown-pragmas','-O3'] 
+                  extra_compile_args=['-g','-std=c++11','-Wno-unknown-pragmas','-Wno-unused-local-typedef','-O3'] 
                   ),
         ],
 
