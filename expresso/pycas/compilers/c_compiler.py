@@ -340,6 +340,7 @@ def ccompile(*function_definitions,**kwargs):
     import ctypes
     import numpy as np
     from subprocess import Popen, PIPE
+    from os import environ
 
     ccode_printer = CCodePrinter()
     code  = ccode_printer.print_file(*function_definitions)
@@ -347,7 +348,7 @@ def ccompile(*function_definitions,**kwargs):
     output_directory = tempfile.mkdtemp()
 
     object_file = output_directory+'/'+'pycas_compiled_expression.o'
-    p = Popen(['g++','-o',object_file,'-c','-xc++','-std=c++11','-funsafe-math-optimizations','-O3','-fPIC', '-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    p = Popen([environ.get('CXX','g++'),'-o',object_file,'-c','-xc++','-std=c++11','-funsafe-math-optimizations','-O3','-fPIC', '-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
     p.stdin.write(code)
     p.stdin.close()
 
