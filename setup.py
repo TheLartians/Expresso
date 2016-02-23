@@ -35,5 +35,9 @@ setup(
                   library_dirs=['/'],
                   extra_compile_args=['-g','-std=c++11','-Wno-unknown-pragmas','-O3'] 
                   ),
-        ]
+        ],
+
+    test_suite='nose.collector',
+    tests_require=['nose'],
+
 )
