@@ -26,16 +26,10 @@ Installing the latest release of Expresso can be done by cloning directly from t
 - mpmath
 
 ## Citing Expresso/PyCAS
-When using Expresso in your work it would be very appreciated to give us a citation. You can use the following BibTeX template:
+To cite Expresso/PyCAS use the Zenodo DOI:
 
-        @misc{LMExpresso2016-v0.1,
-          author = {Lars Melchior},
-          title = {Expresso 0.1},
-          year = {2016},
-          publisher = {GitHub},
-          journal = {GitHub repository},
-          howpublished = {\url{https://github.com/TheLartians/Expresso}},
-        }
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.46539.svg)](http://dx.doi.org/10.5281/zenodo.46539)
+
 
 ## Outlook
 There are still many possible improvements to expresso/pyCAS. Feel free to fork the project and add your own contributions. Planned features include:
