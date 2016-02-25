@@ -35,7 +35,7 @@ When using Expresso in your work it would be very appreciated to give us a citat
       publisher = {GitHub},
       journal = {GitHub repository},
       howpublished = {\url{https://github.com/TheLartians/Expresso/}},
-      commit = {61e097b9c895b885d69d813b8fde1bb935b03557}
+      commit = {b401a45f6fd40241c280bb66ff67db421b04cada}
     }
     
 ## Outlook
