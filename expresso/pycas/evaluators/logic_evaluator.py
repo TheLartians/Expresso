@@ -15,7 +15,6 @@ is_mpmath= pc.Function('is mpmath')
 is_function = pc.Function('is function')
 contains_atomic = pc.Function('contains atomic')
 
-
 def is_explicit_natural_evaluator(m):
     for expr in m:
         if not isinstance(expr[1].value, pc.Number):
