@@ -276,9 +276,14 @@ def ncompile(*function_definitions):
             def __init__(self,f,arg_names):
                 self.f = f
                 self.arg_names = arg_names
-            def __call__(self, *args):
+            def __call__(self, *args, **kwargs):
                 args = { n:a for n,a in zip(self.arg_names,args) }
-                return self.f(**args)
+                res = kwargs.pop('res',None)
+                if res is not None:
+                    res[:] = self.f(**args)
+                    return res
+                else:
+                    return self.f(**args)
 
         functions[definition.name] = Delegate(f,arg_names)
 
