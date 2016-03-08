@@ -28,8 +28,7 @@ Installing the latest release of Expresso can be done by cloning directly from t
 ## Citing Expresso/PyCAS
 To cite Expresso/PyCAS use the Zenodo DOI:
 
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.46539.svg)](http://dx.doi.org/10.5281/zenodo.46539)
-
+[![DOI](https://zenodo.org/badge/20604/TheLartians/Expresso.svg)](https://zenodo.org/badge/latestdoi/20604/TheLartians/Expresso)
 
 ## Outlook
 There are still many possible improvements to expresso/pyCAS. Feel free to fork the project and add your own contributions. Planned features include:
