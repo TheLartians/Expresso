@@ -119,6 +119,8 @@ template <class T,size_t ... size_stride> struct mapped_ndarray{
 
         self.preamble.add(ndarray)
 
+        self.preamble.add('''template <typename T> int sign(T val) { return (T(0) <= val) - (val < T(0)); }''')
+
 
     def needs_brackets_in(self,expr,parent):
         if expr.is_atomic:

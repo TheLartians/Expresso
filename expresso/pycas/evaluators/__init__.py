@@ -34,6 +34,9 @@ def set_debug(v):
 
     def callback(r,m):
         from IPython.display import display_latex
+
+        print "appy rule: %s" % r
+
         lt = pc.latex(r.search.subs(m,evaluate=False)),\
              pc.latex(r.replacement.subs(m,evaluate=False)),\
              r"\;\text{ if }\;%s" % pc.latex(r.condition.subs(m,evaluate=False)) if r.condition is not None else ''

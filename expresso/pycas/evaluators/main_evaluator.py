@@ -14,7 +14,7 @@ evaluator.add_rule(s.x*0, 0)
 evaluator.add_rule(s.x**1, s.x)
 evaluator.add_rule(s.x**0, 1)
 evaluator.add_rule(1**s.x, 1)
-evaluator.add_rule(0**s.x, 0)
+evaluator.add_rule(0**s.x, 0,condition=s.x>0)
 
 evaluator.add_rule(s.x*s.x, s.x**2)
 evaluator.add_rule(s.x*s.x**-1, 1)
