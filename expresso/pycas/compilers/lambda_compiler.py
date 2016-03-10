@@ -149,6 +149,18 @@ class LambdaCompiler(object):
             return abs(arg(args))
         return evaluate
 
+    @visitor.function(f.Min)
+    def visit(self,expr):
+        lhs = self.visit(expr.args[0])
+        rhs = self.visit(expr.args[0])
+        return lambda args:min(lhs(args),rhs(args))
+
+    @visitor.function(f.Max)
+    def visit(self,expr):
+        lhs = self.visit(expr.args[0])
+        rhs = self.visit(expr.args[0])
+        return lambda args:max(lhs(args),rhs(args))
+
     @visitor.function(f.Not)
     def visit(self,expr):
         arg = self.visit(expr.args[0])
