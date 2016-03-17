@@ -47,8 +47,10 @@ canonical_form.add_rule(pc.unequal(s.x,s.y),pc.Not(pc.equal(s.x,s.y)));
 
 canonical_form.add_rule(abs(s.x),pc.Max(s.x,-s.x),condition=pc.equal(pc.DominantType(pc.Type(s.x),pc.Types.Real),pc.Types.Real))
 
-
 canonical_form.add_rule(pc.Max(s.a,s.b),-pc.Min(-s.a,-s.b))
+
+canonical_form.add_rule(pc.tan(s.x),pc.sin(s.x)/pc.cos(s.x))
+canonical_form.add_rule(pc.cot(s.x),pc.cos(s.x)/pc.sin(s.x))
 
 
 #canonical_form.add_rule(abs(s.x)<s.y,pc.And(s.x<s.y,-s.x<s.y),condition=pc.And(s.y>0,pc.equal(pc.DominantType(pc.Type(s.x),pc.Types.Real),pc.Types.Real)))
@@ -78,10 +80,11 @@ format_evaluator.add_rule(-(-s.a),s.a)
 format_evaluator.add_rule(pc.equal(s.a,s.a),True)
 format_evaluator.add_rule(-(s.a+s.b),-s.a-s.b)
 
+format_evaluator.add_rule(pc.sin(s.x)/pc.cos(s.x),pc.tan(s.x))
+format_evaluator.add_rule(pc.cos(s.x)/pc.sin(s.x),pc.cot(s.x))
+
 format_evaluator.add_rule((-s.a)*s.b,-(s.a*s.b))
 format_evaluator.add_rule(pc.Not(pc.equal(s.x,s.y)),pc.unequal(s.x,s.y));
-
-
 
 format_evaluator.add_rule(pc.Or(s.x<s.y,pc.equal(s.x,s.y)),s.x<=s.y)
 

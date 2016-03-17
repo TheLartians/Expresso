@@ -77,12 +77,19 @@ inline complex<double> operator{0}(const double & lhs,complex<double> rhs){{
 
 template<typename C1,typename C2,typename F> void parallel_for(C1 start,C2 end,F f,uintptr_t thread_count = hardware_thread_count()){
     if(end-start < thread_count) thread_count = end-start;
+
     std::vector<std::future<void>> handles(thread_count);
     C2 block_size = (end - start)/thread_count;
     for(uintptr_t i=0;i<thread_count-1;++i){
-      handles[i] = std::async(std::launch::async,[=](){ for(C2 j=start+block_size*i;j!=start+block_size*(i+1);++j){ f(j); } });
+      handles[i] = std::async(std::launch::async,[=](){
+        C2 begin = start+block_size*i, end = start+block_size*(i+1);
+        for(C2 j=begin;j<end;++j){ f(j); }
+      });
     }
-    handles[thread_count-1] = std::async([&](){ for(C2 j=start+block_size*(thread_count-1);j!=end;++j)f(j); });
+    handles[thread_count-1] = std::async([&](){
+      C2 begin = start+block_size*(thread_count-1);
+      for(C2 j=begin;j<end;++j)f(j);
+     });
     for(auto & handle:handles) handle.wait();
 }
         '''
@@ -325,9 +332,9 @@ template <class T,size_t ... size_stride> struct mapped_ndarray{
         else:
             f_code = 'for(unsigned __i = 0; __i<__size;++__i) __res[__i] = %s;' % f_code
 
+        rargument_types = [argument_types[0]] + ['%s __restrict__ ' % t for t in argument_types[1:]]
         formatted_args = ','.join(['%s %s' % vardef for vardef in
-                                   zip(argument_types,['__size','__res'] + list(args))])
-
+                                   zip(rargument_types,['__size','__res'] + list(args))])
 
         formatted = (self.vectorized_name(definition.name), formatted_args, f_code)
 
@@ -350,7 +357,9 @@ def ccompile(*function_definitions,**kwargs):
     output_directory = tempfile.mkdtemp()
 
     object_file = output_directory+'/'+'pycas_compiled_expression.o'
-    p = Popen([environ.get('CXX','g++'),'-o',object_file,'-c','-xc++','-std=c++11','-funsafe-math-optimizations','-O3','-fPIC', '-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
+
+    flags = kwargs.pop('flags',[])
+    p = Popen([environ.get('CXX','g++'),'-o',object_file] + flags + ['-c','-xc++','-std=c++11','-ffast-math','-O3','-fPIC','-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
     p.stdin.write(code)
     p.stdin.close()
 
@@ -358,10 +367,14 @@ def ccompile(*function_definitions,**kwargs):
     if(return_code!=0):
         raise RuntimeError("Cannot compile expression: " + p.stderr.read() )
 
-    print_warnings = kwargs.get('print_warnings')
+    print_output = kwargs.pop('print_output',False)
+    print_warnings = print_output or kwargs.pop('print_warnings',False)
 
     if print_warnings:
         print p.stderr.read()
+
+    if print_output:
+        print p.stdout.read()
 
     shared_library = output_directory+'/'+'pycas_compiled_expression.so'
     p = Popen(['g++','-shared','-o',shared_library,object_file],stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -373,6 +386,9 @@ def ccompile(*function_definitions,**kwargs):
 
     if print_warnings:
         print p.stderr.read()
+
+    if print_output:
+        print p.stdout.read()
 
     lib = ctypes.cdll.LoadLibrary(shared_library)
     shutil.rmtree(output_directory)

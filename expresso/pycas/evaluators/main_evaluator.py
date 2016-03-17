@@ -3,6 +3,7 @@ import expresso.pycas as pc
 import rule_symbols as s
 
 evaluator = pc.RewriteEvaluator(recursive=True, split_binary=True)
+factor_evaluator = pc.RewriteEvaluator(recursive=True, split_binary=True)
 
 evaluator.add_rule(s.x+0, s.x)
 evaluator.add_rule(s.x-s.x, 0)
@@ -16,7 +17,7 @@ evaluator.add_rule(s.x**0, 1)
 evaluator.add_rule(1**s.x, 1)
 evaluator.add_rule(0**s.x, 0,condition=s.x>0)
 
-evaluator.add_rule(s.x*s.x, s.x**2)
+factor_evaluator.add_rule(s.x*s.x, s.x**2)
 evaluator.add_rule(s.x*s.x**-1, 1)
 
 evaluator.add_rule((s.x**s.a)**s.b, s.x**(s.a*s.b),condition=pc.equal(pc.DominantType(pc.Type(s.b),pc.Types.Integer),pc.Types.Integer))
@@ -31,11 +32,11 @@ evaluator.add_rule((-s.x)**(s.a), s.x**s.a ,condition=is_even(s.a))
 evaluator.add_rule((-s.x)**(s.a), -(s.x)**s.a ,condition=is_uneven(s.a))
 
 
-evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x*s.y**-1)**s.a)
+factor_evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x*s.y**-1)**s.a)
 
 
-evaluator.add_rule(s.x**s.n*s.x, s.x**(s.n+1))
-evaluator.add_rule(s.x**s.n*s.x**s.m, s.x**(s.n+s.m))
+factor_evaluator.add_rule(s.x**s.n*s.x, s.x**(s.n+1))
+factor_evaluator.add_rule(s.x**s.n*s.x**s.m, s.x**(s.n+s.m))
 
 
 from logic_evaluator import is_explicit_natural
@@ -77,9 +78,10 @@ def extract_sum_intersection(m):
     m[s.c] = common.as_expression()
 '''
 
-evaluator.add_rule(s.x+s.y, s.c*(s.a+s.b), extract_intersection)
-evaluator.add_rule(s.x-s.y, s.c*(s.a-s.b), extract_intersection)
-evaluator.add_rule(-s.x-s.y, -s.c*(s.a+s.b), extract_intersection)
+
+factor_evaluator.add_rule(s.x+s.y, s.c*(s.a+s.b), extract_intersection)
+factor_evaluator.add_rule(s.x-s.y, s.c*(s.a-s.b), extract_intersection)
+factor_evaluator.add_rule(-s.x-s.y, -s.c*(s.a+s.b), extract_intersection)
 
 # equal or c == 0 but we dont want to return pc.Or instead of pc.equal
 #evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_intersection)
@@ -196,6 +198,14 @@ evaluator.add_rule(pc.derivative(pc.log(s.x),s.x),1/s.x)
 evaluator.add_rule(pc.derivative(pc.sin(s.x),s.x),pc.cos(s.x))
 evaluator.add_rule(pc.derivative(pc.cos(s.x),s.x),-pc.sin(s.x))
 
+# TODO: Add assumptions to expressions: the following is only valid if x != -1,1 or x != -i,i
+evaluator.add_rule(pc.derivative(pc.asin(s.x),s.x),1/pc.sqrt(1-s.x**2))
+evaluator.add_rule(pc.derivative(pc.acos(s.x),s.x),-1/pc.sqrt(1-s.x**2))
+evaluator.add_rule(pc.derivative(pc.atan(s.x),s.x),1/(1+s.x**2))
+evaluator.add_rule(pc.derivative(pc.acot(s.x),s.x),-1/(1+s.x**2))
+
+
+
 evaluator.add_rule(pc.derivative(s.x**s.n,s.x),s.n*s.x**(s.n-1),condition=(pc.equal(pc.Type(s.n))));
 evaluator.add_rule(pc.derivative(s.a**s.b,s.x),pc.derivative(s.b*pc.log(s.a),s.x)*s.a**s.b);
 
@@ -232,10 +242,9 @@ main_evaluator = pc.MultiEvaluator(recursive = True, split_binary=True)
 main_evaluator.add_evaluator(canonical_form)
 main_evaluator.add_evaluator(numeric_evaluator)
 main_evaluator.add_evaluator(evaluator)
+main_evaluator.add_evaluator(factor_evaluator)
 main_evaluator.add_evaluator(type_evaluator)
 main_evaluator.add_evaluator(logic_evaluator)
-
-
 
 
 

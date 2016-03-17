@@ -5,6 +5,7 @@ import logic_evaluator
 import numeric_evaluator
 import type_evaluator
 import main_evaluator
+import expand_evaluator
 
 __cached_evaluators = {}
 __use_global_cache = False
@@ -46,6 +47,12 @@ def set_debug(v):
     if v:
         main_evaluator.main_evaluator.set_rule_callback(callback)
         canonical_form.format_evaluator.set_rule_callback(callback)
+        expand_evaluator.expand_evaluator.set_rule_callback(callback)
     else:
         main_evaluator.main_evaluator.set_rule_callback(None)
         canonical_form.format_evaluator.set_rule_callback(None)
+        expand_evaluator.expand_evaluator.set_rule_callback(None)
+
+def expand(expr,**kwargs):
+    return canonical_form.format_evaluator(expand_evaluator.expand_evaluator(expr,**kwargs),**kwargs)
+
