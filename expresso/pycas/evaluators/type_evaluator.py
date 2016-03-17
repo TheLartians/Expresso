@@ -16,6 +16,16 @@ for i in range(len(ordered_types)):
     for j in range(i):
       evaluator.add_rule(pc.DominantType(ordered_types[j],ordered_types[i]),ordered_types[i])
 
+def eval_type_equality(m):
+    tx = m[s.x]
+    ty = m[s.y]
+    if tx in ordered_types and ty in ordered_types:
+        m[s.z] = tx == ty
+        return True
+    return False
+
+evaluator.add_rule(pc.equal(s.x,s.y),False,eval_type_equality)
+
 evaluator.add_rule(pc.Type(pc.Types.Imaginary*pc.Types.Complex),pc.Types.Complex)
 evaluator.add_rule(pc.DominantType(s.x,s.x),s.x)
 

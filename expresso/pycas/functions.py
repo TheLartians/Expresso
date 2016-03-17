@@ -111,6 +111,9 @@ class Types:
   Type = create_type('Type')
 
 
+def is_in_type(expression,type):
+    return equal(DominantType(Type(expression),type),type)
+
 # Custom Function
 # ---------------
 

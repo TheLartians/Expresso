@@ -127,7 +127,7 @@ latex.register_printer(Abs,lambda p,e: r"\left| %s \right|" % p(e.args[0]))
 
 
 latex.register_printer(tmp,lambda p,e: p.print_postfix_operator(e,r"'"))
-latex.register_printer(sqrt,lambda p,e:r"\sqrt{%s} '" % p(e.args[0]))
+latex.register_printer(sqrt,lambda p,e:r"\sqrt{%s} " % p(e.args[0]))
 
 latex.register_printer(real,lambda p,e: p.print_function(e,r"\Re "))
 latex.register_printer(imag,lambda p,e: p.print_function(e,r"\Im "))
