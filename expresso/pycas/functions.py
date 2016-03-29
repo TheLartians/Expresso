@@ -233,7 +233,7 @@ def parameter(name,value):
     @latex.register_target(svalue)
     @printer.register_target(svalue)
     def print_value(printer,expr):
-        return name
+        return printer.format_name(name)
 
     svalue.set_value = set_value
     svalue.get_value = get_value
