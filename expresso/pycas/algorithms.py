@@ -79,10 +79,8 @@ def split(args,condition):
             r2.append(arg)
     return r1,r2
 
-def get_factor(expr,term):
-    from .expression import postorder_traversal
-    return (expr.function(*split(expand(expr).args,lambda e:term in postorder_traversal(e))[0])/term).evaluate()
-
+def get_coefficient(expr,term):
+    return (expr.function(*split(expr.args,lambda e:term in e.args)[0])/term).evaluate()
 
 
 

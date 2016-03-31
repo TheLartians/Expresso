@@ -159,7 +159,7 @@ def get_example_arg(args):
     for arg in args.values():
         if hasattr(arg,"__len__"):
             return arg
-    return args.values()[1]
+    return args.values()[0]
 
 
 def prepare_arguments(args):
