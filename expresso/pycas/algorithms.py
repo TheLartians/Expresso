@@ -79,8 +79,23 @@ def split(args,condition):
             r2.append(arg)
     return r1,r2
 
+def term_decomposition(expr):
+    import expresso.pycas as pc
+
+    if expr.function == pc.multiplication:
+        return [item for term in expr.args for item in term_decomposition(term)]
+    elif expr.function == pc.exponentiation:
+        e = expr.args[1]
+        return [term**e for term in term_decomposition(expr.args[0])]
+    elif expr.function == pc.negative:
+        return [-1] + term_decomposition(expr.args[0])
+    elif expr.function == pc.fraction:
+        return [1/term for term in term_decomposition(expr.args[0])]
+    else:
+        return [expr]
+
 def get_coefficient(expr,term):
-    return (expr.function(*split(expr.args,lambda e:term in e.args)[0])/term).evaluate()
+    return (expr.function(*split(expr.args,lambda e:term in term_decomposition(e))[0])/term).evaluate()
 
 
 
