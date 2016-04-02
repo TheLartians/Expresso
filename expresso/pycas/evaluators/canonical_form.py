@@ -55,7 +55,7 @@ canonical_form.add_rule(pc.cot(s.x),pc.cos(s.x)/pc.sin(s.x))
 
 #canonical_form.add_rule(abs(s.x)<s.y,pc.And(s.x<s.y,-s.x<s.y),condition=pc.And(s.y>0,pc.equal(pc.DominantType(pc.Type(s.x),pc.Types.Real),pc.Types.Real)))
 
-
+from .type_evaluator import issubtype
 
 format_evaluator = pc.RewriteEvaluator(recursive=True,split_binary=True)
 format_evaluator.add_rule(s.x**-1,1/s.x)
@@ -64,13 +64,13 @@ format_evaluator.add_rule(pc.e**s.x,pc.exp(s.x))
 format_evaluator.add_rule(s.x**(1/pc.S(2)),pc.sqrt(s.x))
 
 
-format_evaluator.add_rule(pc.sqrt(s.x)*pc.sqrt(s.y),pc.sqrt(s.x*s.y))
-format_evaluator.add_rule(pc.sqrt(s.x)/pc.sqrt(s.y),pc.sqrt(s.x/s.y))
+format_evaluator.add_rule(pc.sqrt(s.x)*pc.sqrt(s.y),pc.sqrt(s.x*s.y),condition=pc.Or(s.x>0,s.y>0))
+format_evaluator.add_rule(pc.sqrt(s.x)/pc.sqrt(s.y),pc.sqrt(s.x/s.y),condition=pc.Or(s.x>0,s.y>0))
 
 
-format_evaluator.add_rule(s.x**s.a/s.y**s.a,(s.x/s.y)**s.a)
-format_evaluator.add_rule(s.x**s.a*s.y**s.a,(s.x*s.y)**s.a)
-format_evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x/s.y)**s.a)
+format_evaluator.add_rule(s.x**s.a/s.y**s.a,(s.x/s.y)**s.a,condition=pc.Or(s.x>0,s.y>0,issubtype(s.a,pc.Types.Integer)))
+format_evaluator.add_rule(s.x**s.a*s.y**s.a,(s.x*s.y)**s.a,condition=pc.Or(s.x>0,s.y>0,issubtype(s.a,pc.Types.Integer)))
+format_evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x/s.y)**s.a,condition=pc.Or(s.x>0,s.y>0,issubtype(s.a,pc.Types.Integer)))
 
 format_evaluator.add_rule(pc.Min(s.a,-s.a),-abs(s.a))
 format_evaluator.add_rule(pc.Min(-s.a,s.a),-abs(s.a))

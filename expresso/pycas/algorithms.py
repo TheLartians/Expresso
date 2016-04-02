@@ -95,7 +95,10 @@ def term_decomposition(expr):
         return [expr]
 
 def get_coefficient(expr,term):
-    return (expr.function(*split(expr.args,lambda e:term in term_decomposition(e))[0])/term).evaluate()
+    t = split(expr.args,lambda e:term in term_decomposition(e))[0]
+    if len(t) == 0:
+        return 0
+    return (expr.function(*t)/term).evaluate()
 
 
 

@@ -32,7 +32,15 @@ evaluator.add_rule((-s.x)**(s.a), s.x**s.a ,condition=is_even(s.a))
 evaluator.add_rule((-s.x)**(s.a), -(s.x)**s.a ,condition=is_uneven(s.a))
 
 
-factor_evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x*s.y**-1)**s.a)
+from .type_evaluator import issubtype
+
+
+factor_evaluator.add_rule(s.x**s.n*s.y**-s.n,(s.x*s.y**-1)**s.a,condition=pc.Or(s.y>0,issubtype(s.n,pc.Types.Integer)))
+
+
+factor_evaluator.add_rule(s.x**s.a/s.y**s.a,(s.x/s.y)**s.a,condition=pc.Or(s.x>0,s.y>0,issubtype(s.a,pc.Types.Integer)))
+factor_evaluator.add_rule(s.x**s.a*s.y**s.a,(s.x*s.y)**s.a,condition=pc.Or(s.x>0,s.y>0,issubtype(s.a,pc.Types.Integer)))
+factor_evaluator.add_rule(s.x**s.a*s.y**-s.a,(s.x/s.y)**s.a,condition=pc.Or(s.x>0,s.y>0,issubtype(s.a,pc.Types.Integer)))
 
 
 factor_evaluator.add_rule(s.x**s.n*s.x, s.x**(s.n+1))
@@ -41,7 +49,7 @@ factor_evaluator.add_rule(s.x**s.n*s.x**s.m, s.x**(s.n+s.m))
 
 from logic_evaluator import is_explicit_natural
 
-evaluator.add_rule(s.a**s.x*s.b**s.x, (s.a*s.b)**(s.x), condition=pc.Not(pc.Or(is_explicit_natural(s.a),is_explicit_natural(s.b))))
+evaluator.add_rule(s.a**s.x*s.b**s.x, (s.a*s.b)**(s.x), condition=pc.And(pc.Not(pc.Or(is_explicit_natural(s.a),is_explicit_natural(s.b))),pc.Or(issubtype(s.x,pc.Types.Natural),s.a>0,s.b>0)))
 
 evaluator.add_rule(-(s.x+s.y), -s.x-s.y)
 evaluator.add_rule(s.x*-1, -s.x)
@@ -64,33 +72,11 @@ def extract_intersection(m):
     m[s.b] = (mb-common).as_expression()
     m[s.c] = common.as_expression()
 
-# TODO: implement commutative mulplicity list
-'''
-def extract_sum_intersection(m):
-    ma = pc.MulplicityList(m[s.x],pc.addition_group,pc.multiplication,pc.real_field)
-    mb = pc.MulplicityList(m[s.y],pc.addition_group,pc.multiplication,pc.real_field)
-    common = ma.intersection(mb)
-    if len(common) == 0:
-        return False
-    
-    m[s.a] = (ma-common).as_expression()
-    m[s.b] = (mb-common).as_expression()
-    m[s.c] = common.as_expression()
-'''
 
 
 factor_evaluator.add_rule(s.x+s.y, s.c*(s.a+s.b), extract_intersection)
 factor_evaluator.add_rule(s.x-s.y, s.c*(s.a-s.b), extract_intersection)
 factor_evaluator.add_rule(-s.x-s.y, -s.c*(s.a+s.b), extract_intersection)
-
-# equal or c == 0 but we dont want to return pc.Or instead of pc.equal
-#evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_intersection)
-#evaluator.add_rule(pc.equal(s.x,-s.y), pc.equal(s.a,s.b), extract_intersection)
-
-#evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_sum_intersection)
-#evaluator.add_rule(pc.equal(s.x,-s.y), pc.equal(s.a,-s.b), extract_sum_intersection)
-#evaluator.add_rule(pc.equal(s.x,s.y), pc.equal(s.a,s.b), extract_sum_intersection)
-
 
 def extract_comp_mul_intersection(m):
 
@@ -111,8 +97,6 @@ def extract_comp_mul_intersection(m):
 
 evaluator.add_rule(-s.x<-s.y, s.y<s.x)
 
-#evaluator.add_rule(s.x<s.y, s.a<s.b, extract_sum_intersection)
-
 
 evaluator.add_rule(s.x<s.y, pc.sign(s.c)*s.a<pc.sign(s.c)*s.b, extract_comp_mul_intersection)
 evaluator.add_rule(s.x<-s.y, pc.sign(s.c)*s.a<-pc.sign(s.c)*s.b, extract_comp_mul_intersection)
@@ -132,7 +116,7 @@ evaluator.add_rule(pc.sign(s.a**s.n),pc.sign(s.a),condition=is_uneven(s.n))
 from .logic_evaluator import is_function_type
 
 def evaluate_fraction(m):
-    ex,ey = m[s.x],m[s.y]**m[s.z]
+    ex,ey = m[s.x],m[s.y]**m[s.n]
     ma = pc.MulplicityList(ex,pc.multiplication_group,pc.exponentiation,pc.real_field)
     mb = pc.MulplicityList(ey,pc.multiplication_group,pc.exponentiation,pc.real_field)
 
@@ -153,7 +137,7 @@ def evaluate_fraction(m):
 
     m[s.c] = (ma+mb).as_expression()
 
-evaluator.add_rule(s.x*s.y**s.z, s.c, evaluate_fraction)
+evaluator.add_rule(s.x*s.y**s.n, s.c, evaluate_fraction,condition=issubtype(s.n,pc.Types.Integer))
 
 
 evaluator.add_rule(pc.log(pc.e), 1)
