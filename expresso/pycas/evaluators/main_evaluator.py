@@ -23,19 +23,18 @@ evaluator.add_rule(s.x*s.x**-1, 1)
 evaluator.add_rule((s.x**s.a)**s.b, s.x**(s.a*s.b),condition=pc.equal(pc.DominantType(pc.Type(s.b),pc.Types.Integer),pc.Types.Integer))
 
 from .numeric_evaluator import is_even,is_uneven
+from .type_evaluator import issubtype
 
-evaluator.add_rule((s.x**s.a)**(s.a**-1), abs(s.x),condition=is_even(s.a))
-evaluator.add_rule((s.x**s.a)**(s.a**-1), s.x,condition=is_uneven(s.a))
+evaluator.add_rule((s.x**s.a)**(s.a**-1), abs(s.x),condition=pc.And( issubtype(s.x,pc.Types.Real),is_even(s.a) ) )
+evaluator.add_rule((s.x**s.a)**(s.a**-1), s.x,condition=pc.And( issubtype(s.x,pc.Types.Real),is_uneven(s.a)))
 
 
 evaluator.add_rule((-s.x)**(s.a), s.x**s.a ,condition=is_even(s.a))
 evaluator.add_rule((-s.x)**(s.a), -(s.x)**s.a ,condition=is_uneven(s.a))
 
 
-from .type_evaluator import issubtype
 
-
-factor_evaluator.add_rule(s.x**s.n*s.y**-s.n,(s.x*s.y**-1)**s.a,condition=pc.Or(s.y>0,issubtype(s.n,pc.Types.Integer)))
+factor_evaluator.add_rule(s.x**s.n*s.y**-s.n,(s.x*s.y**-1)**s.n,condition=pc.Or(s.y>0,issubtype(s.n,pc.Types.Integer)))
 
 
 factor_evaluator.add_rule(s.x**s.a/s.y**s.a,(s.x/s.y)**s.a,condition=pc.Or(s.x>0,s.y>0,issubtype(s.a,pc.Types.Integer)))

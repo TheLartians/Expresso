@@ -5,8 +5,11 @@
 
 #include <algorithm>
 
-
 //#define VERBOSE
+
+#ifdef VERBOSE
+#include <iostream>
+#endif
 
 namespace expresso {
   
