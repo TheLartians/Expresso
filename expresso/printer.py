@@ -119,7 +119,7 @@ class LatexPrinter(Printer):
         super(LatexPrinter,self).__init__(*args,**kwargs)
 
         self.latex_replacements = {}
-        self.latex_replacements.update({w:r'\%s ' % w for w in ['Delta', 'Gamma', 'Lambda', 'Omega', 'Phi', 'Pi', 'Psi', 'Sigma', 'Theta', 'Upsilon', 'Xi', 'alpha', 'beta', 'chi', 'delta', 'epsilon', 'eta', 'gamma', 'kappa', 'lambda', 'mu', 'nabla', 'nu', 'omega', 'phi', 'pi', 'psi', 'rho', 'sigma', 'tau', 'theta', 'upsilon', 'varepsilon', 'varphi', 'varpi', 'varrho', 'varsigma', 'vartheta', 'xi', 'zeta']})
+        self.latex_replacements.update({w:r'\%s ' % w for w in ['Delta', 'Gamma', 'Lambda', 'Omega', 'Phi', 'Pi', 'Psi', 'Sigma', 'Theta', 'Upsilon', 'Xi', 'alpha', 'beta', 'chi', 'delta', 'epsilon', 'eta', 'gamma', 'kappa', 'lambda', 'mu', 'nabla', 'nu', 'omega', 'phi', 'pi', 'psi', 'rho', 'sigma', 'tau', 'theta', 'upsilon', 'varepsilon', 'varphi', 'varpi', 'varrho', 'varsigma', 'vartheta', 'xi', 'zeta', 'hbar']})
 
     @visitor.on('expr',parent = Printer)
     def visit(self,expr):
@@ -150,9 +150,9 @@ class LatexPrinter(Printer):
                     space_parts[i2] = self.latex_replacements[p2]
                 elif len(p2) > 1:
                     space_parts[i2] = r'\text{%s} ' % p2
-            underscore_parts[i] = ' '.join(space_parts)
+            underscore_parts[i] = '\; '.join(space_parts)
 
-        return reduce(lambda p1,p2:'{%s}_{%s}' % (p2,p1),underscore_parts[::-1])
+        return reduce(lambda p1,p2:'{%s}_{%s} ' % (p2,p1),underscore_parts[::-1])
 
     def print_wildcard_function(self,expr):
         f = expr.function

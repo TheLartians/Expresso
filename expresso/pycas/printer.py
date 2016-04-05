@@ -192,8 +192,7 @@ def visit(printer,expr):
 @add_target(printer,ArrayAccess)
 def visit(printer,expr):
     name = printer.format_name(expr.args[0].name.split('__id')[0])
-    return r'%s[ %s \right]' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
-
+    return r'%s[%s]' % (name,','.join([printer(arg) for arg in expr.args[1:]]))
 
 @add_target_obj(printer, Number)
 def visit(printer,expr):

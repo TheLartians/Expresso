@@ -5,14 +5,16 @@
 
 #include <algorithm>
 
-
 //#define VERBOSE
+
+#ifdef VERBOSE
+#include <iostream>
+#endif
 
 namespace expresso {
   
   using namespace lars;
   
-
     EvaluatorVisitor::EvaluatorVisitor(const Evaluator &_evaluator,replacement_map & _cache):evaluator(_evaluator),cache(_cache){
 
     }
