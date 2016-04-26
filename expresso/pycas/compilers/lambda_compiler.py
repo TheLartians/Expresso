@@ -170,6 +170,13 @@ class LambdaCompiler(object):
             raise RuntimeError('folding unfoldable value')
         return self.visit(expr.args[0])
 
+    @visitor.function(f.Tuple)
+    def visit(self,expr):
+        arguments = [self.visit(arg) for arg in expr.args]
+        def make_tuple(args):
+            return tuple((arg(args) for arg in arguments))
+        return make_tuple
+
     @visitor.function(f.ArrayAccess)
     def visit(self,expr):
 
