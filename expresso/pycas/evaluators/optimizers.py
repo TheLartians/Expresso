@@ -35,7 +35,7 @@ compiler_opt_evaluator.add_evaluator(logic_evaluator)
 
 def optimize_for_compilation(expr,cache = None,prec=20):
     global fold_accuracy
-    fold_accuracy = 20
+    fold_accuracy = prec
     opt = None
 
     # TODO: why do we need to evaluate multiple times?
