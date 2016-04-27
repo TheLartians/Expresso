@@ -201,6 +201,16 @@ evaluator.add_rule(pc.OuterPiecewise(s.a)**s.x,pc.OuterPiecewise(s.a**s.x))
 evaluator.add_rule(pc.InnerPiecewise((s.a,s.b),s.c)**s.x,pc.InnerPiecewise((s.a**s.x,s.b),pc.InnerPiecewise(s.c)**s.x))
 evaluator.add_rule(pc.InnerPiecewise((s.a,s.b))**s.x,(s.a**s.x,s.b))
 
+evaluator.add_rule(pc.real(s.x),(s.x + pc.conjugate(s.x))/2)
+evaluator.add_rule(pc.imag(s.x),(s.x - pc.conjugate(s.x))/2j)
+
+evaluator.add_rule(pc.conjugate(s.x),s.x,condition=issubtype(s.x,pc.Types.Real))
+evaluator.add_rule(pc.conjugate(s.x),-s.x,condition=issubtype(s.x,pc.Types.Imaginary))
+evaluator.add_rule(pc.conjugate(s.x+s.y),pc.conjugate(s.x)+pc.conjugate(s.y))
+evaluator.add_rule(pc.conjugate(s.x*s.y),pc.conjugate(s.x)*pc.conjugate(s.y))
+evaluator.add_rule(pc.conjugate(-s.x),-pc.conjugate(s.x))
+evaluator.add_rule(pc.conjugate(1/s.x),1/pc.conjugate(s.x))
+evaluator.add_rule(pc.conjugate(s.x**-1),pc.conjugate(s.x)**-1)
 
 
 def create_tmp_x(m):

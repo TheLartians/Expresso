@@ -88,6 +88,15 @@ format_evaluator.add_rule(pc.Not(pc.equal(s.x,s.y)),pc.unequal(s.x,s.y));
 
 format_evaluator.add_rule(pc.Or(s.x<s.y,pc.equal(s.x,s.y)),s.x<=s.y)
 
+format_evaluator.add_rule((s.x + pc.conjugate(s.x)),2*pc.real(s.x))
+format_evaluator.add_rule((s.x - pc.conjugate(s.x)),2j*pc.imag(s.x))
+format_evaluator.add_rule(s.x/s.x,1)
+format_evaluator.add_rule(1*s.x,s.x)
+format_evaluator.add_rule(s.x/1,s.x)
+format_evaluator.add_rule(-1*s.x,-s.x)
+format_evaluator.add_rule(-1*-1,1)
+format_evaluator.add_rule(pc.I*pc.I,-1)
+
 
 
 

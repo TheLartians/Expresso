@@ -16,7 +16,10 @@ fold_accuracy = 20
 
 def fold(m):
     try:
-        m[s.y] = pc.expresso.create_object(m[s.x].N(fold_accuracy,folding=True))
+        res = m[s.x].N(fold_accuracy,folding=True)
+        if type(res) == tuple:
+            return False
+        m[s.y] = pc.expresso.create_object(res)
     except Exception as e:
         return False
 
@@ -30,13 +33,17 @@ compiler_opt_evaluator = pc.MultiEvaluator(recursive = True, split_binary=True)
 compiler_opt_evaluator.add_evaluator(compile_evaluator)
 compiler_opt_evaluator.add_evaluator(logic_evaluator)
 
-def optimize_for_compilation(expr,cache = None):
+def optimize_for_compilation(expr,cache = None,prec=20):
+    global fold_accuracy
+    fold_accuracy = 20
     opt = None
+
+    # TODO: why do we need to evaluate multiple times?
     N = 10
-    # TODO: This should make no difference
     while opt != expr and N>0:
         N -= 1
         opt = expr
         expr = compiler_opt_evaluator(expr, cache = cache)
+
     return format_evaluator(expr, cache = cache)
 
