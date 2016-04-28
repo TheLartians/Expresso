@@ -186,6 +186,10 @@ class Expression(expresso.WrappedExpression(expression_converter)):
         from compilers import N
         return N(self,mp_dps=prec,**kwargs)
 
+    def approximate(self,prec = 16,**kwargs):
+        from expresso.pycas.evaluators.optimizers import optimize_for_compilation
+        return optimize_for_compilation(self,prec=prec,**kwargs)
+
     def __float__(self):
         v = self.evaluate().N()
         try:
@@ -211,7 +215,6 @@ class Expression(expresso.WrappedExpression(expression_converter)):
             return long(v)
         except:
             raise RuntimeError('expression %s is not convertable to long' % self)
-
 
 locals().update(expresso.WrappedExpressionTypes(Expression).__dict__)
 

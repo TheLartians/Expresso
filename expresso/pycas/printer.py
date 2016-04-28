@@ -125,6 +125,8 @@ printer.register_printer(I,lambda p,e:r'i')
 
 latex.register_printer(Abs,lambda p,e: r"\left| %s \right|" % p(e.args[0]))
 
+latex.register_printer(conjugate,lambda p,e: r"\overline{ %s }" % p(e.args[0]))
+
 
 latex.register_printer(tmp,lambda p,e: p.print_postfix_operator(e,r"'"))
 latex.register_printer(sqrt,lambda p,e:r"\sqrt{%s} " % p(e.args[0]))
