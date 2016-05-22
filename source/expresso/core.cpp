@@ -92,9 +92,8 @@ namespace expresso {
         if(op && op->get_name() == get_name()){
           it = args.erase(it);
           
-          for(auto &arg:op->arguments){
-            it = args.insert(it, arg) + op->arguments.size();
-          }
+          args.insert(it,op->arguments.begin(), op->arguments.end());
+          it += op->arguments.size();
           
           // it = args.insert(it,op->arguments.begin(), op->arguments.end()) + op->arguments.size(); // if gcc fails here, upgrade to at least version 4.9
           
