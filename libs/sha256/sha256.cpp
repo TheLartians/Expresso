@@ -2,7 +2,8 @@
 #include <cstring>
 #include <fstream>
 #include <cstring>
-#include "sha256.h"
+
+#include "include/sha256/sha256.h"
 
 #define SHA2_SHFR(x, n)    (x >> n)
 #define SHA2_ROTR(x, n)   ((x >> n) | (x << ((sizeof(x) << 3) - n)))

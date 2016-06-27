@@ -83,6 +83,4 @@ namespace std{
 void sha256(std::string input,sha256_hash & hash);
 sha256_hash sha256(std::string input);
 
-
-
 #endif
