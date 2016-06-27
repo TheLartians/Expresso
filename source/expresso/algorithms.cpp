@@ -1,5 +1,5 @@
 
-#include "algorithms.h"
+#include <expresso/algorithms.h>
 
 #include <lars/iterators.h>
 #include <lars/set_operations.h>

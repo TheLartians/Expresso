@@ -1,5 +1,5 @@
 
-#include "core.h"
+#include <expresso/core.h>
 
 #include <lars/iterators.h>
 #include <lars/hashers.h>
@@ -168,7 +168,7 @@ namespace expresso {
   
   struct BasicPrinterVisitor:public Visitor{
     std::ostream & stream;
-    std::unordered_map<std::pair<string, string>, string,lars::tuple_hasher<string, string>> joint_operators;
+    std::unordered_map<std::pair<string, string>, string,lars::TupleHasher<string, string>> joint_operators;
     
     BasicPrinterVisitor(std::ostream & _stream):stream(_stream){
       //joint_operators[std::make_pair("*", "1/")] = "/";

@@ -60,6 +60,7 @@ endif(CREATE_PYTHON_TARGET)
 
 # ---- libs -----
 
+include_directories (${PROJECT_INCUDE_DIR})
 include_directories (${PROJECT_LIBS_DIR})
 
 if(NOT sha256_LIBRARIES)
