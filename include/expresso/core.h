@@ -21,7 +21,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
 #pragma once
 
 #include <memory>
@@ -203,6 +202,7 @@ namespace expresso {
     const string & get_name()const{ return name; }
     void accept(Visitor * v)const override{ v->visit(this); }
     using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Function>())return o->get_name() == get_name(); return false; }
+    
     virtual shared clone(argument_list && args)const{ return make_expression<Function>(get_name(),std::forward<argument_list>(args)); }
     shared clone(expression arg)const{ return clone(argument_list{arg}); }
     

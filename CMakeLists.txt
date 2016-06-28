@@ -83,6 +83,6 @@ include_directories(${Lars_INCLUDE_DIRS})
 # ---- export ----
 
 set(Expresso_LIBRARIES expresso CACHE STRING "Expresso libraries")
-set(Expresso_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE STRING "Expresso include dirs")
+set(Expresso_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include ${Lars_INCLUDE_DIRS} ${sha256_INCLUDE_DIRS} CACHE STRING "Expresso include dirs")
 
 

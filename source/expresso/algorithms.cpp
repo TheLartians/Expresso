@@ -427,7 +427,7 @@ namespace expresso {
       ++it2;
     }
     
-    return std::move(res);
+    return res;
   }
   
   mulplicity_list mulplicity_list::sum(const mulplicity_list &other)const{
@@ -463,7 +463,7 @@ namespace expresso {
       ++it2;
     }
     
-    return std::move(res);
+    return res;
   }
   
   mulplicity_list mulplicity_list::power(const expression &expr)const{
@@ -508,7 +508,7 @@ namespace expresso {
       }
     }
     
-    return std::move(res);
+    return res;
   }
   
   argument_list mulplicity_list::as_argument_list()const{
@@ -530,7 +530,7 @@ namespace expresso {
     }
     
     
-    return std::move(res);
+    return res;
   }
   
   expression mulplicity_list::as_expression()const{

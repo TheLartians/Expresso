@@ -5,9 +5,9 @@
 
 #include <algorithm>
 
-//#define VERBOSE
+//#define EXPRESSO_VERBOSE_EVALUATE
 
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
 #include <iostream>
 #endif
 
@@ -30,19 +30,19 @@ namespace expresso {
     }
     
     bool EvaluatorVisitor::is_cached(const Expression * e){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
       std::cout << "entering: " << *e << std::endl;
 #endif
       if(get_from_cache(e->get_shared(),copy)) {
         modified |= *e != *copy;
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
          std::cout << "cached: " << *e << " -> " << *copy << std::endl;
 #endif
         return true;
       }
       //TODO: we should figure out how check for infinite recursion without screwing up the evaluation process
       //if(expression_stack.find(*e) != expression_stack.end()){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
         //std::cout << "stopped recursion: " << *e << std::endl;
 #endif
         //copy = *e;
@@ -52,7 +52,7 @@ namespace expresso {
     }
     
     void EvaluatorVisitor::add_to_cache(expression e,expression res){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
       std::cout << "caching: " << e << " -> " << res << std::endl;
 #endif
       cache[e] = res;
@@ -63,7 +63,7 @@ namespace expresso {
       if(*copy != *e){
         modified = true;
         if(evaluator.settings.recursive){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
           std::cout << "Revisit: " << copy << " != " << *e << std::endl;
 #endif
           expression keep_reference = copy;
@@ -74,7 +74,7 @@ namespace expresso {
     }
   
   expression EvaluatorVisitor::evaluate(expression e){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
     std::cout << "Evaluate: " << e << std::endl;
 #endif
     copy = expression();
@@ -104,7 +104,7 @@ namespace expresso {
       if(modified){
         copy = e->clone(std::move(args));
         
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
         std::cout << "recursive copied expression: " << *e << " -> " << *copy << std::endl;
 #endif
         
@@ -123,7 +123,7 @@ namespace expresso {
     }
     
     void EvaluatorVisitor::visit(const Function * e){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
       std::cout << "visit function: " << *e << std::endl;
 #endif
       if(copy_function(e)) return;
@@ -139,7 +139,7 @@ namespace expresso {
       auto c = copy->static_as<BinaryOperator>();
       
       if(e->associativity == BinaryOperator::non_associative || c->arguments.size()<=evaluator.settings.split_binary_size){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
         std::cout << "visit binary as function: " << *e << std::endl;
 #endif
         auto tmp = copy;
@@ -182,7 +182,7 @@ namespace expresso {
         
         auto test = e->clone(std::move(CAargs));
         
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
         std::cout << "Binary window: " << *test << std::endl;
 #endif
         
@@ -228,7 +228,7 @@ namespace expresso {
     }
     
     void EvaluatorVisitor::visit(const BinaryOperator * e){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
       std::cout << "visit binary: " << *e << std::endl;
 #endif
       if(evaluator.settings.split_binary) visit_binary(e);
@@ -236,7 +236,7 @@ namespace expresso {
     }
     
     void EvaluatorVisitor::visit(const AtomicExpression * e){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
       std::cout << "visit atomic: " << *e << std::endl;
 #endif
       if(is_cached(e)) return;
@@ -379,7 +379,7 @@ namespace expresso {
   
   expression RuleEvaluator::evaluate(expression e,EvaluatorVisitor &v,std::vector<rule_id> m)const{
     
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
     std::cout << "entering rule evaluator: " << e << std::endl;
 #endif
 
@@ -446,7 +446,7 @@ namespace expresso {
       
       if(!valid) continue;
       
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
       std::cout << "matched " << current.rule.search << ", wildcards: ";
       for(auto r:wildcards){
         std::cout << "(" << r.first << "," << r.second << "),";
@@ -454,7 +454,7 @@ namespace expresso {
 #endif
       
       if(current.rule.condition){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
         std::cout << "checking condition on rule " << current.rule << std::endl;
         std::cout << replace(current.rule.condition,wildcards) << std::endl;
 #endif
@@ -469,7 +469,7 @@ namespace expresso {
       auto res = replace(current.rule.replacement, wildcards);
       
       if(res != e){
-#ifdef VERBOSE
+#ifdef EXPRESSO_VERBOSE_EVALUATE
         std::cout << "Apply: " << current.rule << ":" << std::endl;
         std::cout << replace(current.rule.search,wildcards) << " => " << replace(current.rule.replacement,wildcards) << std::endl;
 #endif
