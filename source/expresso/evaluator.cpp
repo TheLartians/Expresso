@@ -346,12 +346,12 @@ namespace expresso {
     
     auto insert_function = [&](expression &a){
       if(a->is<WildcardSymbol>()){
-        auto b = make_expression<WildcardSymbol>(std::to_string(wc_count++));
+        auto b = make_expression<WildcardSymbol>(lars::to_string(wc_count++));
         current.wildcard_mapping.insert(std::make_pair(b, a));
         a = b;
       }
       if(auto af = a->as<WildcardFunction>()){
-        auto b = make_expression<WildcardFunction>(std::to_string(wc_count++),af->arguments);
+        auto b = make_expression<WildcardFunction>(lars::to_string(wc_count++),af->arguments);
         current.wildcard_mapping.functions.insert(std::make_pair(b->as<WildcardFunction>()->get_id(), b));
         current.wildcard_mapping.insert(std::make_pair(b, a));
         a = b;
