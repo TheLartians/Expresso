@@ -198,6 +198,11 @@ namespace expresso {
     void accept(Visitor * v)const override{ v->visit(this); }
     using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Function>())return o->get_name() == get_name(); return false; }
     
+    
+    template <class Super> shared clone_with_type(argument_list && args)const{
+      return make_expression<Super>(get_name(),std::forward<argument_list>(args));
+    }
+    
     virtual shared clone(argument_list && args)const{ return make_expression<Function>(get_name(),std::forward<argument_list>(args)); }
     shared clone(expression arg)const{ return clone(argument_list{arg}); }
     
@@ -237,6 +242,11 @@ namespace expresso {
     UnaryOperator(const string &_symbol,fix_type _fix,int precedence,expression arg = expression()):Operator(string(_fix == prefix?"__prefix_":"__postfix_")+_symbol,_symbol,precedence,{arg}),fix(_fix){ }
     void accept(Visitor * v)const override{ v->visit(this); }
     using Function::clone;
+    
+    template <class Super> shared clone_with_type(argument_list && args)const{
+      return make_expression<Super>(get_name(),get_symbol(),fix,get_precedence(),std::forward<argument_list>(args));
+    }
+    
     shared clone(argument_list && args)const override{ return make_expression<UnaryOperator>(get_name(),get_symbol(),fix,get_precedence(),std::forward<argument_list>(args)); }
     bool is_prefix()const{ return fix == prefix; }
     bool is_postfix()const{ return fix == postfix; }
@@ -264,10 +274,16 @@ namespace expresso {
     BinaryOperator(const string &_symbol,associativity_type a,commutativity_type c,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,a,c),_symbol,precedence,std::forward<argument_list>(args)),associativity(a),commutativity(c){ finalize_arguments(argument_data); }
     BinaryOperator(const string &_symbol,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,non_associative,non_commutative),_symbol,precedence,std::forward<argument_list>(args)),associativity(non_associative),commutativity(non_commutative){ finalize_arguments(argument_data); }
     void accept(Visitor * v)const override{ v->visit(this); }
-    shared clone(argument_list && args,bool finalize)const{
+    
+    template <class Super> shared clone_with_type(argument_list && args,bool finalize = true)const{
       if(args.size() == 1){ return args[0]; }
-      return make_expression<BinaryOperator>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,finalize);
+      return make_expression<Super>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,finalize);
     }
+    
+    shared clone(argument_list && args,bool finalize)const{
+      return clone_with_type<BinaryOperator>(std::forward<argument_list>(args),finalize);
+    }
+    
     shared clone(argument_list && args)const override{ return clone(std::move(args),true); }
 
   };
