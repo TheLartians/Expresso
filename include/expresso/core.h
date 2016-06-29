@@ -368,7 +368,8 @@ namespace expresso {
     
   std::ostream & operator<<( std::ostream &stream,Expression::shared expr );
   std::ostream & operator<<( std::ostream &stream,const Expression &expr );
-
+  
+  bool needs_brackets_in(unsigned e, unsigned p ,bool sp = true);
   bool needs_brackets_in(const Expression::shared &expr,const Operator * parent,bool sp = true);
   
 }

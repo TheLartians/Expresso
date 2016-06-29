@@ -161,6 +161,10 @@ namespace expresso {
   
 #pragma mark Printing
   
+  bool needs_brackets_in(unsigned n,unsigned p,bool sp){
+    return sp ? p <= n : p < n;
+  }
+  
   bool needs_brackets_in(const Expression::shared &expr,const Operator * parent,bool sp){
     if(auto e = expr->as<Operator>() ) return sp?parent->get_precedence() <= e->get_precedence():parent->get_precedence() < e->get_precedence();
     return false;
