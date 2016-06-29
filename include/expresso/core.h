@@ -53,7 +53,7 @@ namespace expresso {
   class DataExpression;
   
   using string = lars::shared_object<std::string>;
-  
+
   struct Visitor{
     virtual void visit(const Function * e) = 0;
     virtual void visit(const AtomicExpression * e) = 0;
@@ -68,12 +68,7 @@ namespace expresso {
     virtual void visit(const CompressedNode * e){ visit((const Function*)e); }
     virtual void visit(const DataExpression * e){ visit((const AtomicExpression*)e); }
   };
-  
-  template <class Expr> struct DataVisitor:public virtual Visitor{
-    using Visitor::visit;
-    virtual void visit(const Expr * e){ Visitor::visit((const DataExpression*)e); }
-  };
-  
+
   class Expression:public std::enable_shared_from_this<Expression>{
     
   public:
@@ -311,7 +306,7 @@ namespace expresso {
       return false;
     }
     string get_representation()const override{ return representation; }
-    void accept(Visitor * v)const override{ if(auto * dv = dynamic_cast<DataVisitor<Data>*>(v)) dv->visit(this); v->visit(this); };
+    void accept(Visitor * v)const override{ v->visit(this); };
   };
     
   class MatchCondition:public Function{
@@ -358,6 +353,8 @@ namespace expresso {
   std::ostream & operator<<( std::ostream &stream,Expression::shared expr );
   std::ostream & operator<<( std::ostream &stream,const Expression &expr );
 
+  bool needs_brackets_in(const Expression::shared &expr,const Operator * parent,bool sp = true);
+  
 }
 
 #pragma mark -
