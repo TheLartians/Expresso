@@ -86,3 +86,6 @@ set(Expresso_LIBRARIES expresso CACHE STRING "Expresso libraries")
 set(Expresso_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include ${Lars_INCLUDE_DIRS} ${sha256_INCLUDE_DIRS} CACHE STRING "Expresso include dirs")
 
 
+install (TARGETS expresso DESTINATION lib)
+
+
