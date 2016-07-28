@@ -183,7 +183,6 @@ namespace expresso {
     using argument_list = std::vector<shared>;
     
   private:
-    
     const string name;
     void generate_hash(sha256_hash &hash)const override;
     
@@ -191,13 +190,13 @@ namespace expresso {
     mutable argument_list argument_data;
     
   public:
-    const argument_list &arguments;
+    const argument_list &arguments = argument_data;
     
+    Function(const Function &other):Expression(other),name(other.name),argument_data(other.argument_data){  }
     Function(const string &_name,argument_list && _args = argument_list());
     const string & get_name()const{ return name; }
     void accept(Visitor * v)const override{ v->visit(this); }
     using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Function>())return o->get_name() == get_name(); return false; }
-    
     
     template <class Super> shared clone_with_type(argument_list && args)const{
       return make_expression<Super>(get_name(),std::forward<argument_list>(args));
