@@ -3,11 +3,12 @@
 
 #include <lars/iterators.h>
 #include <lars/hashers.h>
+#include <lars/stream.h>
+
 #include <stdexcept>
 #include <cstdlib>
 #include <cmath>
 #include <stdio.h>
-
 #include <iostream>
 
 namespace expresso {
@@ -170,11 +171,11 @@ namespace expresso {
     return false;
   }
   
-  struct BasicPrinterVisitor:public Visitor{
-    std::ostream & stream;
+  template <typename Stream> struct BasicPrinterVisitor:public Visitor{
+    Stream & stream;
     std::unordered_map<std::pair<string, string>, string,lars::TupleHasher<string, string>> joint_operators;
     
-    BasicPrinterVisitor(std::ostream & _stream):stream(_stream){
+    BasicPrinterVisitor(Stream & _stream):stream(_stream){
       //joint_operators[std::make_pair("*", "1/")] = "/";
       //joint_operators[std::make_pair("+", "-")] = "-";
     }
@@ -269,15 +270,27 @@ namespace expresso {
   };
   
   std::ostream & operator<<( std::ostream &stream,const Expression &expr ){
-    BasicPrinterVisitor v(stream);
+    BasicPrinterVisitor<std::ostream> v(stream);
     expr.accept(&v);
     return stream;
   }
   
   std::ostream & operator<<( std::ostream &stream,Expression::shared expr ){
-    BasicPrinterVisitor v(stream);
+    BasicPrinterVisitor<std::ostream> v(stream);
     expr->accept(&v);
     return stream;
   }
-
+  
+  std::wostream & operator<<( std::wostream &stream,const Expression &expr ){
+    BasicPrinterVisitor<std::wostream> v(stream);
+    expr.accept(&v);
+    return stream;
+  }
+  
+  std::wostream & operator<<( std::wostream &stream,Expression::shared expr ){
+    BasicPrinterVisitor<std::wostream> v(stream);
+    expr->accept(&v);
+    return stream;
+  }
+  
 }

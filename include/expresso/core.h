@@ -364,9 +364,12 @@ namespace expresso {
     shared clone(argument_list && args)const override{ return make_expression<CompressedNode>(indices,reverse_indices,arguments); }
     expression extract(ID idx)const;
   };
-    
+  
   std::ostream & operator<<( std::ostream &stream,Expression::shared expr );
   std::ostream & operator<<( std::ostream &stream,const Expression &expr );
+  
+  std::wostream & operator<<( std::wostream &stream,Expression::shared expr );
+  std::wostream & operator<<( std::wostream &stream,const Expression &expr );
   
   bool needs_brackets_in(unsigned e, unsigned p ,bool sp = true);
   bool needs_brackets_in(const Expression::shared &expr,const Operator * parent,bool sp = true);
