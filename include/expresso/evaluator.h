@@ -55,7 +55,7 @@ namespace expresso {
       std::vector<unsigned> indices;
       unsigned N;
       unsigned size;
-      Window(unsigned _N = 2):N(_N){}
+      Window(unsigned _Android_sucks_N = 2):N(_Android_sucks_N){}
       void init(const BinaryOperator * op)override{ size = op->arguments.size(); indices.resize(std::min(size,N)); for(auto i:range(std::min(size,N))) indices[i] = i; }
       const std::vector<unsigned> & get_indices()override{ return indices; }
       bool step()override{ for(auto &i:indices)i++; return indices.back() != size;  }
@@ -65,7 +65,7 @@ namespace expresso {
     struct SingleOrdered:public BinaryIterator{
       subarray_indices::iterator it;
       unsigned N;
-      SingleOrdered(unsigned _N = 2):N(_N){}
+      SingleOrdered(unsigned _Android_sucks_N = 2):N(_Android_sucks_N){}
       void init(const BinaryOperator * op)override{ unsigned s = op->arguments.size(); it.init(std::min(s,N),s); }
       const std::vector<unsigned> & get_indices()override{ return *it; }
       bool step()override{ return it.step(); }
@@ -75,7 +75,7 @@ namespace expresso {
     struct SingleUnordered:public BinaryIterator{
       permutated_subarray_indices::iterator it;
       unsigned N;
-      SingleUnordered(unsigned _N = 2):N(_N){}
+      SingleUnordered(unsigned _Android_sucks_N = 2):N(_Android_sucks_N){}
       void init(const BinaryOperator * op)override{ unsigned s = op->arguments.size(); it.init(std::min(s,N),s); }
       const std::vector<unsigned> & get_indices()override{ return *it; }
       bool step()override{ return it.step(); }

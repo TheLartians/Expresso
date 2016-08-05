@@ -374,6 +374,7 @@ namespace expresso {
   
   bool needs_brackets_in(unsigned e, unsigned p ,bool sp = true);
   bool needs_brackets_in(const Expression::shared &expr,const Operator * parent,bool sp = true);
+  inline bool needs_brackets_in(const Expression::shared &expr,const Operator & parent,bool sp = true){ return needs_brackets_in(expr,&parent,sp); }
   
 }
 
