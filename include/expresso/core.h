@@ -117,6 +117,7 @@ namespace expresso {
     
     // properties
     virtual bool is_identical(const Expression * other) const = 0;
+    bool is_identical(const Expression & other) const{ return is_identical(&other); }
     bool is_identical(const shared &other)const{ return is_identical(other.get()); }
     
     // hash
@@ -162,7 +163,7 @@ namespace expresso {
     Symbol(string _name):name(_name){}
     using AtomicExpression::accept;
     void accept(Visitor * v)const override{ v->visit(this); };
-    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Symbol>()) return o->name==name; return false; }
+    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = dynamic_cast<const Symbol *>(other)) return o->name==name; return false; }
     string get_representation()const override{ return name; }
     const string & get_name()const{ return name; }
   };
@@ -174,7 +175,7 @@ namespace expresso {
     WildcardSymbol(const string &_id,bool _open = false):id(_id){}
     const string & get_id() const { return id; }
     void accept(Visitor * v)const override{ v->visit(this); }
-    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<WildcardSymbol>()) return o->get_id()==get_id(); return false; }
+    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = dynamic_cast<const WildcardSymbol *>(other)) return o->get_id()==get_id(); return false; }
     string get_representation()const override{ return string("$") + get_id(); }
   };
   
@@ -196,7 +197,7 @@ namespace expresso {
     Function(const string &_name,argument_list && _args = argument_list());
     const string & get_name()const{ return name; }
     void accept(Visitor * v)const override{ v->visit(this); }
-    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Function>())return o->get_name() == get_name(); return false; }
+    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = dynamic_cast<const Function *>(other)) return o->get_name() == get_name(); return false; }
     
     template <class Super> shared clone_with_type(argument_list && args)const{
       return make_expression<Super>(get_name(),std::forward<argument_list>(args));
@@ -218,7 +219,7 @@ namespace expresso {
     const string & get_id() const { return id; }
     void accept(Visitor * v)const override{ v->visit(this); }
     shared clone(argument_list && args)const override{ return make_expression<WildcardFunction>(get_id(),std::forward<argument_list>(args)); }
-    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<WildcardFunction>()) return o->get_id()==get_id(); return false; }
+    using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = dynamic_cast<const WildcardFunction *>(other)) return o->get_id()==get_id(); return false; }
   };
   
   class Operator:public Function{
@@ -317,7 +318,7 @@ namespace expresso {
     using AtomicExpression::accept;
     //using Expression::is_identical; bool is_identical(const Expression * other)const override{ if(auto o = other->as<Data<value_type>>()) return o->get_value() == get_value(); return false; }
     using Expression::is_identical; bool is_identical(const Expression * other)const override{
-      if(auto o = other->as<Data<value_type>>()) return representation == o->representation;
+      if(auto o = dynamic_cast<const Data<value_type> *>(other)) return representation == o->representation;
       return false;
     }
     string get_representation()const override{ return representation; }
