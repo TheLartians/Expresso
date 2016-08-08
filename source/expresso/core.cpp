@@ -166,6 +166,10 @@ namespace expresso {
     return sp ? p <= n : p < n;
   }
   
+  bool needs_brackets_in(const Operator * e,const Operator * parent,bool sp){
+    return sp?parent->get_precedence() <= e->get_precedence():parent->get_precedence() < e->get_precedence();
+  }
+  
   bool needs_brackets_in(const Expression::shared &expr,const Operator * parent,bool sp){
     if(auto e = expr->as<Operator>() ) return sp?parent->get_precedence() <= e->get_precedence():parent->get_precedence() < e->get_precedence();
     return false;
