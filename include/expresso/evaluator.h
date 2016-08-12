@@ -37,6 +37,7 @@ namespace expresso {
     virtual const std::vector<unsigned> & get_indices() = 0;
     virtual bool step() = 0;
     virtual std::shared_ptr<BinaryIterator> clone()const = 0;
+    virtual ~BinaryIterator(){}
   };
   
   namespace BinaryIterators {
@@ -128,6 +129,8 @@ namespace expresso {
 
     expression operator()(expression e)const{ return run(e); }
     expression operator()(expression e,replacement_map &cache)const{ return run(e,cache); }
+  
+    virtual ~Evaluator(){}
   };
   
   template <typename F> class FunctionEvaluator:public Evaluator{
@@ -135,6 +138,7 @@ namespace expresso {
   public:
     FunctionEvaluator(F f):function(f){  }
     virtual expression evaluate(expression expr)const{ return function(expr); }
+    
   };
   
   template <typename F> FunctionEvaluator<F> create_function_evaluator(F f){ return FunctionEvaluator<F>(f); }

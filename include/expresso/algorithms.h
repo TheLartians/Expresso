@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <functional>
 #include <iterator>
+#include <deque> // HACK
 
 namespace expresso{
   
@@ -111,7 +112,8 @@ namespace expresso{
     public:
     
     expression_location index_stack;
-    std::vector<expression> expression_stack;
+    // std::vector<expression> expression_stack;
+    std::deque<expression> expression_stack; // HACK
     
   public:
     expression replace_current(const expression &)const;
@@ -126,6 +128,8 @@ namespace expresso{
     
     const expression &outer()const{ return expression_stack.front(); }
     unsigned depth(){ return expression_stack.size(); }
+    
+    virtual ~expression_iterator(){}
   };
   
   class stack_based_expression_iterator:public expression_iterator{

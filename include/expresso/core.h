@@ -67,6 +67,8 @@ namespace expresso {
     virtual void visit(const MatchCondition * e){ visit((const Function*)e); }
     virtual void visit(const CompressedNode * e){ visit((const Function*)e); }
     virtual void visit(const DataExpression * e){ visit((const AtomicExpression*)e); }
+    
+    virtual ~Visitor(){}
   };
 
   class Expression:public std::enable_shared_from_this<Expression>{

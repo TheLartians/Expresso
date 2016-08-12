@@ -769,6 +769,7 @@ namespace expresso {
     }
     
     return rep_expr->clone(std::move(args), false);
+    
   }
   
   commutative_permutations::iterator & commutative_permutations::iterator::operator++(){
