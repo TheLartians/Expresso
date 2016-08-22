@@ -294,7 +294,184 @@ namespace expresso {
         get_matches(expr, searches, wildcards,matches);
         return matches;
       }
+  
+#pragma mark CompressedTreeMatcher
+
+  void CompressedTreeMatcher::commutative_insert(const expression & e,size_t index){
+    std::vector<expression> inserted;
+    replacement_map wc;
+    for(auto p:commutative_permutations(e)){
+      bool valid = true;
+      
+      for(auto &s:inserted){
+        wc.clear();
+        if(match(s, p, wc)){
+          valid = false;
+          break;
+        }
+      }
+      if(!valid) continue;
+      inserted.emplace_back(p);
+      insert(p,index);
+    }
+  }
+  
+  void CompressedTreeMatcher::insert(const expression & e,size_t index){
+    wildcard_mappings.emplace_back(size(),replacement_map());
+    auto & current = wildcard_mappings.back();
+    current.first = index;
     
+    auto merge_function = [&](expression &a,expression b){
+      if(a->is_identical(b)) {
+        return true;
+      }
+      
+      if(auto wa = a->as<WildcardSymbol>()){
+        auto ba = b->is<WildcardSymbol>();
+        if(ba) current.second[b] = a;
+        return ba;
+      }
+      
+      if(auto wa = a->as<WildcardFunction>()){
+        auto ba = b->as<WildcardFunction>();
+        auto match = ba && ba->arguments.size() == wa->arguments.size();
+        if(match) current.second[b] = a;
+        return match;
+      }
+      
+      return false;
+    };
+    
+    auto insert_function = [&](expression &a){
+      if(a->is<WildcardSymbol>()){
+        auto b = make_expression<WildcardSymbol>(lars::to_string(wildcard_count++));
+        current.second.insert(std::make_pair(b, a));
+        a = b;
+      }
+      if(auto af = a->as<WildcardFunction>()){
+        auto b = make_expression<WildcardFunction>(lars::to_string(wildcard_count++),af->arguments);
+        current.second.functions.insert(std::make_pair(b->as<expresso::WildcardFunction>()->get_id(), b));
+        current.second.insert(std::make_pair(b, a));
+        a = b;
+      }
+    };
+    
+    search_tree->insert(e,merge_function,insert_function);
+    
+  }
+  
+  lars::Generator<CompressedTreeMatcher::Match> CompressedTreeMatcher::matches(const expression & e)const{
+    
+    return lars::Generator<CompressedTreeMatcher::Match>([this,e](Yield<Match> &yield){
+    replacement_map raw_wildcards;
+    
+    auto r = range<CompressedNode::ID>(0, wildcard_mappings.size());
+    auto m = std::vector<CompressedNode::ID>(r.begin(),r.end());
+    
+    get_matches(e, search_tree, raw_wildcards, m);
+    
+    /*
+     std::sort(m.begin(), m.end(), [this](rule_id a, rule_id b){
+     auto pa = rules[a].priority,pb = rules[b].priority; if(pa == pb) return a<b;
+     return pa < pb;
+     });
+     */
+    
+    std::vector<expression> wc_functions;
+    replacement_map wildcards;
+    
+    for(auto i:m){
+      
+      wc_functions.clear();
+      wildcards.clear();
+      
+      auto & current = wildcard_mappings[i];
+      
+      //std::cout << "Candidate: " << current.rule << std::endl;
+      bool valid = true;
+      
+      for(auto w:current.second){
+        auto it = wildcards.find(w.second);
+        
+        if(it != wildcards.end()){
+          auto it2 = raw_wildcards.find(w.first);
+          
+          if(it2 != raw_wildcards.end() && it->second != it2->second){
+            valid = false;
+            break;
+          }
+        }
+        else{
+          if(auto wf = w.first->as<WildcardFunction>()){
+            auto it = raw_wildcards.functions.find(wf->get_id());
+            if(it == raw_wildcards.functions.end()){ valid = false; break; }
+            wildcards.insert(std::make_pair(w.second,raw_wildcards[it->second]));
+            wildcards.functions.insert(std::make_pair(w.second->as<WildcardFunction>()->get_id(), w.second));
+            if(wildcards.find(w.second) == wildcards.end()){ valid = false; break; }
+            wc_functions.emplace_back(w.second);
+          }
+          else{
+            auto it = raw_wildcards.find(w.first);
+            if(it == raw_wildcards.end()){ continue; }
+            wildcards.insert(std::make_pair(w.second,it->second));
+          }
+        }
+      }
+      
+      for(auto &f: wc_functions){
+        auto wf = f->as<WildcardFunction>();
+        if( wf->arguments.size() == 1 ){
+          auto it = wildcards.find(wf->arguments[0]);
+          if(it != wildcards.end() && it->second == wildcards[f]){ valid = false; break; }
+        }
+      }
+      
+      if(!valid) continue;
+      
+      yield(Match{current.first,std::move(wildcards)});
+      
+#ifdef EXPRESSO_VERBOSE_EVALUATE
+      std::cout << "matched " << current.rule.search << ", wildcards: ";
+      for(auto r:wildcards){
+        std::cout << "(" << r.first << "," << r.second << "),";
+      }
+#endif
+      
+      /*
+      if(current.rule.condition){
+#ifdef EXPRESSO_VERBOSE_EVALUATE
+        std::cout << "checking condition on rule " << current.rule << std::endl;
+        std::cout << replace(current.rule.condition,wildcards) << std::endl;
+#endif
+        if(v.evaluate(replace(current.rule.condition,wildcards)) == current.rule.valid){
+          if(current.rule.evaluator) for(auto &rep:wildcards) rep.second = v.evaluate(rep.second);
+        }
+        else continue;
+      }
+      
+      if(current.rule.evaluator) if(!current.rule.evaluator(wildcards,v)) continue;
+      
+      auto res = replace(current.rule.replacement, wildcards);
+      
+      if(res != e){
+#ifdef EXPRESSO_VERBOSE_EVALUATE
+        std::cout << "Apply: " << current.rule << ":" << std::endl;
+        std::cout << replace(current.rule.search,wildcards) << " => " << replace(current.rule.replacement,wildcards) << std::endl;
+#endif
+        
+        if(apply_callback) apply_callback(current.rule,wildcards);
+        return res;
+      }
+    }
+    
+    return e;
+       */
+    }
+
+    });
+  }
+
+  
 #pragma mark mulplicity
   
   mulplicity_list::mulplicity_list(const group &_base,const Function &_mulplicity,const field &_field):base(_base),mulplicity(_mulplicity),real_field(_field){}

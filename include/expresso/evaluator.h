@@ -137,7 +137,7 @@ namespace expresso {
     F function;
   public:
     FunctionEvaluator(F f):function(f){  }
-    virtual expression evaluate(expression expr)const{ return function(expr); }
+    expression evaluate(expression expr,EvaluatorVisitor &eval)const override{ return function(expr,eval); }
     
   };
   
@@ -173,7 +173,6 @@ namespace expresso {
   /*
    TODO: add lazy evaluation
    */
-  
   
   class RuleEvaluator:public Evaluator{
     using expression_evaluator = std::function<void(replacement_map &)>;
@@ -228,7 +227,6 @@ namespace expresso {
     expression evaluate(expression expr,EvaluatorVisitor &)const override;
   };
 
-  
   class StepEvaluator:public Evaluator{
   protected:
     std::vector<Evaluator*> evaluators;
@@ -236,7 +234,6 @@ namespace expresso {
     void add_evaluator(Evaluator*e){ evaluators.emplace_back(e); }
     expression evaluate(expression expr,EvaluatorVisitor &)const override;
   };
-
   
   
 }

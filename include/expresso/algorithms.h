@@ -32,7 +32,7 @@
 #include <stdexcept>
 #include <functional>
 #include <iterator>
-#include <deque> // HACK
+#include <lars/generator.h>
 
 namespace expresso{
   
@@ -56,8 +56,27 @@ namespace expresso{
   void get_matches( const Expression::shared &expr, std::shared_ptr<CompressedNode> searches, replacement_map &wildcards, std::vector<CompressedNode::ID> & matches );
   std::vector<CompressedNode::ID> get_matches( const Expression::shared &expr, std::shared_ptr<CompressedNode> searches, replacement_map &wildcards );
   
-#pragma mark mulplicity list
+  class CompressedTreeMatcher{
+    size_t term_count = 0, wildcard_count = 0;
+    std::vector< std::pair<size_t,replacement_map> > wildcard_mappings;
+    std::shared_ptr<CompressedNode> search_tree = std::make_shared<CompressedNode>();
+    
+  public:
+    size_t size(){ return term_count; }
+    void insert(const expression & e,size_t index);
+    void commutative_insert(const expression & e,size_t index);
+    std::shared_ptr<const CompressedNode> get_search_tree()const{ return search_tree; }
+    
+    struct Match{
+      size_t index;
+      replacement_map wildcards;
+    };
+    
+    lars::Generator<Match> matches(const expression & e)const;
+
+  };
   
+#pragma mark mulplicity list
   
   struct group{
     const Function &operation,&inverse;
@@ -112,8 +131,7 @@ namespace expresso{
     public:
     
     expression_location index_stack;
-    // std::vector<expression> expression_stack;
-    std::deque<expression> expression_stack; // HACK
+    std::vector<expression> expression_stack;
     
   public:
     expression replace_current(const expression &)const;
@@ -225,7 +243,6 @@ namespace expresso{
     commutative_permutations(expression _top):top(_top){}
     iterator begin()const{ return iterator(top); }
     iterator end()const{ return iterator(); }
-
     
   };
   
