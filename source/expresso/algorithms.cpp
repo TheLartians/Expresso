@@ -32,6 +32,7 @@ namespace expresso {
     Expression::shared copy;
     const replacement_map &replacements;
     bool modified = false;
+    bool finalize_binop = true;
     
     ReplaceVisitor(const replacement_map &_replacements):replacements(_replacements){}
     
@@ -54,7 +55,22 @@ namespace expresso {
       for(auto a:e->arguments){ a->accept(this); args.push_back(copy); }
       if(modified) copy = e->clone(std::move(args));
       else copy = e->get_shared();
-
+      
+      modified |= m;
+    }
+    
+    void visit(const BinaryOperator * e)override{
+      
+      if(replaced(e)) return;
+      Function::argument_list args;
+      args.reserve(e->arguments.size());
+      
+      auto m = modified;
+      modified = false;
+      for(auto a:e->arguments){ a->accept(this); args.push_back(copy); }
+      if(modified) copy = e->clone(std::move(args),finalize_binop);
+      else copy = e->get_shared();
+      
       modified |= m;
     }
     
@@ -84,8 +100,9 @@ namespace expresso {
     
   };
   
-  Expression::shared replace(const Expression::shared &s,const replacement_map &replacements ){
+  Expression::shared replace(const Expression::shared &s,const replacement_map &replacements, bool normalize_binop ){
     ReplaceVisitor v(replacements);
+    v.finalize_binop = normalize_binop;
     s->accept(&v);
     return v.copy;
   }
@@ -370,12 +387,11 @@ namespace expresso {
     
     get_matches(e, search_tree, raw_wildcards, m);
     
-    /*
-     std::sort(m.begin(), m.end(), [this](rule_id a, rule_id b){
-     auto pa = rules[a].priority,pb = rules[b].priority; if(pa == pb) return a<b;
-     return pa < pb;
+      /*
+     std::sort(m.begin(), m.end(), [this](size_t a, size_t b){
+       return wildcard_mappings[a].first <  wildcard_mappings[b].first;
      });
-     */
+      */
     
     std::vector<expression> wc_functions;
     replacement_map wildcards;
