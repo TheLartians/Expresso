@@ -20,6 +20,7 @@ namespace expresso {
     }
         
     bool EvaluatorVisitor::get_from_cache(expression e,expression &res){
+      if(!evaluator.settings.use_cache) return false;
       auto key = e->get_shared();
       auto cached = cache.find(key);
       if(cached != cache.end()) {
@@ -52,6 +53,7 @@ namespace expresso {
     }
     
     void EvaluatorVisitor::add_to_cache(expression e,expression res){
+      if(!evaluator.settings.use_cache) return;
 #ifdef EXPRESSO_VERBOSE_EVALUATE
       std::cout << "caching: " << e << " -> " << res << std::endl;
 #endif
@@ -102,7 +104,12 @@ namespace expresso {
         args[a.index] = copy;
       }
       if(modified){
-        copy = e->clone(std::move(args));
+        if(auto b = dynamic_cast<const BinaryOperator*>(e)){
+          copy = b->clone(std::move(args),evaluator.settings.normalize_associative,evaluator.settings.normalize_commutation);
+        }
+        else{
+          copy = e->clone(std::move(args));
+        }
         
 #ifdef EXPRESSO_VERBOSE_EVALUATE
         std::cout << "recursive copied expression: " << *e << " -> " << *copy << std::endl;
@@ -180,13 +187,14 @@ namespace expresso {
         }
         if(invalid) continue;
         
-        auto test = e->clone(std::move(CAargs));
+        auto test = e->clone(std::move(CAargs),evaluator.settings.normalize_associative,evaluator.settings.normalize_commutation);
         
 #ifdef EXPRESSO_VERBOSE_EVALUATE
         std::cout << "Binary window: " << *test << std::endl;
 #endif
         
-        expression res = evaluate(test);
+        //expression res = evaluate(test); TODO: check if this breaks PyCAS
+        expression res = evaluator.evaluate(test,*this);
         
         modified = res != test;
         
@@ -216,7 +224,7 @@ namespace expresso {
               new_indices.insert(new_indices.begin()+idx, arg.index);
             }
           }
-          copy = c->clone(std::move(new_args));
+          copy = c->clone(std::move(new_args),evaluator.settings.normalize_associative,evaluator.settings.normalize_commutation);
           modified = true;
       }
       else{

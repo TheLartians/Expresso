@@ -104,6 +104,7 @@ namespace expresso {
     void visit(const AtomicExpression * e)override;
     
     public:
+    
     replacement_map & cache;
     std::unordered_set<expression> expression_stack;
 
@@ -119,6 +120,9 @@ namespace expresso {
       bool split_binary = true;
       unsigned split_binary_size = 2;
       bool commutate_binary = true;
+      bool normalize_commutation = true;
+      bool normalize_associative = true;
+      bool use_cache = true;
     } settings;
     
     using ignore_set = std::unordered_set<expression>;

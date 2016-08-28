@@ -256,7 +256,7 @@ namespace expresso {
   
   class BinaryOperator:public Operator{
     
-    void finalize_arguments(argument_list &args)const;
+    void finalize_arguments(argument_list &args,bool handle_associativity,bool handle_commutativity)const;
     
   public:
     enum associativity_type:char{ associative='a',left_associative = 'l',right_associative = 'r',non_associative='n' };
@@ -272,19 +272,24 @@ namespace expresso {
     bool is_associative()const{ return associativity == associative; }
     bool is_commutative()const{ return commutativity == commutative; }
     
-    BinaryOperator(const string &name,const string &_symbol,int precedence,argument_list &&args,associativity_type a ,commutativity_type c,bool finalize = true):Operator(name,_symbol,precedence,std::forward<argument_list>(args)),associativity(a),commutativity(c){ if(finalize) finalize_arguments(argument_data); }
-    BinaryOperator(const string &_symbol,associativity_type a,commutativity_type c,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,a,c),_symbol,precedence,std::forward<argument_list>(args)),associativity(a),commutativity(c){ finalize_arguments(argument_data); }
-    BinaryOperator(const string &_symbol,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,non_associative,non_commutative),_symbol,precedence,std::forward<argument_list>(args)),associativity(non_associative),commutativity(non_commutative){ finalize_arguments(argument_data); }
+    BinaryOperator(const string &name,const string &_symbol,int precedence,argument_list &&args,associativity_type a ,commutativity_type c,bool handle_associativity = true,bool handle_commutativity = true):Operator(name,_symbol,precedence,std::forward<argument_list>(args)),associativity(a),commutativity(c){ finalize_arguments(argument_data,handle_associativity,handle_commutativity); }
+    BinaryOperator(const string &_symbol,associativity_type a,commutativity_type c,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,a,c),_symbol,precedence,std::forward<argument_list>(args)),associativity(a),commutativity(c){ finalize_arguments(argument_data,true,true); }
+    BinaryOperator(const string &_symbol,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,non_associative,non_commutative),_symbol,precedence,std::forward<argument_list>(args)),associativity(non_associative),commutativity(non_commutative){ finalize_arguments(argument_data,true,true); }
     void accept(Visitor * v)const override{ v->visit(this); }
     
-    template <class Super> shared clone_with_type(argument_list && args,bool finalize = true)const{
+    template <class Super> shared clone_with_type(argument_list && args,bool handle_associativity = true,bool handle_commutativity = true)const{
       if(args.size() == 1){ return args[0]; }
-      return make_expression<Super>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,finalize);
+      return make_expression<Super>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,handle_associativity,handle_commutativity);
     }
     
-    shared clone(argument_list && args,bool finalize)const{
-      return clone_with_type<BinaryOperator>(std::forward<argument_list>(args),finalize);
+    shared clone(argument_list && args,bool handle_associativity_and_commutativity)const{
+      return clone_with_type<BinaryOperator>(std::forward<argument_list>(args),handle_associativity_and_commutativity,handle_associativity_and_commutativity);
     }
+    
+    shared clone(argument_list && args,bool handle_associativity,bool handle_commutativity)const{
+      return clone_with_type<BinaryOperator>(std::forward<argument_list>(args),handle_associativity,handle_commutativity);
+    }
+
     
     shared clone(argument_list && args)const override{ return clone(std::move(args),true); }
 

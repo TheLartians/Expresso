@@ -84,9 +84,9 @@ namespace expresso {
         
   }
   
-  void BinaryOperator::finalize_arguments(argument_list &args)const{
+  void BinaryOperator::finalize_arguments(argument_list &args,bool handle_associativity,bool handle_commutativity)const{
     
-    if(associativity == associative){
+    if(handle_associativity && associativity == associative){
       auto it = args.begin(),end = args.end();
       while (it != end) {
         auto op = (*it)->as<BinaryOperator>();
@@ -105,7 +105,7 @@ namespace expresso {
       }
     }
     
-    if(commutativity == commutative){
+    if(handle_commutativity && commutativity == commutative){
       std::sort(args.begin(), args.end());
     }
     

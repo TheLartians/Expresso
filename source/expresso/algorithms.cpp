@@ -68,7 +68,7 @@ namespace expresso {
       auto m = modified;
       modified = false;
       for(auto a:e->arguments){ a->accept(this); args.push_back(copy); }
-      if(modified) copy = e->clone(std::move(args),finalize_binop);
+      if(modified) copy = e->clone(std::move(args),true,finalize_binop);
       else copy = e->get_shared();
       
       modified |= m;
