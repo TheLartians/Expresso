@@ -277,11 +277,16 @@ namespace expresso {
     BinaryOperator(const string &_symbol,int precedence,argument_list &&args = argument_list()):Operator(create_name(_symbol,non_associative,non_commutative),_symbol,precedence,std::forward<argument_list>(args)),associativity(non_associative),commutativity(non_commutative){ finalize_arguments(argument_data,true,true); }
     void accept(Visitor * v)const override{ v->visit(this); }
     
-    template <class Super> shared clone_with_type(argument_list && args,bool handle_associativity = true,bool handle_commutativity = true)const{
+    template <class Super> shared clone_with_type(argument_list && args,bool normalize = true)const{
+      if(args.size() == 1){ return args[0]; }
+      return make_expression<Super>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,normalize,normalize);
+    }
+    
+    template <class Super> shared clone_with_type(argument_list && args,bool handle_associativity,bool handle_commutativity)const{
       if(args.size() == 1){ return args[0]; }
       return make_expression<Super>(get_name(),get_symbol(),get_precedence(),std::forward<argument_list>(args),associativity,commutativity,handle_associativity,handle_commutativity);
     }
-    
+
     shared clone(argument_list && args,bool handle_associativity_and_commutativity)const{
       return clone_with_type<BinaryOperator>(std::forward<argument_list>(args),handle_associativity_and_commutativity,handle_associativity_and_commutativity);
     }
