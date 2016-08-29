@@ -29,10 +29,11 @@ STRING(REGEX REPLACE "/" "\\\\" groupname "${groupname}")
 source_group(${groupname} FILES ${resource})
 endforeach()
 
-
 # ---- enable c++11 ----
-set (CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if(NOT CMAKE_CXX_STANDARD GREATER 11)
+  set (CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
 
 # ---- create module ----
 
