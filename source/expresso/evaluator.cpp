@@ -164,7 +164,7 @@ namespace expresso {
       
       std::unique_ptr<BinaryIterator> bit;
       
-      if(e->is_commutative() && evaluator.settings.commutate_binary){
+      if(e->is_commutative() && evaluator.settings.normalize_commutation){
         bit.reset(new BinaryIterators::SingleOrdered(evaluator.settings.split_binary_size));
       }
       else{
@@ -216,16 +216,17 @@ namespace expresso {
       } while (bit->step());
       
       if(ignore_indices.size() != 0){
-          for(auto arg:enumerate(c->arguments)) if(ignore_indices.find(arg.index) == ignore_indices.end()) {
-            if(c->is_commutative()) new_args.emplace_back(arg.value);
-            else{
-              unsigned idx = std::lower_bound(new_indices.begin(), new_indices.end(), arg.index) - new_indices.begin();
-              new_args.insert(new_args.begin()+idx, arg.value);
-              new_indices.insert(new_indices.begin()+idx, arg.index);
-            }
+        for(auto arg:enumerate(c->arguments)) if(ignore_indices.find(arg.index) == ignore_indices.end()) {
+          if(c->is_commutative() && evaluator.settings.normalize_commutation) new_args.emplace_back(arg.value);
+          else{
+            unsigned idx = std::lower_bound(new_indices.begin(), new_indices.end(), arg.index) - new_indices.begin();
+            new_args.insert(new_args.begin()+idx, arg.value);
+            new_indices.insert(new_indices.begin()+idx, arg.index);
           }
-          copy = c->clone(std::move(new_args),evaluator.settings.normalize_associative,evaluator.settings.normalize_commutation);
-          modified = true;
+        }
+        
+        copy = c->clone(std::move(new_args),evaluator.settings.normalize_associative,evaluator.settings.normalize_commutation);
+        modified = true;
       }
       else{
         copy = c;

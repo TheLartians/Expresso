@@ -119,7 +119,6 @@ namespace expresso {
       bool recursive = false;
       bool split_binary = true;
       unsigned split_binary_size = 2;
-      bool commutate_binary = true;
       bool normalize_commutation = true;
       bool normalize_associative = true;
       bool use_cache = true;
