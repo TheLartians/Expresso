@@ -73,7 +73,6 @@ namespace expresso{
     };
     
     lars::Generator<Match> matches(const expression & e)const;
-
   };
   
 #pragma mark mulplicity list
@@ -156,7 +155,6 @@ namespace expresso{
     void set_expression(const expression &,unsigned idx);
     void recursive_set_expression(const expression &,unsigned idx );
   };
-  
   
   class preorder_traversal{
     expression top;
