@@ -25,8 +25,52 @@ namespace expresso {
     what_string = stream.str();
     return what_string.c_str();
   }
+  
+#pragma mark normalize
+  
+  struct NormalizeVisitor:public Visitor{
+    Expression::shared copy;
+    bool modified = false;
     
-  #pragma mark replace
+    void visit(const Function * e)override{
+      Function::argument_list args;
+      args.reserve(e->arguments.size());
+      
+      auto m = modified;
+      modified = false;
+      for(auto a:e->arguments){ a->accept(this); args.push_back(copy); }
+      if(modified) copy = e->clone(std::move(args));
+      else copy = e->get_shared();
+      
+      modified |= m;
+    }
+    
+    void visit(const BinaryOperator * e)override{
+      Function::argument_list args;
+      args.reserve(e->arguments.size());
+      
+      auto m = modified;
+      modified = false;
+      for(auto a:e->arguments){ a->accept(this); args.push_back(copy); }
+      copy = e->clone(std::move(args),true,true);
+      modified = *copy == *e;
+      
+      modified |= m;
+    }
+    
+    void visit(const AtomicExpression * e)override{
+      copy = e->get_shared();
+    }
+    
+  };
+  
+  expression normalize(const expression &expr){
+    NormalizeVisitor v;
+    expr->accept(&v);
+    return v.copy;
+  }
+  
+#pragma mark replace
   
   struct ReplaceVisitor:public Visitor{
     Expression::shared copy;

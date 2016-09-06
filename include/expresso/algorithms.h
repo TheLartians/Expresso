@@ -50,6 +50,7 @@ namespace expresso{
   
   expression rhs_associative(expression x);
   
+  expression normalize(const expression &expr);
   Expression::shared replace(const Expression::shared &s,const replacement_map &replacements, bool normalize_binop = true );
   bool match( const Expression::shared &expr,const Expression::shared &search,replacement_map &wildcards);
   
