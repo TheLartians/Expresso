@@ -315,7 +315,8 @@ namespace expresso {
 #pragma mark CompressedTreeMatcher
 
   void CompressedTreeMatcher::commutative_insert(const expression & e,size_t index){
-    std::vector<expression> inserted;
+    insert(e,index);
+    std::vector<expression> inserted{e};
     replacement_map wc;
     for(auto p:commutative_permutations(e)){
       bool valid = true;
