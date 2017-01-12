@@ -93,7 +93,7 @@ namespace expresso {
     argument_list CAargs;
     
     bool get_from_cache(expression e,expression &res);
-    bool is_cached(const Expression * e);
+    bool is_cached(expression e);
     void add_to_cache(expression e,expression res);
     void finalize(const Expression * e);
     bool copy_function(const Function * e);
