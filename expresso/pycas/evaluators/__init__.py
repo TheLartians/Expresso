@@ -35,6 +35,7 @@ def set_debug(v):
 
     def callback(r,m):
         from IPython.display import display_latex
+        import sys
 
         print "appy rule: %s" % r
 
@@ -43,6 +44,7 @@ def set_debug(v):
              r"\;\text{ if }\;%s" % pc.latex(r.condition.subs(m,evaluate=False)) if r.condition is not None else ''
 
         display_latex(r"$$%s \rightarrow %s%s$$" % lt,raw=True)
+        sys.stdout.flush()
 
     if v:
         main_evaluator.main_evaluator.set_rule_callback(callback)
