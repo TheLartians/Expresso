@@ -127,6 +127,8 @@ class NumpyCompiler(LambdaCompiler):
             if shape != None:
                 idx = [arg.astype(int) if isinstance(arg,np.ndarray) else int(arg)*np.ones(shape,dtype=int)
                        for arg in idx]
+            else:
+                idx = [int(arg) for arg in idx]
 
             valid =  reduce(np.logical_and,[ (i >= 0) & (i<s) for i,s in zip(idx,array.shape) ])
 
