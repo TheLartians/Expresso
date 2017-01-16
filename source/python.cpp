@@ -380,7 +380,7 @@ BOOST_PYTHON_MODULE(_expresso){
   .def("intersection",+[](const expresso::mulplicity_list &m,const expresso::mulplicity_list &other){ return m.intersection(other); })
   .def("intersection",+[](const expresso::mulplicity_list &m,const expresso::mulplicity_list &other,object f){
     return m.intersection(other,[&](const expresso::expression &a,const expresso::expression &b)->expresso::expression{
-      auto res =  f(a,b);
+      object res =  f(a,b);
       if(res == object()) return expresso::expression();
       return extract<expresso::expression>(res);
     });

@@ -88,7 +88,7 @@ namespace expresso {
     
     //using shared = std::shared_ptr<const Expression>;
     
-    class shared:private std::shared_ptr<const Expression>{
+    class shared:public std::shared_ptr<const Expression>{
       public:
       shared(){}
       shared(const std::shared_ptr<const Expression> &e):std::shared_ptr<const Expression>(e){}
@@ -107,7 +107,7 @@ namespace expresso {
 
       using std::shared_ptr<const Expression>::get;
       using std::shared_ptr<const Expression>::reset;
-      
+
     };//*/
     
     virtual void accept(Visitor * v) const = 0;
