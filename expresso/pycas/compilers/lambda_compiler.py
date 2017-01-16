@@ -31,8 +31,10 @@ class LambdaCompiler(object):
         raise ValueError('cannot compile expression: %s' % expr)
 
     def get_function(self,name):
-        if name in self.function_module.__dict__:
-            return self.function_module.__dict__[name]
+        try:
+            return getattr(self.function_module,name)
+        except:
+            return None
 
     @visitor.function
     def visit(self,expr):

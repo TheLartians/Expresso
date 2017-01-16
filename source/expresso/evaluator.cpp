@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-//#define VERBOSE
+// #define VERBOSE
 
 #ifdef VERBOSE
 #include <iostream>
@@ -29,14 +29,14 @@ namespace expresso {
       return false;
     }
     
-    bool EvaluatorVisitor::is_cached(const Expression * e){
+    bool EvaluatorVisitor::is_cached(expression e){
 #ifdef VERBOSE
       std::cout << "entering: " << *e << std::endl;
 #endif
-      if(get_from_cache(e->get_shared(),copy)) {
+      if(get_from_cache(e,copy)) {
         modified |= *e != *copy;
 #ifdef VERBOSE
-         std::cout << "cached: " << *e << " -> " << *copy << std::endl;
+        std::cout << "cached: " << *e << " -> " << *copy << std::endl;
 #endif
         return true;
       }
@@ -85,7 +85,7 @@ namespace expresso {
   
     bool EvaluatorVisitor::copy_function(const Function * e){
       
-      if(is_cached(e)){
+      if(is_cached(e->get_shared())){
         return true;
       }
       
@@ -108,7 +108,7 @@ namespace expresso {
         std::cout << "recursive copied expression: " << *e << " -> " << *copy << std::endl;
 #endif
         
-        if(is_cached(copy.get())){
+        if(is_cached(copy)){
           expression_stack.erase(expression_stack.find(*e));
           add_to_cache(e->get_shared(),copy);
           return true;
@@ -167,7 +167,6 @@ namespace expresso {
       bit->init(c.get());
       
       do {
-        
         auto & indices = bit->get_indices();
         CAargs.resize(indices.size());
         
@@ -239,7 +238,7 @@ namespace expresso {
 #ifdef VERBOSE
       std::cout << "visit atomic: " << *e << std::endl;
 #endif
-      if(is_cached(e)) return;
+      if(is_cached(e->get_shared())) return;
       expression_stack.emplace(*e);
       copy = evaluator.evaluate(e->get_shared(),*this);
       expression_stack.erase(expression_stack.find(*e));
