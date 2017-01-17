@@ -115,7 +115,7 @@ logic_evaluator.add_rule(pc.Or(s.x,s.x),s.x);
 logic_evaluator.add_rule(pc.equal(s.x,s.x),True);
 
 
-logic_evaluator.add_rule(-s.x<-s.y,s.x<s.y)
+logic_evaluator.add_rule(-s.x<-s.y,s.y<s.x)
 
 '''
 logic_evaluator.add_rule(s.x<s.x,False);

@@ -96,7 +96,6 @@ def extract_comp_mul_intersection(m):
 
 evaluator.add_rule(-s.x<-s.y, s.y<s.x)
 
-
 evaluator.add_rule(s.x<s.y, pc.sign(s.c)*s.a<pc.sign(s.c)*s.b, extract_comp_mul_intersection)
 evaluator.add_rule(s.x<-s.y, pc.sign(s.c)*s.a<-pc.sign(s.c)*s.b, extract_comp_mul_intersection)
 evaluator.add_rule(-s.x<s.y, -pc.sign(s.c)*s.a<pc.sign(s.c)*s.b, extract_comp_mul_intersection)
