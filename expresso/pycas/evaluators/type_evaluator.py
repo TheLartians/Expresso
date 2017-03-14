@@ -76,10 +76,10 @@ evaluator.add_rule(pc.OperationType(pc.Abs(pc.Types.Rational)),pc.Types.Rational
 evaluator.add_rule(pc.OperationType(pc.Abs(pc.Types.Integer)),pc.Types.Natural)
 evaluator.add_rule(pc.OperationType(pc.Abs(pc.Types.Natural)),pc.Types.Natural)
 
-
 evaluator.add_rule(pc.Type(pc.real(s.x)),pc.Types.Real)
 evaluator.add_rule(pc.Type(pc.imag(s.x)),pc.Types.Real)
-evaluator.add_rule(pc.Type(pc.conjugate(s.x)),pc.Types.Complex)
+evaluator.add_rule(pc.OperationType(abs(s.x)),pc.Types.Real)
+#evaluator.add_rule(pc.Type(pc.conjugate(s.x)),pc.Type(s.x))
 
 evaluator.add_rule(pc.Type(pc.Indicator(s.x)),pc.Types.Natural)
 evaluator.add_rule(pc.Type(pc.OuterPiecewise(s.x)),pc.Type(s.x))

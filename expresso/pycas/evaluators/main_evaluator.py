@@ -100,7 +100,6 @@ evaluator.add_rule(s.x<s.y, pc.sign(s.c)*s.a<pc.sign(s.c)*s.b, extract_comp_mul_
 evaluator.add_rule(s.x<-s.y, pc.sign(s.c)*s.a<-pc.sign(s.c)*s.b, extract_comp_mul_intersection)
 evaluator.add_rule(-s.x<s.y, -pc.sign(s.c)*s.a<pc.sign(s.c)*s.b, extract_comp_mul_intersection)
 
-
 evaluator.add_rule(pc.sign(s.a),1,condition=s.a>=0)
 evaluator.add_rule(pc.sign(s.a),-1,condition=s.a<0)
 evaluator.add_rule(pc.sign(s.a*s.b),pc.sign(s.a)*pc.sign(s.b))
@@ -210,6 +209,7 @@ evaluator.add_rule(pc.conjugate(s.x*s.y),pc.conjugate(s.x)*pc.conjugate(s.y))
 evaluator.add_rule(pc.conjugate(-s.x),-pc.conjugate(s.x))
 evaluator.add_rule(pc.conjugate(1/s.x),1/pc.conjugate(s.x))
 evaluator.add_rule(pc.conjugate(s.x**-1),pc.conjugate(s.x)**-1)
+evaluator.add_rule(pc.conjugate(s.x**s.n),s.x**s.n,condition=0<s.x)
 
 
 def create_tmp_x(m):

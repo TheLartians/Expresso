@@ -342,6 +342,20 @@ template <class T,size_t ... size_stride> struct mapped_ndarray{
 
         return 'extern "C"{\nvoid %s(%s){\n\t%s\n}\n}' % formatted
 
+class CompilerError(Exception):
+
+    def __init__(self, message):
+        if isinstance(message, unicode):
+            super(CompilerError, self).__init__(message.encode('utf-8'))
+            self.message = message
+        elif isinstance(message, str):
+            super(CompilerError, self).__init__(message)
+            self.message = message.decode('utf-8')
+        else:
+            raise TypeError
+
+    def __unicode__(self):
+        return self.message
 
 def ccompile(*function_definitions,**kwargs):
     import tempfile
@@ -362,10 +376,10 @@ def ccompile(*function_definitions,**kwargs):
     p = Popen([environ.get('CXX','g++'),'-o',object_file] + flags + ['-c','-xc++','-std=c++11','-ffast-math','-O3','-fPIC','-'],stdin=PIPE, stdout=PIPE, stderr=PIPE)
     p.stdin.write(code)
     p.stdin.close()
-
+   
     return_code = p.wait()
     if(return_code!=0):
-        raise RuntimeError("Cannot compile expression: " + p.stderr.read() )
+        raise CompilerError("Cannot compile expression: " + p.stderr.read().decode('utf-8'))
 
     print_output = kwargs.pop('print_output',False)
     print_warnings = print_output or kwargs.pop('print_warnings',False)
