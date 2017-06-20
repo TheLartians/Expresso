@@ -74,9 +74,13 @@ target_link_libraries(expresso ${sha256_LIBRARIES})
 
 # ---- lars libs ----
 
-if(NOT Lars_INCLUDE_DIRS)
+IF(LARS_LIBRARY)
+  SET(lars_include_dirs ${lars_include_dirs} "${CMAKE_CURRENT_SOURCE_DIR}/include" PARENT_SCOPE)
+  SET(lars_libraries ${lars_libraries} ${sha256_LIBRARIES} expresso PARENT_SCOPE)
+  SET(Lars_INCLUDE_DIRS ${lars_include_dirs})
+ELSEIF()
   add_subdirectory (${PROJECT_LIBS_DIR}/lars)
-endif(NOT Lars_INCLUDE_DIRS)
+ENDIF()
 
 include_directories(${Lars_INCLUDE_DIRS})
 
