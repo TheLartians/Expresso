@@ -7,6 +7,19 @@ endif()
 
 project(Expresso)
 
+# ---- add dependencies ----
+include(cmake/CPM.cmake)
+
+set(BOOST_INCLUDE_LIBRARIES system python filesystem regex)
+set(BOOST_ENABLE_PYTHON ON)
+
+CPMAddPackage(
+  NAME Boost
+  VERSION 1.81.0
+  GITHUB_REPOSITORY "boostorg/boost"
+  GIT_TAG "boost-1.81.0"
+)
+
 # ---- add sources ----
 
 set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/source)
@@ -37,10 +50,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 SET(Python_ADDITIONAL_VERSIONS 2.7 2.6 2.5)
 FIND_PACKAGE(PythonInterp REQUIRED)
 FIND_PACKAGE(PythonLibs REQUIRED)
-FIND_PACKAGE(Boost COMPONENTS python REQUIRED)
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
-LINK_LIBRARIES(${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) # Deprecated but so convenient!
+LINK_LIBRARIES(Boost::python ${PYTHON_LIBRARIES}) # Deprecated but so convenient!
 
 # ---- create module ----
 
